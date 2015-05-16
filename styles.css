@@ -1,14 +1,48 @@
-     
-#divIntro {
-  float: left;
-  width: 30%;
-  height: 15%;
+body {
+    font-family: 'Open Sans', 'Segoe UI', Helvetica, Verdana, Arial, sans-serif;
+    font-weight: 300;
+    background-color: #eee;
+    outline: none;
+    color: #777;
+}
+
+body > .container-fluid {
+    height: calc(100% - 50px);
+    overflow-y: auto;
+    min-width: 1460px;
+    padding: 0;
+    margin-top: 50px;
+}
+
+.navbar {
+    background-image: none;
+    padding: 0 20px;
+    color: white;
+    background-color: #2394F5;
+}
+
+.navbar .navbar-title {
+    font-size: 24px;
+    padding-top: 8px;
+}
+
+.navbar-inverse .navbar-nav>li>a {
+  color: white;
+}
+
+.navbar-fixed-top {
+    border: 0;
+}
+
+.list-unstyled > li {
+    padding: 10px;
 }
 
 #divControls {
   float: left;
-  width: 30%;
-  height: 30%;
+  width: 25%;
+  height: 100%;
+  background-color: white;
 }
 
 /* Styling for 3D view */
@@ -19,7 +53,7 @@
 
 /* Styling for lineage tree */
 .lineage_tree {
-  width: 95%;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
 }

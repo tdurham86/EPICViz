@@ -919,7 +919,7 @@ function plotCellLineageTree(root) {
   height = 700 - margin.top - margin.bottom;
   var width = 2000;
 
-  var tree_div = d3.select("body")
+  var tree_div = d3.select("#divPlot")
     .append('div')
     .attr("class", 'lineage_tree')
 
