@@ -38,6 +38,12 @@ body > .container-fluid {
     padding: 10px;
 }
 
+#reset-button {
+  float: right;
+  margin-top: 20px;
+
+}
+
 #hide-controls {
   position: relative;
   left: 0;
