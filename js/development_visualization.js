@@ -801,7 +801,6 @@ function hideControls() {
         $('#hide-controls').attr('value', '<')
         $('#divPlot').animate({"margin-left": "500", width: "75%"}, 500, function() {});
     }
-
 }
 
 function initializeEmbryo() {
