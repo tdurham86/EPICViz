@@ -38,17 +38,31 @@ body > .container-fluid {
     padding: 10px;
 }
 
+#hide-controls {
+  position: relative;
+  left: 0;
+  top: 5;
+}
+
 #divControls {
-  float: left;
-  width: 25%;
-  height: 100%;
-  background-color: white;
+  position:fixed;
+  top:50;
+  left:0;
+  width:500px;
+  height:100%;
+  background: #454545;
+  overflow: hidden;
+  color: white;
+}
+
+#divControls select {
+  color: #454545;
 }
 
 /* Styling for 3D view */
 #divplot {
-  width: 95%;
-  height: 40%;
+  margin-left:500px;
+  min-height:100%;
 }
 
 /* Styling for lineage tree */
@@ -86,6 +100,10 @@ input[type=range] {
 
 input[type=range]:focus {
   outline: 0;
+}
+
+input[type=range] {
+  background: none;
 }
 
 input[type=range]::-webkit-slider-runnable-track {

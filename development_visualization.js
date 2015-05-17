@@ -73,6 +73,10 @@ var speedarray = ["slow", "medium", "fast"];
 var options = [0,1,2];
 var speed = "slow"
 
+
+// Hiding controls 
+controls_hidden = false;
+
 /****************************************************************
 Lineage Highlighting Functions
 ****************************************************************/
@@ -785,6 +789,21 @@ function resetView() {
   x3d.node().runtime.resetView()
 }
 
+function hideControls() {
+    if(! controls_hidden) {
+        controls_hidden = true;
+        $('#divControls').animate({width: "0px"}, 500, function() {});
+        $('#hide-controls').attr('value', '>')
+        $('#divPlot').animate({margin: "0", width: "100%"}, 500, function() {});
+    } else {
+        controls_hidden = false;
+        $('#divControls').animate({width: "500px"}, 500, function() {});
+        $('#hide-controls').attr('value', '<')
+        $('#divPlot').animate({"margin-left": "500", width: "75%"}, 500, function() {});
+    }
+
+}
+
 function initializeEmbryo() {
     d3.text('http://localhost:2255/timepoints/nuclei/t001-nuclei', function(t0data){
         csvdata[0] = parseCSV(t0data);
@@ -1118,24 +1137,19 @@ function scatterPlot3d( parent ) {
     console.log("Reading in embryo positions.");
     initializeEmbryo();
     console.log("Loading data");
-    
-    d3.select('#divControls').append('input')
-      .attr('type', 'button')
-      .attr('id', 'reset-button')
-      .attr('value', 'Reset View')
+
+    d3.select('#hide-controls')
+      .attr('onclick', 'hideControls()');
+
+    d3.select('#reset-button')
       .attr('onclick', 'resetView()');
 
-
     // Add play button for time points
-    d3.select('#divControls').append('button')
-        .attr('id', 'playpause')
+    d3.select('#playpause')
         .attr('onclick', "playpausedev()")
-        .html("Play");
 
     // Add slider for time points
-    d3.select('#divControls').append('input')
-        .attr('type', 'range')
-        .attr('id', 'timerange')
+    d3.select('#timerange')
         .attr('defaultValue', 0)
         .attr('min', 0)
         .attr('step', 1)
