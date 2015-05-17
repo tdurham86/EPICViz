@@ -794,12 +794,12 @@ function hideControls() {
         controls_hidden = true;
         $('#divControls').animate({width: "0px"}, 500, function() {});
         $('#hide-controls').attr('value', '>')
-        $('#divPlot').animate({margin: "0", width: "100%"}, 500, function() {});
+        $('#divPlot').animate({margin: "0"}, 500, function() {});
     } else {
         controls_hidden = false;
-        $('#divControls').animate({width: "500px"}, 500, function() {});
+        $('#divControls').animate({width: "415"}, 500, function() {});
         $('#hide-controls').attr('value', '<')
-        $('#divPlot').animate({"margin-left": "500", width: "75%"}, 500, function() {});
+        $('#divPlot').animate({"margin-left": "415"}, 500, function() {});
     }
 }
 
@@ -1121,8 +1121,6 @@ function scatterPlot3d( parent ) {
     x3d = parent  
         .append("x3d")
         .attr('id', '3dplot')
-        .style( "width", "100%")
-        .style( "height", "100%")
         .style( "border", "none" )
 
     scene = x3d.append("scene")

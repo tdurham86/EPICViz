@@ -18,18 +18,17 @@
     <script src="libraries/bootstrap/js/bootstrap.min.js"></script>
 
     <link href="/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
     <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
     <script type="text/javascript" src="http://x3dom.org/download/1.6.2/x3dom-full.js"></script>
     <script type="text/javascript" src="http://bgrins.github.io/spectrum/spectrum.js"></script>
     <script type="text/javascript" src="/js/development_visualization.js"></script>
-    <script type="text/javascript" src="/js/Color_mixer-master/color_mixer.js"></script>
+    <script type="text/javascript" src="/libraries/Color_mixer-master/color_mixer.js"></script>
     <script type="text/javascript" src="/js/fisheye.js"></script>
     
     <link rel="stylesheet" type="text/css" href="http://www.x3dom.org/download/dev/x3dom.css"/>
-    <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
     <link rel="stylesheet" type="text/css" href="http://bgrins.github.io/spectrum/spectrum.css"/>
     <link rel="stylesheet" type="text/css" href="/libraries/chosen_v1.4.2/chosen.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -74,10 +73,6 @@
   </div>
 
     <script>
-      d3.select('html').style('height','100%').style('width','100%')
-      d3.select('body').style('height','100%').style('width','100%')
-      d3.select('#divPlot').style('width', "75%").style('height', "45%")
-        .style('float', 'right');
       scatterPlot3d( d3.select('#divPlot'));
     </script>
 
