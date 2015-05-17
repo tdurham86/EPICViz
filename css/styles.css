@@ -54,8 +54,7 @@ body > .container-fluid {
 
 /* Styling for 3D view */
 x3d {
-  margin-left: 0 auto;
-  margin-right: 0 auto;
+  margin: 0 auto;
   width: 60%;
 }
 
@@ -75,6 +74,7 @@ x3d {
 }
 
 #divPlot {
+  padding-top: 50px;
   margin-left:415px; 
 }
 
