@@ -187,17 +187,17 @@ function cloneLPDiv(){
 }
 
 function initializeLineagePicker(){
-    d3.select('#divControls')
+    d3.select('#highlighting')
         .append('div').attr('class', 'lineage-pickers');
     makeLPDivTemplate();
     cloneLPDiv();
-    d3.select('#divControls').append('input')
+    d3.select('#highlighting').append('input')
         .attr('type', 'button')
         .attr('value', '+')
         .attr('class', 'add-highlight')
         .attr('id', 'add-lp')
         .attr('onclick', 'cloneLPDiv()');
-    d3.select('#divControls').append('input')
+    d3.select('#highlighting').append('input')
         .attr('type', 'button')
         .attr('value', 'Hide Non-Highlighted')
         .attr('class', 'add-highlight')
@@ -1152,15 +1152,6 @@ function scatterPlot3d( parent ) {
         .attr('step', 1)
         .attr('value', 0)
         .attr('onchange', 'updatetime()');
-
-    // Add menu for playback speed
-    d3.select('#divControls').append('div').attr('class', 'select-style')
-        .append('select')
-           .selectAll("speed")
-           .data(options)
-           .enter()
-           .append("option")
-           .text(function(d) {return speedarray[d];});
            
     d3.select('body').select('select')
         .on("change", function(d) {speed = this.value;});

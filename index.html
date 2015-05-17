@@ -65,9 +65,27 @@
         <input type="button" id="reset-button" value="Reset View">
     </div>
     <div id="divControls">
-        <h3>Lineage Controls</h3>
-        <button id="playpause">Play</button>
-        <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
+        <div id="playback" class="control-section">
+          <h4>Playback</h4>
+          <button id="playpause">Play</button>
+          <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
+          <div id="speed" class="select-style">
+            <select>
+              <option>slow</option>
+              <option>medium</option>
+              <option>fast</option>
+            </select>
+          </div>
+        </div>
+        <div id="highlighting" class="control-section">
+          <h4>Highlighting</h4>
+
+        </div>
+
+        <div id="expression" class="control-section">
+          <h4>Expression</h4>
+          ...Placeholder...
+        </div>
     </div>
   
 

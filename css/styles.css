@@ -58,6 +58,19 @@ x3d {
   width: 60%;
 }
 
+.control-section {
+  margin-bottom: 30px;
+  margin-left: 5px;
+}
+
+.control-section h1, h2, h3, h4, h5 {
+  border-bottom: 1px solid #CCCCCC;
+  padding-bottom: 10px;
+  margin-left: 5px;
+  margin-right: 10px;
+  font-size: 15px;
+}
+
 #divControls {
   position: fixed;
   top:0;
@@ -67,7 +80,7 @@ x3d {
   min-height: 100%;
   background: #454545;
   overflow: hidden;
-  color: white;
+  color: #CCCCCC;
   display: inline-block;
   float: left;
 
@@ -108,7 +121,9 @@ x3d {
 input[type=range] {
   -webkit-appearance: none;
   margin: 10px 0;
-  width: 300px;
+  width: 200px;
+  margin-right: 10px;
+  display: inline;
 }
 
 input[type=range]:focus {
@@ -186,7 +201,7 @@ input[id=distortion_slider]{
 #reset-button {
   margin-bottom: 0px;
   display: block;
-  width: 150px;
+  width: 100px;
 }
 
 #playpause {
@@ -256,7 +271,7 @@ input[type="text"].focus {
 
 /* Styling for color picker selector */
 .chosen-container {
-  width: 300px;
+  width: 280px !important;
 }
 
 input[type="color"] {
@@ -277,7 +292,8 @@ input[type="color"]:focus {
     margin: 0 auto;
     position: relative;
     top: 10px;
-    width: 100px;
+    width: 70px;
+    height: 30px;
     border-radius: 3px;
     display: inline-block;
     overflow: hidden;
