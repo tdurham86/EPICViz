@@ -27,7 +27,7 @@
     <!--Add IntroJs js-->
     <script type="text/javascript" src="/js/intro.js"></script>
     <!-- Add IntroJs styles -->
-    <link href="/js/introjs.css" rel="stylesheet">
+    <link href="/css/introjs.css" rel="stylesheet">
     
     <link rel="stylesheet" type="text/css" href="http://www.x3dom.org/download/dev/x3dom.css"/>
     <link rel="stylesheet" type="text/css" href="http://bgrins.github.io/spectrum/spectrum.css"/>
@@ -56,26 +56,28 @@
                 <div class="navbar-title">C. Elegans Development</div>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
-               </div>
+     
                 <ul class="nav navbar-nav navbar-right">
                     <li><a href="" data-toggle="modal" data-target="#aboutModal">About</a></li>
                     <li><a href="" data-toggle="modal" data-target="#helpModal">Help</a></li>
+                     <li><a class="btn btn-large btn-success" href="javascript:void(0);" onclick="javascript:introJs().start();">Show me how</a></li>
                 </ul>
             </div>
+            
         </div>
     </nav>
 
 
-    <div id="divPlot">
-        <input type="button" id="hide-controls" value="<">
-        <input type="button" id="reset-button" value="Reset View">
+    <div id="divPlot" class="divPlot" >
+        <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="Enlarge view."  data-step="2">
+        <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="Reset 3D plot."  data-step="1">
     </div>
-    <div id="divControls">
-        <div id="playback" class="control-section">
+    <div id="divControls" class="divControls" >
+        <div id="playback" class="control-section"  data-intro="play lineage tree."  data-step="3">
           <h4>Playback</h4>
-          <button id="playpause">Play</button>
+          <button id="playpause" >Play</button>
           <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
-          <div id="speed" class="select-style">
+          <div id="speed" class="select-style" >
             <select>
               <option>slow</option>
               <option>medium</option>
@@ -83,12 +85,12 @@
             </select>
           </div>
         </div>
-        <div id="highlighting" class="control-section">
+        <div id="highlighting" class="control-section" data-intro="Highlighting."  data-step="4">
           <h4>Highlighting</h4>
 
         </div>
 
-        <div id="expression" class="control-section">
+        <div id="expression" class="control-section" data-intro="Expression."  data-step="5">
           <h4>Expression</h4>
           ...Placeholder...
         </div>
