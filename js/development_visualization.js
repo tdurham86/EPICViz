@@ -554,7 +554,19 @@ function plotData( time_point, duration ) {
     //finish generating data points
     new_data = new_data.append('shape');
     new_data.append('appearance').append('material');
-    new_data.append('sphere');
+    new_data.append('sphere')
+        // Add attributed for popover text
+        .attr('data-toggle', 'popover')
+        .attr('title', function(d) {return d.meta.name})
+        .attr('data-content', function(d) {return '<b>x:</b> ' + Math.round(d.x * 10000) / 10000 + '<br />' + '<b>y:</b> ' + Math.round(d.y * 10000) / 10000 + '<br />' + '<b>z:</b> ' + Math.round(d.z * 10000) / 10000 + '<br />'})
+        .attr('data-trigger', 'hover')
+        .attr('data-placement', 'bottom')
+        .attr('data-html', 'true');
+
+    // Add the popover behavior for cells
+    $(document).ready(function(){
+        $('[data-toggle="popover"]').popover();   
+    });
 
     //Collect highlight classes
     var picker_sel = document.getElementsByClassName('selhi');

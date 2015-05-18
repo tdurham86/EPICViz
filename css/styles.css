@@ -52,6 +52,11 @@ body > .container-fluid {
   color: #454545;
 }
 
+/* Styling for popovers */
+.popover > .arrow { 
+  visibility: hidden;
+}
+
 /* Styling for 3D view */
 x3d {
   margin: 0 auto;
@@ -116,6 +121,7 @@ x3d {
   stroke: #ccc;
   stroke-width: 1.5px;
 }
+
 
 /* Styling for slider */
 input[type=range] {
