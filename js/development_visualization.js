@@ -26,7 +26,7 @@ var P0 = {meta: cellmap.P0, pred: -1, succ: []};
 var P1 = {meta: cellmap.P1, pred: P0, succ: []};
 var AB = {meta: cellmap.AB, pred: P0, succ: []};
 
-//maps cell name to an index into this.csvdata for each time point
+//maps cell name to an index into csvdata for each time point
 var namemap = [];
 
 //maps cell types to cell names
@@ -306,6 +306,9 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
 function updatePlot(){
     var ppbutton = document.getElementById('playpause');
     if(ppbutton.innerHTML === 'Play'){
+        var timepoint_data = csvdata[timepoint % csvdata.length];
+        var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
+        datapoints.remove();
         plotData(timepoint, 0);
     }
 }
@@ -489,85 +492,6 @@ function plotData( time_point, duration ) {
 
     var x = scales[0], y = scales[1], z = scales[2];
 
-    // Draw a sphere at each x,y,z coordinate.
-    var timepoint_data = csvdata[time_point % csvdata.length];
-    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
-    datapoints.exit().remove();
-    var cellnames = timePointCellNames(timepoint_data);
-    var new_data = datapoints.enter().append('transform')
-        .attr('translation', function(d){
-            if (d.pred == -1){
-                return x(d.x) + " " + y(d.y) + " " + z(d.z);
-            }else{
-                return x(d.pred.x) + " " + y(d.pred.y) + " " + z(d.pred.z);
-        }})
-        .attr('class', 'datapoint')
-        .attr('id', function(d){return d.meta.name})
-        .attr('scale', function(d){var ptrad = d.radius * 0.5; return [ptrad, ptrad, ptrad]});
-    
-    //use new_data to identify which nodes in the tree should be revealed
-    var allnodes = d3.selectAll('.node');
-    allnodes.selectAll('.node-circle').attr('style', 'visibility:hidden;');
-    var visiblenodes = allnodes.filter(function(d){
-        if(d.name === 'E' || d.name === 'MS'){
-            if(cellnames.indexOf('.'+d.name+'.') > -1){
-                return this;
-            }else{
-                return null;
-            }
-        }else{
-            if(cellnames.indexOf(d.name) > -1){
-                return this;
-            }else{
-                return null;
-            }
-        }
-    });
-    visiblenodes.selectAll('.node-circle')
-        .attr('style', 'visibility:visible')
-        .attr('fill', 'steelblue');
-    
-    var new_data_names = [];
-    new_data.each(function(d){
-        new_data_names.push(d.meta.name);
-    });
-    var newnodes = visiblenodes.filter(function(d){
-        if(new_data_names.indexOf(d.name) > -1){
-            return this;
-        }else{
-            return null;
-        }
-    });
-    var circ1 = newnodes.selectAll('circle')
-        .attr('x', function(d){
-            return treeXScale(this.parentNode.__data__.parent.x);
-        })
-        .attr('cx', function(d){
-            return treeXScale(this.parentNode.__data__.parent.x);
-        })
-        .attr('y', function(d){
-            return this.parentNode.__data__.parent.y;
-        })
-        .attr('transform', function(d){ return 'translate('+0+','+this.parentNode.__data__.parent.y + ')';});
-    
-    
-    //finish generating data points
-    new_data = new_data.append('shape');
-    new_data.append('appearance').append('material');
-    new_data.append('sphere')
-        // Add attributed for popover text
-        .attr('data-toggle', 'popover')
-        .attr('title', function(d) {return d.meta.name})
-        .attr('data-content', function(d) {return '<b>x:</b> ' + Math.round(d.x * 10000) / 10000 + '<br />' + '<b>y:</b> ' + Math.round(d.y * 10000) / 10000 + '<br />' + '<b>z:</b> ' + Math.round(d.z * 10000) / 10000 + '<br />'})
-        .attr('data-trigger', 'hover')
-        .attr('data-placement', 'bottom')
-        .attr('data-html', 'true');
-
-    // Add the popover behavior for cells
-    $(document).ready(function(){
-        $('[data-toggle="popover"]').popover();   
-    });
-
     //Collect highlight classes
     var picker_sel = document.getElementsByClassName('selhi');
     var picker_col = document.getElementsByClassName('hicolor');
@@ -588,16 +512,21 @@ function plotData( time_point, duration ) {
             colors.push(picker_col[i].value);
         }
     }
-    
-    //Coloring and code to highlight a specific lineage
+
+    //Get the data for this timepoint
+    var timepoint_data = csvdata[time_point % csvdata.length];
+    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
+    datapoints.exit().remove();
+    var cellnames = timePointCellNames(timepoint_data);
+
+    //Draw points with coloring and code to highlight a specific lineage
+    var transp = 0;
+    var pt_color_map = {};
+    var to_color;
     if(cells.length > 0){
-        var pt_color_map = {};
         function calc_highlights(d, elt){
             var pt_colors = [];
             for(i=0; i < cells.length; i++){
-//                if(ct_types[i] === 'cn' && isParentOf(d.meta, cells[i])){
-//                    pt_colors.push($.Color(colors[i]))
-//                }else if(cells[i].indexOf(d.name) > -1){
                 if(typeof cells[i] === 'string' && cells[i].indexOf(d.name) > -1){
                     pt_colors.push($.Color(colors[i]));
                 }else if(typeof cells[i] === 'object'){
@@ -634,31 +563,142 @@ function plotData( time_point, duration ) {
             }
             return elt;
         }
-        var showhide = document.getElementById('showhide-highlight').value;
-        var transp;
-        if(showhide.substr(0,4) === 'Show'){
-            transp = 1;
+//        var showhide = document.getElementById('showhide-highlight').value;
+//        if(showhide.substr(0,4) === 'Show'){
+//            transp = 1;
+//        }else{
+//            transp = 0.8;
+//        }
+//        datapoints.selectAll('shape appearance material')
+//            .attr('transparency', transp)
+//            .attr('diffuseColor', 'darkgrey');
+//        //color points
+//        var to_color = datapoints.select(function(d){return calc_highlights(d.meta, this);});
+//        to_color.selectAll('shape appearance material')
+//            .attr('transparency', 0)
+//            .attr('diffuseColor', function(d){return pt_color_map[d.meta.name];});
+//        to_color.selectAll('transform')
+//            .attr('scale', function(d){var ptrad = d.radius * 0.5; return [ptrad, ptrad, ptrad]});
+//        //color nodes
+//        visiblenodes.select(function(d) {return calc_highlights(d, this);})
+//            .selectAll('circle').attr('fill', function(d){
+//            return pt_color_map[d.name];
+//        });
+//    }else{
+//        datapoints.selectAll('shape appearance material')
+//            .attr('transparency', 0)
+//            .attr('diffuseColor', 'darkgrey');
+    }
+
+    // Draw a sphere at each x,y,z coordinate.
+    var new_data = datapoints.enter().append('transform')
+        .attr('translation', function(d){
+            if (d.pred == -1){
+                return x(d.x) + " " + y(d.y) + " " + z(d.z);
+            }else{
+                return x(d.pred.x) + " " + y(d.pred.y) + " " + z(d.pred.z);
+        }})
+        .attr('class', 'datapoint')
+        .attr('id', function(d){return d.meta.name})
+        .attr('scale', function(d){
+                var res;
+                if(cells.length > 0){
+                    res = calc_highlights(d.meta, this);
+                }else{
+                    res = true;
+                }
+                if(res){
+                    var ptrad = d.radius * 0.5; 
+                    return [ptrad, ptrad, ptrad];
+                }else{
+                    return [5, 5, 5];
+                }
+        });
+
+    var showhide = document.getElementById('showhide-highlight').value;
+    if(showhide.substr(0,4) === 'Show'){
+        transp = 1;
+    }
+    //finish generating data points
+    new_data = new_data.append('shape');
+    new_data.append('appearance').append('material')
+        .attr('transparency', function(d){
+            if(d.meta.name in pt_color_map){
+                return 0;
+            }else{
+                return transp;
+            }
+        })
+        .attr('diffuseColor', function(d){
+            if(d.meta.name in pt_color_map){
+                return pt_color_map[d.meta.name];
+            }else{
+                return 'steelblue';
+            }
+        });
+    new_data.append('sphere')
+        // Add attributed for popover text
+        .attr('data-toggle', 'popover')
+        .attr('title', function(d) {return d.meta.name})
+        .attr('data-content', function(d) {return '<b>x:</b> ' + Math.round(d.x * 10000) / 10000 + '<br />' + '<b>y:</b> ' + Math.round(d.y * 10000) / 10000 + '<br />' + '<b>z:</b> ' + Math.round(d.z * 10000) / 10000 + '<br />'})
+        .attr('data-trigger', 'hover')
+        .attr('data-placement', 'bottom')
+        .attr('data-html', 'true');
+
+    // Add the popover behavior for cells
+    $(document).ready(function(){
+        $('[data-toggle="popover"]').popover();   
+    });
+    
+    //use new_data to identify which nodes in the tree should be revealed
+    var allnodes = d3.selectAll('.node');
+    allnodes.selectAll('.node-circle').attr('style', 'visibility:hidden;');
+    var visiblenodes = allnodes.filter(function(d){
+        if(d.name === 'E' || d.name === 'MS'){
+            if(cellnames.indexOf('.'+d.name+'.') > -1){
+                return this;
+            }else{
+                return null;
+            }
         }else{
-            transp = 0.8;
+            if(cellnames.indexOf(d.name) > -1){
+                return this;
+            }else{
+                return null;
+            }
         }
-        datapoints.selectAll('shape appearance material')
-            .attr('transparency', transp)
-            .attr('diffuseColor', 'steelblue');
-        //color points
-        var to_color = datapoints.select(function(d){return calc_highlights(d.meta, this);});
-        to_color.selectAll('shape appearance material')
-            .attr('transparency', 0)
-            .attr('diffuseColor', function(d){return pt_color_map[d.meta.name];});
-        //color nodes
-        visiblenodes.select(function(d) {return calc_highlights(d, this);})
+    });
+    visiblenodes.selectAll('.node-circle')
+        .attr('style', 'visibility:visible')
+        .attr('fill', 'steelblue');
+//        .attr('fill', 'darkgrey')
+    
+    visiblenodes.select(function(d) {return calc_highlights(d, this);})
             .selectAll('circle').attr('fill', function(d){
             return pt_color_map[d.name];
         });
-    }else{
-        datapoints.selectAll('shape appearance material')
-            .attr('transparency', 0)
-            .attr('diffuseColor', 'steelblue');
-    }
+    var new_data_names = [];
+    new_data.each(function(d){
+        new_data_names.push(d.meta.name);
+    });
+    var newnodes = visiblenodes.filter(function(d){
+        if(new_data_names.indexOf(d.name) > -1){
+            return this;
+        }else{
+            return null;
+        }
+    });
+    var circ1 = newnodes.selectAll('circle')
+        .attr('x', function(d){
+            return treeXScale(this.parentNode.__data__.parent.x);
+        })
+        .attr('cx', function(d){
+            return treeXScale(this.parentNode.__data__.parent.x);
+        })
+        .attr('y', function(d){
+            return this.parentNode.__data__.parent.y;
+        })
+        .attr('transform', function(d){ return 'translate('+0+','+this.parentNode.__data__.parent.y + ')';});
 
     //transition points
     datapoints.transition().ease(ease).duration(duration)
