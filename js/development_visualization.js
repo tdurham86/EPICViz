@@ -483,113 +483,8 @@ function drawAxis( axisIndex, key, duration ) {
     scales[axisIndex] = scale;
 }
 
-// Update the data points (spheres) and stems.
-function plotData( time_point, duration ) {
-    if (!this.csvdata){
-     console.log("no rows to plot.");
-     return;
-    }
-
+function plot3DView(datapoints, pt_color_map, colors, cells){
     var x = scales[0], y = scales[1], z = scales[2];
-
-    //Collect highlight classes
-    var picker_sel = document.getElementsByClassName('selhi');
-    var picker_col = document.getElementsByClassName('hicolor');
-    var cells = [];
-    var colors = [];
-    var ct_types = [];
-    for(var i=0; i < picker_sel.length; i++){
-        var selected = picker_sel[i].value;
-        if(selected){
-            var sel_type = selected.substr(0, 2);
-            ct_types.push(sel_type);
-            var sel_val = selected.substr(2);
-            if(sel_type === 'cn'){
-                cells.push(cellLineageStr(sel_val));
-            }else {
-                cells.push(celltypes[sel_val]);
-            }
-            colors.push(picker_col[i].value);
-        }
-    }
-
-    //Get the data for this timepoint
-    var timepoint_data = csvdata[time_point % csvdata.length];
-    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
-    datapoints.exit().remove();
-    var cellnames = timePointCellNames(timepoint_data);
-
-    //Draw points with coloring and code to highlight a specific lineage
-    var transp = 0;
-    var pt_color_map = {};
-    var to_color;
-    if(cells.length > 0){
-        function calc_highlights(d, elt){
-            var pt_colors = [];
-            for(i=0; i < cells.length; i++){
-                if(typeof cells[i] === 'string' && cells[i].indexOf(d.name) > -1){
-                    pt_colors.push($.Color(colors[i]));
-                }else if(typeof cells[i] === 'object'){
-                    //find blastomere name
-                    var blastregex = /^(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/;
-                    var blastmatch = blastregex.exec(d.name);
-                    if(blastmatch === null){
-                        console.log('null blastmatch: ' + d.name);
-                        continue;
-                    }
-                    var blast = blastmatch[1];
-                    
-                    //find lineage suffix
-                    var linregex = /([aplrdv]+)$/;
-                    var linmatch = linregex.exec(d.name);
-                    if(linmatch === null){
-                        if(blast === d.name && d.name in cells[i] && cells[i][d.name].indexOf(d.name) > -1){
-                            pt_colors.push($.Color(colors[i]));
-                        }
-                        continue;
-                    }
-                    var linsuffix = linmatch[1];
-                    if(blast in cells[i] && cells[i][blast].indexOf(linsuffix) > -1){
-                        pt_colors.push($.Color(colors[i]));
-                    }
-                }
-            }
-            if(pt_colors.length === 0){
-                return null;
-            }else if(pt_colors.length === 1){
-                pt_color_map[d.name] = pt_colors[0].toHexString();
-            }else{
-                pt_color_map[d.name] = Color_mixer.mix(pt_colors).toHexString();
-            }
-            return elt;
-        }
-//        var showhide = document.getElementById('showhide-highlight').value;
-//        if(showhide.substr(0,4) === 'Show'){
-//            transp = 1;
-//        }else{
-//            transp = 0.8;
-//        }
-//        datapoints.selectAll('shape appearance material')
-//            .attr('transparency', transp)
-//            .attr('diffuseColor', 'darkgrey');
-//        //color points
-//        var to_color = datapoints.select(function(d){return calc_highlights(d.meta, this);});
-//        to_color.selectAll('shape appearance material')
-//            .attr('transparency', 0)
-//            .attr('diffuseColor', function(d){return pt_color_map[d.meta.name];});
-//        to_color.selectAll('transform')
-//            .attr('scale', function(d){var ptrad = d.radius * 0.5; return [ptrad, ptrad, ptrad]});
-//        //color nodes
-//        visiblenodes.select(function(d) {return calc_highlights(d, this);})
-//            .selectAll('circle').attr('fill', function(d){
-//            return pt_color_map[d.name];
-//        });
-//    }else{
-//        datapoints.selectAll('shape appearance material')
-//            .attr('transparency', 0)
-//            .attr('diffuseColor', 'darkgrey');
-    }
-
     // Draw a sphere at each x,y,z coordinate.
     var new_data = datapoints.enter().append('transform')
         .attr('translation', function(d){
@@ -603,7 +498,7 @@ function plotData( time_point, duration ) {
         .attr('scale', function(d){
                 var res;
                 if(cells.length > 0){
-                    res = calc_highlights(d.meta, this);
+                    res = calc_highlights(d.meta, this, pt_color_map, colors, cells);
                 }else{
                     res = true;
                 }
@@ -616,6 +511,7 @@ function plotData( time_point, duration ) {
         });
 
     var showhide = document.getElementById('showhide-highlight').value;
+    var transp = 0;
     if(showhide.substr(0,4) === 'Show'){
         transp = 1;
     }
@@ -649,8 +545,52 @@ function plotData( time_point, duration ) {
     $(document).ready(function(){
         $('[data-toggle="popover"]').popover();   
     });
-    
-    //use new_data to identify which nodes in the tree should be revealed
+    return new_data;
+}
+
+//Calculate whether a data point should be highlighted and if so what color(s)
+//it should get
+function calc_highlights(d, elt, pt_color_map, colors, cells){
+    var pt_colors = [];
+    for(i=0; i < cells.length; i++){
+        if(typeof cells[i] === 'string' && cells[i].indexOf(d.name) > -1){
+            pt_colors.push($.Color(colors[i]));
+        }else if(typeof cells[i] === 'object'){
+            //find blastomere name
+            var blastregex = /^(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/;
+            var blastmatch = blastregex.exec(d.name);
+            if(blastmatch === null){
+                console.log('null blastmatch: ' + d.name);
+                continue;
+            }
+            var blast = blastmatch[1];
+            
+            //find lineage suffix
+            var linregex = /([aplrdv]+)$/;
+            var linmatch = linregex.exec(d.name);
+            if(linmatch === null){
+                if(blast === d.name && d.name in cells[i] && cells[i][d.name].indexOf(d.name) > -1){
+                    pt_colors.push($.Color(colors[i]));
+                }
+                continue;
+            }
+            var linsuffix = linmatch[1];
+            if(blast in cells[i] && cells[i][blast].indexOf(linsuffix) > -1){
+                pt_colors.push($.Color(colors[i]));
+            }
+        }
+    }
+    if(pt_colors.length === 0){
+        return null;
+    }else if(pt_colors.length === 1){
+        pt_color_map[d.name] = pt_colors[0].toHexString();
+    }else{
+        pt_color_map[d.name] = Color_mixer.mix(pt_colors).toHexString();
+    }
+    return elt;
+}
+
+function plotLineageTree(cellnames, new_data_names, pt_color_map){
     var allnodes = d3.selectAll('.node');
     allnodes.selectAll('.node-circle').attr('style', 'visibility:hidden;');
     var visiblenodes = allnodes.filter(function(d){
@@ -670,17 +610,15 @@ function plotData( time_point, duration ) {
     });
     visiblenodes.selectAll('.node-circle')
         .attr('style', 'visibility:visible')
-        .attr('fill', 'steelblue');
-//        .attr('fill', 'darkgrey')
+        .attr('fill', defaultColor);
     
-    visiblenodes.select(function(d) {return calc_highlights(d, this);})
-            .selectAll('circle').attr('fill', function(d){
-            return pt_color_map[d.name];
+    visiblenodes.selectAll('circle').attr('fill', function(d){
+            if(d.name in pt_color_map){
+                return pt_color_map[d.name];
+            }else{
+                return defaultColor;
+            }
         });
-    var new_data_names = [];
-    new_data.each(function(d){
-        new_data_names.push(d.meta.name);
-    });
     var newnodes = visiblenodes.filter(function(d){
         if(new_data_names.indexOf(d.name) > -1){
             return this;
@@ -699,8 +637,63 @@ function plotData( time_point, duration ) {
             return this.parentNode.__data__.parent.y;
         })
         .attr('transform', function(d){ return 'translate('+0+','+this.parentNode.__data__.parent.y + ')';});
+    return newnodes;
+}
+
+var defaultColor = 'steelblue';
+
+// Update the data points (spheres) and stems.
+function plotData( time_point, duration ) {
+    if (!this.csvdata){
+     console.log("no rows to plot.");
+     return;
+    }
+
+    //Collect highlight classes
+    var picker_sel = document.getElementsByClassName('selhi');
+    var picker_col = document.getElementsByClassName('hicolor');
+    var cells = [];
+    var colors = [];
+//    var ct_types = [];
+    for(var i=0; i < picker_sel.length; i++){
+        var selected = picker_sel[i].value;
+        if(selected){
+            var sel_type = selected.substr(0, 2);
+//            ct_types.push(sel_type);
+            var sel_val = selected.substr(2);
+            if(sel_type === 'cn'){
+                cells.push(cellLineageStr(sel_val));
+            }else {
+                cells.push(celltypes[sel_val]);
+            }
+            colors.push(picker_col[i].value);
+        }
+    }
+
+    //Get the data for this timepoint
+    var timepoint_data = csvdata[time_point % csvdata.length];
+    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
+    datapoints.exit().remove();
+    var cellnames = timePointCellNames(timepoint_data);
+
+    //Draw points with coloring and code to highlight a specific lineage
+    var transp = 0;
+    var pt_color_map = {};
+    
+    //plot data in 3D view
+    var new_data = plot3DView(datapoints, pt_color_map, colors, cells)
+    
+    //use new_data to identify which nodes in the tree should be revealed
+    var new_data_names = [];
+    new_data.each(function(d){
+        new_data_names.push(d.meta.name);
+    });
+    
+    //plot the lineage tree
+    var newnodes = plotLineageTree(cellnames, new_data_names, pt_color_map);
 
     //transition points
+    var x = scales[0], y = scales[1], z = scales[2];
     datapoints.transition().ease(ease).duration(duration)
         .attr("translation", function(row) {
             return x(row.x) + " " + y(row.y) + " " + z(row.z);
