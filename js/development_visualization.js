@@ -15,16 +15,16 @@ GLOBAL VARIABLES
 var csvdata = [];
 
 //mapping of cell name to cell metadata
-var cellmap = {P0: {name:'P0', parent:-1}};
-cellmap.AB = {name:'AB', parent: cellmap.P0, children: []};
-cellmap.P1 = {name:'P1', parent: cellmap.P0, children: []};
-cellmap.P0.children = [cellmap.AB, cellmap.P1];
+var cellmap = {P0: {name:'P0', parent:-1, children: []}};
+//cellmap.AB = {name:'AB', parent: cellmap.P0, children: []};
+//cellmap.P1 = {name:'P1', parent: cellmap.P0, children: []};
+//cellmap.P0.children = [cellmap.AB, cellmap.P1];
 
 
 //contains objects for progenitor cells preceding time series data
 var P0 = {meta: cellmap.P0, pred: -1, succ: []};
-var P1 = {meta: cellmap.P1, pred: P0, succ: []};
-var AB = {meta: cellmap.AB, pred: P0, succ: []};
+//var P1 = {meta: cellmap.P1, pred: P0, succ: []};
+//var AB = {meta: cellmap.AB, pred: P0, succ: []};
 
 //maps cell name to an index into csvdata for each time point
 var namemap = [];
@@ -375,8 +375,9 @@ function loadCellTypeMap(){
             // implemented
 //            var root = getTreeRootFromTimepoints(csvdata, csvdata.length - 1);
 //            plotCellLineageTree(root);
-            plotCellLineageTree(cellmap.P0);
-            plotData(0, 5);
+        initializePlot();
+        plotCellLineageTree(cellmap.P0);
+        plotData(0, 5);
     });
 }
 
@@ -711,40 +712,31 @@ HELPER FUNCTIONS FOR DATA PARSING AND INITIALIZATION
 ****************************************************************/
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
-    var filtered_rows = [], parsed_data = [];
-    var row;
-    var xmean = 0, ymean = 0, zmean = 0;
-    for (var i=0; i < rows.length; i++){
+    var tp = 1;
+    var tpdata = []
+    for (var i=1; i < rows.length; i++){
         row = rows[i];
-        if(row[9].trim()){
-            var x = +row[5], y = +row[6], z = +row[7] * 11.1, r = +row[8];
-            xmean += x;
-            ymean += y;
-            zmean += z;
-            filtered_rows.push([x, y, z, r, row[9]]);
+        if(+row[1] != tp){
+            csvdata[tp - 1] = tpdata;
+            tp = +row[1];
+            tpdata = [];
         }
-    }
-
-    xmean = xmean/filtered_rows.length;
-    ymean = ymean/filtered_rows.length;
-    zmean = zmean/filtered_rows.length;
-    for (var i=0; i < filtered_rows.length; i++){
-        row = filtered_rows[i];
-        parsed_data.push({'x': row[0] - xmean,
-                          'y': row[1] - ymean,
-                          'z': row[2] - zmean,
-                          'radius': row[3],
-                          'pred': -1,
-                          'succ': [],
-                          'meta':{'name': row[4].trim().replace(/\s/g, '_'),
-                                  'parent': -1,
-                                  'children': []}
+        tpdata.push({'x': +row[2],
+                     'y': +row[3],
+                     'z': +row[4] * 11.1,
+                     'radius': +row[5],
+                     'pred': -1,
+                     'succ': [],
+                     'meta':{'name': row[0].trim().replace(/\s/g, '_'),
+                             'parent': -1,
+                             'children': []}
         });
     }
-    return parsed_data;
+    csvdata[tp - 1] = tpdata;
+    return;
 }
 
-function loadTimePoints(idx){
+function loadTimePoints(){
 //    if (idx == max){
 //        ready = true;
 //
@@ -754,53 +746,61 @@ function loadTimePoints(idx){
 //        return;
 //    }
 
-    var basename = 't' + ("000" + (idx + 1)).substr(-3) + '-nuclei';
-    var url = 'http://localhost:2255/timepoints/nuclei/' + basename;
+//    var basename = 't' + ("000" + (idx + 1)).substr(-3) + '-nuclei';
+    var url = 'http://localhost:2255/ImageExpressionTable.timesort.fixed.normalized.1000.csv';
     d3.text(url, function(tpdata){
-        if (!tpdata){
-            ready = true;
-            d3.select('#timerange').attr('max', csvdata.length - 1);
-            //load cell type data
-            loadCellTypeMap();
-            return;
-        }
-        csvdata[idx] = parseCSV(tpdata);
-        namemap[idx] = {};
-        for(var i = 0; i < this.csvdata[idx].length; i++){
-            //make entry in namemap for this cell at this timepoint
-            var cell = csvdata[idx][i];
-            namemap[idx][cell.meta.name] = i;
-            //get predecessor in previous time point
-            var pred_idx = namemap[idx-1][cell.meta.name];
-            if(typeof pred_idx === 'undefined'){
-                var pred_name;
-                //blastomere names are not systematic, so we have to look them up
-                if(cell.meta.name in blastpred){
-                    pred_name = blastpred[cell.meta.name];
-                }else{
-                    pred_name = cell.meta.name.substr(0, cell.meta.name.length - 1);
+        parseCSV(tpdata);
+        for(var idx = 0; idx < csvdata.length; idx++){
+            namemap[idx] = {};
+            for(var i = 0; i < csvdata[idx].length; i++){
+                //make entry in namemap for this cell at this timepoint
+                var cell = csvdata[idx][i];
+                namemap[idx][cell.meta.name] = i;
+                //get predecessor in previous time point
+                var pred_idx;
+                if(idx > 0){
+                    pred_idx = namemap[idx-1][cell.meta.name];
                 }
-                pred_idx = namemap[idx-1][pred_name];
-            }
-            if(typeof pred_idx == 'undefined'){
-                cell.pred = -1;
-                cellmap[cell.meta.name] = cell.meta;
-            }else{
-                //link cell to time point data structure
-                cell.pred = csvdata[idx-1][pred_idx];
-                cell.pred.succ.push(cell);
-                //add entries to lineage data structure (if it's not there already)
-                if(!(cell.meta.name in cellmap)){
-//                    console.log(cell.meta.name);
-                    cell.meta.parent = cellmap[cell.pred.meta.name];
-                    cell.meta.parent.children.push(cell.meta);
+                if(typeof pred_idx === 'undefined'){
+                    var pred_name;
+                    //blastomere names are not systematic, so we have to look them up
+                    if(cell.meta.name in blastpred){
+                        pred_name = blastpred[cell.meta.name];
+                    }else{
+                        pred_name = cell.meta.name.substr(0, cell.meta.name.length - 1);
+                    }
+                    if(idx > 0){
+                        pred_idx = namemap[idx-1][pred_name];
+                    }
+                }
+                if(typeof pred_idx === 'undefined'){
+                    cell.pred = -1;
+                    if(pred_name){
+                        cell.meta.parent = cellmap[pred_name];
+                        cell.meta.parent.children.push(cell.meta);
+                    }
                     cellmap[cell.meta.name] = cell.meta;
                 }else{
-                    cell.meta = cellmap[cell.meta.name];
+                    //link cell to time point data structure
+                    cell.pred = csvdata[idx-1][pred_idx];
+                    cell.pred.succ.push(cell);
+                    //add entries to lineage data structure (if it's not there already)
+                    if(!(cell.meta.name in cellmap)){
+//                    console.log(cell.meta.name);
+                        cell.meta.parent = cellmap[cell.pred.meta.name];
+                        cell.meta.parent.children.push(cell.meta);
+                        cellmap[cell.meta.name] = cell.meta;
+                    }else{
+                        cell.meta = cellmap[cell.meta.name];
+                    }
                 }
             }
         }
-        loadTimePoints(idx + 1);
+        ready = true;
+        d3.select('#timerange').attr('max', csvdata.length - 1);
+        //load cell type data
+        loadCellTypeMap();
+        return;
     });
 }
 
@@ -849,7 +849,7 @@ function hideControls() {
 }
 
 function initializeEmbryo() {
-    d3.text('http://localhost:2255/timepoints/nuclei/t001-nuclei', function(t0data){
+/*    d3.text('http://localhost:2255/timepoints/nuclei/t001-nuclei', function(t0data){
         csvdata[0] = parseCSV(t0data);
         namemap[0] = {};
         for(var i = 0; i < csvdata[0].length; i++){
@@ -880,7 +880,6 @@ function initializeEmbryo() {
         console.log("Got T0 data");
 
         console.log("Init Plot");
-        initializePlot();
 //        initializeLineagePicker();
 //        console.log("Plot data")
         console.log("Load Time Point data");
@@ -893,6 +892,8 @@ function initializeEmbryo() {
 
 //        setInterval( development, 1000 );
     });
+*/
+    loadTimePoints();
   }
 
 function development() {
