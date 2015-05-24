@@ -12,6 +12,7 @@ GLOBAL VARIABLES
 ****************************************************************/
 //global highlighting variables
 var defaultColor='steelblue';
+var selectionColor='#FFFF00';
 var highlights = false;
 
 //contains the data for each timepoint/cell
@@ -19,7 +20,7 @@ var csvdata = [];
 
 //mapping of cell name to cell metadata
 var cellmap = {P0: {name:'P0', parent:-1, children: [], selected: false,
-                    color: defaultColor}};
+                    userselected:false, color: defaultColor}};
 //cellmap.AB = {name:'AB', parent: cellmap.P0, children: []};
 //cellmap.P1 = {name:'P1', parent: cellmap.P0, children: []};
 //cellmap.P0.children = [cellmap.AB, cellmap.P1];
@@ -95,7 +96,7 @@ function makeLPDivTemplate(){
         .attr('class', 'selhi')
         .attr('id', id)
         .attr('data-placeholder', 'Cell Lineage or Cell Type...')
-        .attr('onchange', 'updateCellColors(); updatePlot()');
+        .attr('onchange', 'updateCellColors(); updateCellSize(); updatePlot()');
 //        .attr('size', 15)
     select.append('option').attr('value', '');
     var optgroup = select.append('optgroup')
@@ -144,13 +145,13 @@ function makeLPDivTemplate(){
         .attr('value', '#ff0000')
         .attr('class', 'hicolor')
         .attr('id', 'hicolor'+lpidx)
-        .attr('onchange', 'updateCellColors(); updatePlot()');
+        .attr('onchange', 'updateCellColors(); updateCellSize(); updatePlot();');
     lpsubdiv.append('input')
         .attr('type', 'button')
         .attr('value', '-')
         .attr('class', 'removehi')
         .attr('id', 'removehi'+lpidx)
-        .attr('onclick', 'removeLPDiv(event, this); updateCellColors(); updatePlot();');
+        .attr('onclick', 'removeLPDiv(event, this); updateCellColors(); updateCellSize(); updatePlot();');
     lpidx++;
 }
 
@@ -188,6 +189,19 @@ function cloneLPDiv(){
     }
 }
 
+function showHideHighlights(showhide){
+    //here, show means hide and hide means show
+    var datapoints = scene.selectAll('.datapoint')
+    if(showhide.substr(0,4) === 'Show'){
+        datapoints.filter(function(d){return d.meta.selected ? null : this;})
+            .selectAll('shape appearance material')
+            .attr('transparency', '1');
+    }else{
+        datapoints.selectAll('shape appearance material')
+            .attr('transparency', '0');
+    }
+}
+
 function initializeLineagePicker(){
     d3.select('#highlighting')
         .append('div').attr('class', 'lineage-pickers');
@@ -204,7 +218,7 @@ function initializeLineagePicker(){
         .attr('value', 'Hide Non-Highlighted')
         .attr('class', 'add-highlight')
         .attr('id', 'showhide-highlight')
-        .attr('onclick', '(function(e, obj) {obj.value = obj.value.substr(0,4) === "Hide" ? "Show Non-Highlighted" : "Hide Non-Highlighted"; updatePlot();})(event, this)');
+        .attr('onclick', '(function(e, obj) {obj.value = obj.value.substr(0,4) === "Hide" ? "Show Non-Highlighted" : "Hide Non-Highlighted"; showHideHighlights(obj.value);})(event, this)');
 }
 
 //check to see if name is the name of a parent of object d
@@ -239,6 +253,7 @@ function timePointCellNames(timepoint){
     var timepoint_str = $.map(timepoint, function(elt, idx){return elt.meta.name;}).join('.');
     return cellNamesStr('.'+timepoint_str);
 }
+
 function cellNamesStr(cellstr){
     var regex = /\.(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/g;
     var blast_list = cellstr.match(regex);
@@ -304,11 +319,20 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
 }
 
 function updateCellColors(){
+    setCellColors();
+    d3.selectAll('.dp_sphere appearance material')
+        .attr('diffuseColor', function(d){return d.meta.color;});
+    d3.selectAll('.node-circle')
+        .attr('fill', function(d){return d.color;});
+}
+
+function setCellColors(){
     //Collect highlight classes
     var picker_sel = document.getElementsByClassName('selhi');
     var picker_col = document.getElementsByClassName('hicolor');
     var selections = [];
     var colors = [];
+    highlights = false;
     for(var i=0; i < picker_sel.length; i++){
         var selected = picker_sel[i].value;
         if(selected){
@@ -321,8 +345,6 @@ function updateCellColors(){
                 selections.push(celltypes[sel_val]);
             }
             colors.push(picker_col[i].value);
-        }else{
-            highlights = false;
         }
     }
     //Calculate whether a data point should be highlighted and if so what color(s)
@@ -378,6 +400,24 @@ function updateCellColors(){
     }
 }
 
+function updateCellSize(){
+    //find cells that are selected and are small, or cells that aren't selected 
+    //and are big, erase them, and redraw
+    var to_update = d3.selectAll('.datapoint')
+        .filter(function(d){
+            var scale = +$(this).attr('scale').split(',')[0];
+            if((d.meta.selected && scale == 5) || //small and should be big
+               (!d.meta.selected && scale > 5) || //big and should be small
+               (!highlights && scale == 5)){      //reset any small to big
+                   return this;
+            }else{
+                return null;
+            }
+        });
+    to_update.remove();
+    plot3DView(to_update);
+}
+
 //update the plots if the highlight options are changed when the development
 //animation is not playing.
 function updatePlot(){
@@ -387,9 +427,9 @@ function updatePlot(){
         playpause = true;
         playpausedev();
     }
-    var timepoint_data = csvdata[timepoint % csvdata.length];
-    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
-    datapoints.remove();
+//    var timepoint_data = csvdata[timepoint % csvdata.length];
+//    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
+//    datapoints.remove();
     plotData(timepoint, 0);
     if(playpause){
         playpausedev();
@@ -462,6 +502,55 @@ function loadCellTypeMap(){
         plotCellLineageTree(cellmap.P0);
         plotData(0, 5);
     });
+}
+
+/****************************************************************
+ USER NODE SELECTION
+****************************************************************/
+function clickSelect(cellname){
+    cellmap[cellname].userselected = !cellmap[cellname].userselected;
+    var selection = [cellname];
+    userSelectPoints(selection);
+}
+
+//This function adds outlines to highlight user-selected cells
+function userSelectPoints(selection){
+    //3Dplot
+    d3.selectAll('.datapoint')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+        .selectAll('billboard').remove();
+    var sdata = d3.selectAll('.datapoint')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;});
+    var user_highlight = sdata.append('billboard').attr('axisOfRotation', '0 0 0').append('shape');
+    var appearance = user_highlight.append('appearance');
+    appearance.append('material')
+        .attr("emissiveColor", selectionColor)
+        .attr("diffuseColor", selectionColor);
+    user_highlight.append('Disk2D')
+        .attr('innerRadius', '1')
+        .attr('outerRadius', '1.4')
+        .attr('solid', 'true')
+        .attr('ccw', 'true')
+        .attr('useGeoCache', 'true')
+        .attr('lit', 'true')
+        .attr('subdivision', '32');
+
+    //lineage tree
+    d3.selectAll('.node')
+        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
+        .selectAll('.node-select').remove();
+    var snode = d3.selectAll('.node')
+        .filter(function(d){return selection.indexOf(d.name) > -1 && d.userselected ? this : null;})
+        .append('circle')
+        .attr('class', 'node-select')
+        .attr("r", 8)
+        .attr("fill", "none")
+        .attr('stroke', selectionColor)
+        .attr('stroke-width', '2')
+        .attr("transform", function(d) { 
+            return "translate(" + 0 + "," + d.y + ")"; }) // 0 is required for x to make edges match up with nodes
+        .call(position_node)
+        .call(scale_radius, 6, 0.5);
 }
 
 /****************************************************************
@@ -567,10 +656,10 @@ function drawAxis( axisIndex, key, duration ) {
     scales[axisIndex] = scale;
 }
 
-function plot3DView(datapoints){
+function plot3DView(to_plot){
     var x = scales[0], y = scales[1], z = scales[2];
     // Draw a sphere at each x,y,z coordinate.
-    var new_data = datapoints.enter().append('transform')
+    var new_data = to_plot.append('transform')
         .attr('translation', function(d){
             if (d.pred == -1){
                 return x(d.x) + " " + y(d.y) + " " + z(d.z);
@@ -586,7 +675,8 @@ function plot3DView(datapoints){
                 }else{
                     return [5, 5, 5];
                 }
-        });
+        })
+        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)');
 
     var showhide = document.getElementById('showhide-highlight').value;
     var transp = 0;
@@ -594,7 +684,8 @@ function plot3DView(datapoints){
         transp = 1;
     }
     //finish generating data points
-    new_data = new_data.append('shape');
+    new_data = new_data.append('shape')
+        .attr('class', 'dp_sphere');
     new_data.append('appearance').append('material')
         .attr('transparency', function(d){
             if(d.meta.selected || !highlights){
@@ -619,6 +710,12 @@ function plot3DView(datapoints){
     $(document).ready(function(){
         $('[data-toggle="popover"]').popover();   
     });
+    
+    //make sure that these new/updated points have the correct user highlighting
+    var new_data_names = [];
+    new_data.select(function(d){new_data_names.push(d.meta.name); return null;});
+    userSelectPoints(new_data_names);
+
     return new_data;
 }
 
@@ -642,11 +739,35 @@ function plotLineageTree(cellnames, new_data_names){
     });
     visiblenodes.selectAll('.node-circle')
         .attr('style', 'visibility:visible')
-        .attr('fill', defaultColor);
-    
-    visiblenodes.selectAll('circle').attr('fill', function(d){
-            return d.color;
-        });
+//        .attr('fill', defaultColor);
+        .attr('fill', function(d){return d.color;});
+
+//    visiblenodes.selectAll('circle')
+//        .attr('fill', function(d){
+//            return d.color;
+//        });
+//    visiblenodes.selectAll('circle')
+//        .attr('stroke', 'black')
+//        .attr('stroke-width', '1');
+
+//    visiblenodes.selectAll('.node-select').remove();
+//    visiblenodes.filter(function(d){return d.userselected ? this : null;})
+//        .append('circle')
+//          .attr('class', 'node-select')
+//          .attr("r", 8)
+//          .attr("fill", "none")
+//          .attr('stroke', selectionColor)
+//          .attr('stroke-width', '2')
+//          .attr("transform", function(d) { 
+//            return "translate(" + 0 + "," + d.y + ")"; }) // 0 is required for x to make edges match up with nodes
+//          .call(position_node)
+//          .call(scale_radius, 6, 0.5);
+
+//THIS WORKS
+//    visiblenodes.selectAll('circle')
+//        .attr('stroke', function(d){return d.userselected ? selectionColor : 'black';})
+//        .attr('stroke-width', function(d){return d.userselected ? '3' : '1';});
+
     var newnodes = visiblenodes.filter(function(d){
         if(new_data_names.indexOf(d.name) > -1){
             return this;
@@ -686,7 +807,7 @@ function plotData( time_point, duration ) {
     var pt_color_map = {};
 
     //plot data in 3D view
-    var new_data = plot3DView(datapoints)
+    var new_data = plot3DView(datapoints.enter())
 
     //use new_data to identify which nodes in the tree should be revealed
     var new_data_names = [];
@@ -735,6 +856,7 @@ function parseCSV(csvdata_in) {
                              'parent': -1,
                              'children': [],
                              'selected':false,
+                             'userselected':false,
                              'color':defaultColor}
         });
     }
@@ -873,11 +995,36 @@ function updatetime() {
 /****************************************************************
 HELPER FUNCTIONS FOR LINEAGE TREE PLOTTING
 ****************************************************************/
+var width = 2000;
+function position_node(node) {
+    node.attr("cx", function(d) {return treeXScale(d.x);})
+        .attr("cx0", function(d) {return treeXScale(d.x);})
+        .attr("x", function(d) {return treeXScale(d.x);})
+        .attr("x0", function(d) {return treeXScale(d.x);})
+        .attr("y", function(d) {return d.y;})
+        .attr("y0", function(d) {return d.y;});
+        //.attr("cy", function(d) { return yScale(y(d)); }) // TODO commenting this out made tree height issues go away
+        //.attr("r", function(d) { return radiusScale(radius(d)); });
+}
+
+function scale_radius(circle, maxCircleRadius, minCircleRadius) {
+//    var maxCircleRadius = 8,
+//    minCircleRadius = 2.5;
+
+    circle.attr("r", function(d) {
+        var currentPosition = treeXScale(d.x)
+        if (d.depth <= 2) { 
+            return maxCircleRadius
+        } else {
+            return Math.max(maxCircleRadius * (-4/Math.pow(width, 2) * Math.pow(currentPosition, 2) + 4 / width * currentPosition), minCircleRadius)
+        } 
+    });
+  }
+
 function plotCellLineageTree(root) {
 
   var margin = {top: 10, right: 10, bottom: 10, left: 10},
   height = 700 - margin.top - margin.bottom;
-  var width = 2000;
 
   var tree_div = d3.select("#divPlot")
     .append('div')
@@ -910,7 +1057,10 @@ function plotCellLineageTree(root) {
     node.call(position_node);
     link.call(position_links);
     text.call(position_text);
-    node.call(scale_radius);
+    node.call(scale_radius, 8, 2.5);
+    var selectednodes = d3.selectAll('.node-select')
+        .call(position_node)
+        .call(scale_radius, 6, 0.5);
   });
 
   /****************************************************************
@@ -959,8 +1109,10 @@ function plotCellLineageTree(root) {
     .attr("class", "nodes")
     .selectAll(".node")
       .data(nodes, function(d) { return d.id || (d.id = ++i); })
-        .enter().append("g").
-        attr("class", "node")
+        .enter().append("g")
+        .attr("class", "node")
+//        .attr('onclick', 'clickSelect(this.__data__.name); updatePlot();')
+        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.name);})(event, this)')
         .append('circle')
           .attr('class', 'node-circle')
           .attr("r", 10)
@@ -968,7 +1120,7 @@ function plotCellLineageTree(root) {
           .attr("transform", function(d) { 
             return "translate(" + 0 + "," + d.y + ")"; }) // 0 is required for x to make edges match up with nodes
           .call(position_node)
-          .call(scale_radius)
+          .call(scale_radius, 8, 2.5)
 
   // Add text labels to each node
   var text = svg.selectAll(".node").append('text')
@@ -992,18 +1144,6 @@ function plotCellLineageTree(root) {
 
     // If element is within 100 px of either side and at a depth greater than 2, return TRUE
     return (currentPosition < 250 || currentPosition > width - 250) && element.depth > 2
-  }
-
-  function position_node(node) {
-    node 
-      .attr("cx", function(d) {return xScale(d.x);})
-      .attr("cx0", function(d) {return xScale(d.x);})
-      .attr("x", function(d) {return xScale(d.x);})
-      .attr("x0", function(d) {return xScale(d.x);})
-      .attr("y", function(d) {return d.y;})
-      .attr("y0", function(d) {return d.y;});
-        //.attr("cy", function(d) { return yScale(y(d)); }) // TODO commenting this out made tree height issues go away
-        //.attr("r", function(d) { return radiusScale(radius(d)); });
   }
 
   function position_text(text) {
@@ -1030,22 +1170,6 @@ function plotCellLineageTree(root) {
 
         //.attr("cy", function(d) { return yScale(y(d)); }) // TODO commenting this out made tree height issues go away
         //.attr("r", function(d) { return radiusScale(radius(d)); });
-  }
-
-  function scale_radius(circle) {
-    var maxCircleRadius = 8,
-    minCircleRadius = 2.5;
-
-    circle
-      .attr("r", function(d) {
-        var currentPosition = xScale(d.x)
-
-        if (d.depth <= 2) { 
-          return maxCircleRadius
-        } else {
-          return Math.max(maxCircleRadius * (-4/Math.pow(width, 2) * Math.pow(currentPosition, 2) + 4 / width * currentPosition), minCircleRadius)
-        } 
-      });
   }
 
   function position_links(link) {
