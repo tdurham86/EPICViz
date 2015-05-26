@@ -73,6 +73,10 @@ var axisKeys = ["x", "y", "z"];
 
 var load_idx = 0;
 
+// Small multiples variables
+var small_multiples_scale = null;
+var small_multiples_y = null;
+
 //variables for speed dropdown
 var speedarray = ["slow", "medium", "fast"];
 var options = [0,1,2];
@@ -499,6 +503,7 @@ function loadCellTypeMap(){
 //            var root = getTreeRootFromTimepoints(csvdata, csvdata.length - 1);
 //            plotCellLineageTree(root);
         initializePlot();
+        initializeSmallMultiples();
         plotCellLineageTree(cellmap.P0);
         plotData(0, 5);
     });
@@ -719,6 +724,121 @@ function plot3DView(to_plot){
     return new_data;
 }
 
+
+function initializeSmallMultiples() {
+    var width = 100
+      , height = 100;
+
+    small_multiples_scale = d3.scale.linear()
+              .domain([-300, 300])
+              .range([0, width]);
+
+ 
+    // Make the axes for the x-y chart
+    var xyChart = d3.select('#divPlot')
+    .append('svg:svg')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('class', 'small_multiples_chart')
+    .attr('id', 'xyChart')
+
+    var main = xyChart.append('g')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('class', 'main')   
+
+    var g = main.append("svg:g")
+        .attr('id', 'xy_data_points');
+
+
+    // Make the axes for the x-z chart
+    var xzChart = d3.select('#divPlot')
+    .append('svg:svg')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('class', 'small_multiples_chart')
+    .attr('id', 'xzChart')
+
+    var main = xzChart.append('g')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('class', 'main')   
+
+    var g = main.append("svg:g")
+        .attr('id', 'xz_data_points');
+
+    // Make the axes for the x-z chart
+    var yzChart = d3.select('#divPlot')
+    .append('svg:svg')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('class', 'small_multiples_chart')
+    .attr('id', 'yzChart')
+
+    var main = yzChart.append('g')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('class', 'main')   
+
+    var g = main.append("svg:g")
+        .attr('id', 'yz_data_points');
+
+}
+
+function plotXYSmallMultiple(timepoint_data) { 
+    timepoint_data.append("svg:circle")
+        .attr('class', 'small_multiples_datapoint')
+        .attr('id', function(d){return d.meta.name})
+        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
+        .attr("cx", function (d) { return small_multiples_scale(d.x); } )
+        .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
+        .attr("r", function(d) {
+            if(d.meta.selected || !highlights){
+                return d.radius/15;
+            }else{
+                return  d.radius/25;
+            }
+        })
+        .attr("fill", function (d) { return d.meta.color; } )
+        .attr('opacity', 0.8);
+}
+
+function plotXZSmallMultiple(timepoint_data) { 
+    timepoint_data.append("svg:circle")
+        .attr('class', 'small_multiples_datapoint')
+        .attr('id', function(d){return d.meta.name})
+        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
+        .attr("cx", function (d) { return small_multiples_scale(d.z); } )
+        .attr("cy", function (d) { return small_multiples_scale(d.x); } )
+        .attr("r", function(d) {
+            if(d.meta.selected || !highlights){
+                return d.radius/15;
+            }else{
+                return  d.radius/25;
+            }
+        })
+        .attr("fill", function (d) { return d.meta.color; } )
+        .attr('opacity', 0.8);
+}
+
+function plotYZSmallMultiple(timepoint_data) { 
+    timepoint_data.append("svg:circle")
+        .attr('class', 'small_multiples_datapoint')
+        .attr('id', function(d){return d.meta.name})
+        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
+        .attr("cx", function (d) { return small_multiples_scale(d.z); } )
+        .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
+        .attr("r", function(d) {
+            if(d.meta.selected || !highlights){
+                return d.radius/15;
+            }else{
+                return  d.radius/25;
+            }
+        })
+        .attr("fill", function (d) {return d.meta.color; } )
+        .attr('opacity', 0.8);
+}
+
 function plotLineageTree(cellnames, new_data_names){
     var allnodes = d3.selectAll('.node');
     allnodes.selectAll('.node-circle').attr('style', 'visibility:hidden;');
@@ -802,12 +922,26 @@ function plotData( time_point, duration ) {
     datapoints.exit().remove();
     var cellnames = timePointCellNames(timepoint_data);
 
+    // Get small multiples data
+    var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xy';});
+    small_multiples_datapoints_xy.exit().remove();
+    plotXYSmallMultiple(small_multiples_datapoints_xy.enter());
+
+    var small_multiples_datapoints_xz = d3.select('#xz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xz';});
+    small_multiples_datapoints_xz.exit().remove();
+    plotXZSmallMultiple(small_multiples_datapoints_xz.enter());
+
+    var small_multiples_datapoints_yz = d3.select('#yz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_yz';});
+    small_multiples_datapoints_yz.exit().remove();
+    plotYZSmallMultiple(small_multiples_datapoints_yz.enter());
+
     //Draw points with coloring and code to highlight a specific lineage
     var transp = 0;
     var pt_color_map = {};
 
     //plot data in 3D view
     var new_data = plot3DView(datapoints.enter())
+
 
     //use new_data to identify which nodes in the tree should be revealed
     var new_data_names = [];
@@ -824,6 +958,20 @@ function plotData( time_point, duration ) {
         .attr("translation", function(row) {
             return x(row.x) + " " + y(row.y) + " " + z(row.z);
         });
+
+    // Transition small multiples points
+    small_multiples_datapoints_xy.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return small_multiples_scale(row.x);})
+        .attr("cy", function(row) {return small_multiples_scale(-row.y);})
+
+    small_multiples_datapoints_xz.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return small_multiples_scale(row.z);})
+        .attr("cy", function(row) {return small_multiples_scale(row.x);})
+
+    small_multiples_datapoints_yz.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return small_multiples_scale(row.z);})
+        .attr("cy", function(row) {return small_multiples_scale(-row.y);})
+
     //transition tree nodes
     var circ2 = newnodes.selectAll('circle').transition().ease(ease).duration(duration)
         .attr('x', function(d){return d3.select(this).attr('x0');})
