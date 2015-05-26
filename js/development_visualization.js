@@ -11,8 +11,9 @@
 GLOBAL VARIABLES
 ****************************************************************/
 //global highlighting variables
-var defaultColor='steelblue';
-var selectionColor='#FFFF00';
+var defaultColor='#a8a8a8';
+var selectionColor = '#FFFF00';
+var highlightColorDefaults = ['#e41a1c', '#377eb8', '#ff7f00', '#f781bf'];
 var highlights = false;
 
 //contains the data for each timepoint/cell
@@ -167,7 +168,8 @@ function makeLPDivTemplate(){
 */
 function removeLPDiv(e, obj) {
     $(obj).parent().remove(); $("#add-lp").prop("disabled", false); updatePlot();
-
+    lpidx--;
+    
     // Restore color of + button
     $('#add-lp').removeAttr('style');
 }
@@ -179,6 +181,7 @@ function cloneLPDiv(){
     var highlightCount = $('.lineage-pickers').children().length
     if(highlightCount < 5){
         var lpdivclone = $('#lineage-picker-template').clone(true);
+
         lpdivclone.attr('id', 'lineage-picker'+lpidx)
             .attr('class', 'lineage-picker')
             .attr('style', 'display: block');
@@ -188,13 +191,21 @@ function cloneLPDiv(){
             id = childs[i].id;
             childs[i].id = id.substr(0, id.length - 1) + lpidx;
         }
+
         lpdivclone.appendTo('.lineage-pickers');
         $('#selhi'+lpidx).chosen({search_contains:true});
         lpidx++;
+
+
         if($('#lineage-pickers').children().length === 4){
             $('#add-lp').prop('disabled', true);
         }
     }
+
+    // Automatically set the new color picker's default color
+    highlight_color = highlightColorDefaults[lpidx - 3]
+    console.log('#hicolor' + (lpidx -1))
+    d3.select('#hicolor' + (lpidx -1)).attr('value', highlight_color)
 
     // Grey out the button when too many highlights are added
     if (highlightCount >= 4) {
