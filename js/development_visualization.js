@@ -21,15 +21,9 @@ var csvdata = [];
 //mapping of cell name to cell metadata
 var cellmap = {P0: {name:'P0', parent:-1, children: [], selected: false,
                     userselected:false, color: defaultColor}};
-//cellmap.AB = {name:'AB', parent: cellmap.P0, children: []};
-//cellmap.P1 = {name:'P1', parent: cellmap.P0, children: []};
-//cellmap.P0.children = [cellmap.AB, cellmap.P1];
-
 
 //contains objects for progenitor cells preceding time series data
 var P0 = {meta: cellmap.P0, pred: -1, succ: []};
-//var P1 = {meta: cellmap.P1, pred: P0, succ: []};
-//var AB = {meta: cellmap.AB, pred: P0, succ: []};
 
 //maps cell name to an index into csvdata for each time point
 var namemap = [];
@@ -73,15 +67,13 @@ var axisKeys = ["x", "y", "z"];
 
 var load_idx = 0;
 
-// Small multiples variables
+// Scale for small multiples plots
 var small_multiples_scale = null;
-var small_multiples_y = null;
 
 //variables for speed dropdown
 var speedarray = ["slow", "medium", "fast"];
 var options = [0,1,2];
 var speed = "slow"
-
 
 // Hiding controls 
 controls_hidden = false;
@@ -89,11 +81,15 @@ controls_hidden = false;
 /****************************************************************
 Lineage Highlighting Functions
 ****************************************************************/
+/**
+* TODO description here
+*/
 function makeLPDivTemplate(){
     var lpsubdiv = d3.select('div.lineage-pickers').append('div')
         .attr('class', 'lineage-picker-template')
         .attr('id', 'lineage-picker-template')
         .attr('style', 'display: none;');
+
     //Construct a select box for picking cell lineages/cell types to highlight
     var id = 'selhi'+lpidx;
     var select = lpsubdiv.append('select')
@@ -101,10 +97,11 @@ function makeLPDivTemplate(){
         .attr('id', id)
         .attr('data-placeholder', 'Cell Lineage or Cell Type...')
         .attr('onchange', 'updateCellColors(); updateCellSize(); updatePlot()');
-//        .attr('size', 15)
+
     select.append('option').attr('value', '');
     var optgroup = select.append('optgroup')
         .attr('label', 'Tissue Type');
+
     var disp;
     for(var i=0; i < tissuetype.length; i++){
         if(tissuetype[i].length > 50){
@@ -114,6 +111,7 @@ function makeLPDivTemplate(){
         }
         optgroup.append('option').attr('value', 'tt' + tissuetype[i]).html(disp);
     }
+
     optgroup = select.append('optgroup')
         .attr('label', 'Cell Type');
     for(i=0; i < celltype.length; i++){
@@ -124,6 +122,7 @@ function makeLPDivTemplate(){
         }
         optgroup.append('option').attr('value', 'ct' + celltype[i]).html(disp);
     }
+
     optgroup = select.append('optgroup')
         .attr('label', 'Cell Description');
     for(i=0; i < celldesc.length; i++){
@@ -134,6 +133,7 @@ function makeLPDivTemplate(){
         }
         optgroup.append('option').attr('value', 'cd' + celldesc[i]).html(disp);
     }
+
     optgroup = d3.select('#'+id).append('optgroup')
         .attr('label', 'Cell Name');
     for(i=0; i < cellnames.length; i++){
@@ -144,6 +144,7 @@ function makeLPDivTemplate(){
         }
         optgroup.append('option').attr('value', 'cn' + cellnames[i]).html(disp);
     }
+
     lpsubdiv.append('input')
         .attr('type', 'color')
         .attr('value', '#ff0000')
@@ -159,13 +160,21 @@ function makeLPDivTemplate(){
     lpidx++;
 }
 
+/**
+* TODO description here
+* @param {TODO type} e - TODO description
+* @param {TODO type} obj - TODO description
+*/
 function removeLPDiv(e, obj) {
     $(obj).parent().remove(); $("#add-lp").prop("disabled", false); updatePlot();
 
-    // Restore color of + button if few enough highlights are present
+    // Restore color of + button
     $('#add-lp').removeAttr('style');
 }
 
+/**
+* TODO description here
+*/
 function cloneLPDiv(){
     var highlightCount = $('.lineage-pickers').children().length
     if(highlightCount < 5){
@@ -193,6 +202,10 @@ function cloneLPDiv(){
     }
 }
 
+/**
+* TODO description here
+* @param {string} showhide - TODO description
+*/
 function showHideHighlights(showhide){
     //here, show means hide and hide means show
     var datapoints = scene.selectAll('.datapoint')
@@ -206,6 +219,9 @@ function showHideHighlights(showhide){
     }
 }
 
+/**
+* TODO description here
+*/
 function initializeLineagePicker(){
     d3.select('#highlighting')
         .append('div').attr('class', 'lineage-pickers');
@@ -225,7 +241,10 @@ function initializeLineagePicker(){
         .attr('onclick', '(function(e, obj) {obj.value = obj.value.substr(0,4) === "Hide" ? "Show Non-Highlighted" : "Hide Non-Highlighted"; showHideHighlights(obj.value);})(event, this)');
 }
 
-//check to see if name is the name of a parent of object d
+/**
+* TODO make description more clear: check to see if name is the name of a parent of object d
+* @param {string} showhide - TODO description
+*/
 function isParentOf(d, name){
     //return true if name matches d
     if(d.name === name){
@@ -251,13 +270,22 @@ function isParentOf(d, name){
     }
 }
 
-//takes a cell name and concatenates any blastomere cell names to get a cell
-//name string suitable for querying with .indexOf(<cellname>)
+/**
+* TODO make description more clear: takes a cell name and concatenates any blastomere cell names to get a cell
+* name string suitable for querying with .indexOf(<cellname>)
+* @param {string} timepoint - TODO description
+* @returns {string} - TODO description
+*/
 function timePointCellNames(timepoint){
     var timepoint_str = $.map(timepoint, function(elt, idx){return elt.meta.name;}).join('.');
     return cellNamesStr('.'+timepoint_str);
 }
 
+/**
+* TODO add description
+* @param {string} cellstr - TODO description
+* @returns {string} - TODO description
+*/
 function cellNamesStr(cellstr){
     var regex = /\.(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/g;
     var blast_list = cellstr.match(regex);
@@ -269,11 +297,23 @@ function cellNamesStr(cellstr){
     return blast_str + cellstr + '.';
 }
 
-//thanks http://stackoverflow.com/questions/1960473/unique-values-in-an-array
+/**
+* TODO add description
+* Based on http://stackoverflow.com/questions/1960473/unique-values-in-an-array
+* @param {TODO type} value - TODO description
+* @param {TODO type} index - TODO description
+* @param {TODO type} self - TODO description
+* @returns {boolean} - TODO description
+*/
 function onlyUnique(value, index, self){
     return self.indexOf(value) === index;
 }
 
+/**
+* TODO add description
+* @param {TODO type} obj - TODO description
+* @returns {TODO type} - TODO description
+*/
 function _cellnamesStrHelper(obj){
     if (obj.parent === -1){
         return '.' + obj.name;
@@ -282,14 +322,22 @@ function _cellnamesStrHelper(obj){
     }
 }
 
-//iterate over lineage and produce string of progenitors (for highlighting for 
-//specific cells) returns an object mapping blastomere names to concatenated lineage suffixes.
+/**
+* TODO make description more clear: Produces an object mapping blastomere names to concatenated lineage suffixes.
+* @param {TODO type} cellname - TODO description
+* @returns {TODO type} - TODO description
+*/
 function cellLineageStr(cellname){
     var lineage_obj = {};
     _cellLineageStrHelper(lineage_obj, cellname, '');
     return lineage_obj;
 }
 
+/**
+* TODO make description more clear: Helper function for cellLineageStr
+* @param {TODO type} cellname - TODO description
+* @returns {TODO type} - TODO description
+*/
 function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
     var cell = cellmap[cellname];
     var regex = /^(AB|E|MS|C|D)([aplrdv]+)/;
@@ -322,6 +370,9 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
     }
 }
 
+/**
+* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+*/
 function updateCellColors(){
     setCellColors();
     d3.selectAll('.dp_sphere appearance material')
@@ -330,6 +381,9 @@ function updateCellColors(){
         .attr('fill', function(d){return d.color;});
 }
 
+/**
+* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+*/
 function setCellColors(){
     //Collect highlight classes
     var picker_sel = document.getElementsByClassName('selhi');
@@ -404,6 +458,9 @@ function setCellColors(){
     }
 }
 
+/**
+* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+*/
 function updateCellSize(){
     //find cells that are selected and are small, or cells that aren't selected 
     //and are big, erase them, and redraw
@@ -422,8 +479,9 @@ function updateCellSize(){
     plot3DView(to_update);
 }
 
-//update the plots if the highlight options are changed when the development
-//animation is not playing.
+/**
+* TODO maybe add some to description: update the plots if the highlight options are changed when the development animation is not playing.
+*/
 function updatePlot(){
     var ppbutton = document.getElementById('playpause');
     var playpause = false;
@@ -431,15 +489,16 @@ function updatePlot(){
         playpause = true;
         playpausedev();
     }
-//    var timepoint_data = csvdata[timepoint % csvdata.length];
-//    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
-//    datapoints.remove();
+
     plotData(timepoint, 0);
     if(playpause){
         playpausedev();
     }
 }
 
+/**
+* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+*/
 function loadCellTypeMap(){
     d3.text('waterston_celltypes_filtered.csv', function (csvtext){
         //read all the cell types in
@@ -501,10 +560,10 @@ function loadCellTypeMap(){
             // TODO this is here temporarily -- will be moved once updating of the tree is
             // implemented
 //            var root = getTreeRootFromTimepoints(csvdata, csvdata.length - 1);
-//            plotCellLineageTree(root);
+//            initializeLineageTree(root);
         initializePlot();
         initializeSmallMultiples();
-        plotCellLineageTree(cellmap.P0);
+        initializeLineageTree(cellmap.P0);
         plotData(0, 5);
     });
 }
@@ -512,13 +571,21 @@ function loadCellTypeMap(){
 /****************************************************************
  USER NODE SELECTION
 ****************************************************************/
+
+/**
+* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+* @param {TODO type} cellname - TODO description
+*/
 function clickSelect(cellname){
     cellmap[cellname].userselected = !cellmap[cellname].userselected;
     var selection = [cellname];
     userSelectPoints(selection);
 }
 
-//This function adds outlines to highlight user-selected cells
+/**
+* TODO maybe add some to description: This function adds outlines to highlight user-selected cells
+* @param {TODO type} selection - TODO description
+*/
 function userSelectPoints(selection){
     //3Dplot
     d3.selectAll('.datapoint')
@@ -561,7 +628,12 @@ function userSelectPoints(selection){
 /****************************************************************
 GRAPHICAL HELPER FUNCTIONS FOR 3D DEVELOPMENT PLOT
 ****************************************************************/
-// Used to make 2d elements visible
+
+/**
+* TODO maybe add some to description: Used to make 2d elements visible
+* @param {TODO type} selection - TODO description
+* @param {TODO type} color - TODO description
+*/
 function makeSolid(selection, color) {
     selection.append("appearance")
         .append("material")
@@ -569,19 +641,29 @@ function makeSolid(selection, color) {
     return selection;
 }
 
-// Initialize the axes lines and labels.
+/**
+* TODO maybe add some to description: Initialize the axes lines and labels.
+*/
 function initializePlot() {
     initializeAxis(0);
     initializeAxis(1);
     initializeAxis(2);
 }
 
+/**
+* TODO add description
+* @param {TODO type} selection - TODO description
+*/
 function constVecWithAxisValue( otherValue, axisValue, axisIndex ) {
     var result = [otherValue, otherValue, otherValue];
     result[axisIndex] = axisValue;
     return result;
 }
 
+/**
+* TODO add description
+* @param {TODO type} axisIndex - TODO description
+*/
 function initializeAxis( axisIndex ){
     var key = axisKeys[axisIndex];
     drawAxis( axisIndex, key, initialDuration );
@@ -652,7 +734,10 @@ function initializeAxis( axisIndex ){
             .attr("justify", "END MIDDLE" )
 }
 
-// Assign key to axis, creating or updating its ticks, grid lines, and labels.
+/**
+* TODO maybe add some to description: Assign key to axis, creating or updating its ticks, grid lines, and labels.
+* @param {TODO type} selection - TODO description
+*/
 function drawAxis( axisIndex, key, duration ) {
     var scale = d3.scale.linear()
         .domain( [-1000,1000] ) // demo data range
@@ -661,6 +746,11 @@ function drawAxis( axisIndex, key, duration ) {
     scales[axisIndex] = scale;
 }
 
+/**
+* Plots data in the 3D view. Determines show/hide status of points and adds popover text to each cell.
+* @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
+* @returns {TODO type} - TODO description
+*/
 function plot3DView(to_plot){
     var x = scales[0], y = scales[1], z = scales[2];
     // Draw a sphere at each x,y,z coordinate.
@@ -724,7 +814,9 @@ function plot3DView(to_plot){
     return new_data;
 }
 
-
+/**
+* Initializes axes for the 3 small multiples plots as XY, XZ, and YZ plots. These are appended to the #divPlot div.
+*/
 function initializeSmallMultiples() {
     var width = 100
       , height = 100;
@@ -785,8 +877,12 @@ function initializeSmallMultiples() {
 
 }
 
-function plotXYSmallMultiple(timepoint_data) { 
-    timepoint_data.append("svg:circle")
+/**
+* Plots points on the XY small multiple axis. initializeSmallMultiples must be called first.
+* @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
+*/
+function plotXYSmallMultiple(to_plot) { 
+    to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
         .attr('id', function(d){return d.meta.name})
         .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
@@ -803,8 +899,12 @@ function plotXYSmallMultiple(timepoint_data) {
         .attr('opacity', 0.8);
 }
 
-function plotXZSmallMultiple(timepoint_data) { 
-    timepoint_data.append("svg:circle")
+/**
+* Plots points on the XZ small multiple axis. initializeSmallMultiples must be called first.
+* @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
+*/
+function plotXZSmallMultiple(to_plot) { 
+    to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
         .attr('id', function(d){return d.meta.name})
         .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
@@ -821,8 +921,12 @@ function plotXZSmallMultiple(timepoint_data) {
         .attr('opacity', 0.8);
 }
 
-function plotYZSmallMultiple(timepoint_data) { 
-    timepoint_data.append("svg:circle")
+/**
+* Plots points on the YZ small multiple axis. initializeSmallMultiples must be called first.
+* @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
+*/
+function plotYZSmallMultiple(to_plot) { 
+    to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
         .attr('id', function(d){return d.meta.name})
         .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
@@ -839,6 +943,11 @@ function plotYZSmallMultiple(timepoint_data) {
         .attr('opacity', 0.8);
 }
 
+/**
+* Updates visible nodes on the lineage tree to show only specified cells by name.
+* @param {TODO type} cellnames - TODO description
+* @param {TODO type} new_data_names - TODO description
+*/
 function plotLineageTree(cellnames, new_data_names){
     var allnodes = d3.selectAll('.node');
     allnodes.selectAll('.node-circle').attr('style', 'visibility:hidden;');
@@ -859,34 +968,7 @@ function plotLineageTree(cellnames, new_data_names){
     });
     visiblenodes.selectAll('.node-circle')
         .attr('style', 'visibility:visible')
-//        .attr('fill', defaultColor);
         .attr('fill', function(d){return d.color;});
-
-//    visiblenodes.selectAll('circle')
-//        .attr('fill', function(d){
-//            return d.color;
-//        });
-//    visiblenodes.selectAll('circle')
-//        .attr('stroke', 'black')
-//        .attr('stroke-width', '1');
-
-//    visiblenodes.selectAll('.node-select').remove();
-//    visiblenodes.filter(function(d){return d.userselected ? this : null;})
-//        .append('circle')
-//          .attr('class', 'node-select')
-//          .attr("r", 8)
-//          .attr("fill", "none")
-//          .attr('stroke', selectionColor)
-//          .attr('stroke-width', '2')
-//          .attr("transform", function(d) { 
-//            return "translate(" + 0 + "," + d.y + ")"; }) // 0 is required for x to make edges match up with nodes
-//          .call(position_node)
-//          .call(scale_radius, 6, 0.5);
-
-//THIS WORKS
-//    visiblenodes.selectAll('circle')
-//        .attr('stroke', function(d){return d.userselected ? selectionColor : 'black';})
-//        .attr('stroke-width', function(d){return d.userselected ? '3' : '1';});
 
     var newnodes = visiblenodes.filter(function(d){
         if(new_data_names.indexOf(d.name) > -1){
@@ -909,7 +991,11 @@ function plotLineageTree(cellnames, new_data_names){
     return newnodes;
 }
 
-// Update the data points (spheres) and stems.
+/**
+* Wrapper function that transitions all plots to a specified timepoint. Determines new data to plot and then passes along to individual plotting functions to update.
+* @param {integer} time_point - Index of the timepoint to transition to
+* @param {integer} duration - Duration of the smooth animation to transition datapoints in milliseconds
+*/
 function plotData( time_point, duration ) {
     if (!this.csvdata){
      console.log("no rows to plot.");
@@ -941,7 +1027,6 @@ function plotData( time_point, duration ) {
 
     //plot data in 3D view
     var new_data = plot3DView(datapoints.enter())
-
 
     //use new_data to identify which nodes in the tree should be revealed
     var new_data_names = [];
@@ -983,6 +1068,11 @@ function plotData( time_point, duration ) {
 /****************************************************************
 HELPER FUNCTIONS FOR DATA PARSING AND INITIALIZATION
 ****************************************************************/
+
+/**
+* TODO add description
+* @param {TODO type} csvdata_in - TODO description
+*/
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
     var tp = 1;
@@ -1012,17 +1102,11 @@ function parseCSV(csvdata_in) {
     return;
 }
 
+/**
+* TODO add description. 
+*/
 function loadTimePoints(){
-//    if (idx == max){
-//        ready = true;
-//
-//        var cellLineage = getTreeRootFromTimepoints(this.csvdata, idx)
-//        plotCellLineageTree(cellLineage)
-//
-//        return;
-//    }
 
-//    var basename = 't' + ("000" + (idx + 1)).substr(-3) + '-nuclei';
     var url = 'http://localhost:2255/ImageExpressionTable.timesort.fixed.normalized.bincollapsed.csv';
     d3.text(url, function(tpdata){
         parseCSV(tpdata);
@@ -1060,9 +1144,9 @@ function loadTimePoints(){
                     //link cell to time point data structure
                     cell.pred = csvdata[idx-1][pred_idx];
                     cell.pred.succ.push(cell);
+
                     //add entries to lineage data structure (if it's not there already)
                     if(!(cell.meta.name in cellmap)){
-//                    console.log(cell.meta.name);
                         cell.meta.parent = cellmap[cell.pred.meta.name];
                         cell.meta.parent.children.push(cell.meta);
                         cellmap[cell.meta.name] = cell.meta;
@@ -1074,6 +1158,7 @@ function loadTimePoints(){
         }
         ready = true;
         d3.select('#timerange').attr('max', csvdata.length - 1);
+
         //load cell type data
         loadCellTypeMap();
         return;
@@ -1083,10 +1168,14 @@ function loadTimePoints(){
 /****************************************************************
 INITIALIZATION AND CALLBACKS FOR VISUALIZATION
 ****************************************************************/
-//Function to handle start/stop playback of development
+
+/**
+* Handles play and pause of development by starting and stopping playback, changing playback speed, and changing play button text.
+* @callback - callback function play/pause button
+*/
 function playpausedev(){
     var button = document.getElementById('playpause');
-    console.log(speed)
+
     if(button.innerHTML === "Play"){
     	if(speed === "slow"){
         	playback_id = setInterval(development, 1000);
@@ -1106,6 +1195,10 @@ function playpausedev(){
     }
 }
 
+/**
+* Resets the 3D view to the original orientation.
+* @callback - callback function for Reset View button
+*/
 function resetView() {
   x3d.node().runtime.resetView()
 }
@@ -1124,6 +1217,10 @@ function hideControls() {
     }
 }
 
+/**
+* TODO description
+* @callback - TODO is this a callback?
+*/
 function development() {
     if (ready && x3d.node() && x3d.node().runtime ) {
         timepoint++;
@@ -1134,7 +1231,10 @@ function development() {
     }
 }
 
-//update the timepoint variable to match the slider value and run plotData
+/**
+* Updates the timepoint variable to match the playback slider value and update plots accordingly
+* @callback - is htis a callback?
+*/
 function updatetime() {
     timepoint = document.getElementById('timerange').value;
     plotData(timepoint, 500);
@@ -1143,6 +1243,11 @@ function updatetime() {
 /****************************************************************
 HELPER FUNCTIONS FOR LINEAGE TREE PLOTTING
 ****************************************************************/
+
+/**
+* Sets the various position properties of nodes in the lineage tree to make them appear in the right place.
+* @callback - called to position nodes when distortion slider moves and on initial setup.
+*/
 var width = 2000;
 function position_node(node) {
     node.attr("cx", function(d) {return treeXScale(d.x);})
@@ -1151,14 +1256,13 @@ function position_node(node) {
         .attr("x0", function(d) {return treeXScale(d.x);})
         .attr("y", function(d) {return d.y;})
         .attr("y0", function(d) {return d.y;});
-        //.attr("cy", function(d) { return yScale(y(d)); }) // TODO commenting this out made tree height issues go away
-        //.attr("r", function(d) { return radiusScale(radius(d)); });
 }
 
+/**
+* Sets the radius of nodes in the lineage tree to scale larger towards the center of the lineage tree plot.
+* @callback - called to set radius when distortion slider moves and on initial setup.
+*/
 function scale_radius(circle, maxCircleRadius, minCircleRadius) {
-//    var maxCircleRadius = 8,
-//    minCircleRadius = 2.5;
-
     circle.attr("r", function(d) {
         var currentPosition = treeXScale(d.x)
         if (d.depth <= 2) { 
@@ -1169,7 +1273,12 @@ function scale_radius(circle, maxCircleRadius, minCircleRadius) {
     });
   }
 
-function plotCellLineageTree(root) {
+/**
+* Sets up the cell lineage tree and associated distortion slider. 
+* @param {TODO type} root - root node of the lineage tree to be plotted
+* @callback - called to set radius when distortion slider moves and on initial setup.
+*/
+function initializeLineageTree(root) {
 
   var margin = {top: 10, right: 10, bottom: 10, left: 10},
   height = 700 - margin.top - margin.bottom;
@@ -1287,13 +1396,11 @@ function plotCellLineageTree(root) {
   /****************************************************************
   Functions for positioning and scaling elements accounting for distortion and position within window
   ****************************************************************/
-  function is_close_to_plot_border(element) {
-    var currentPosition = xScale(element.x)
 
-    // If element is within 100 px of either side and at a depth greater than 2, return TRUE
-    return (currentPosition < 250 || currentPosition > width - 250) && element.depth > 2
-  }
-
+  /**
+  * Sets the position of text within the distorted lineage tree view.
+  * @callback - called to set text position when distortion slider moves and on initial setup.
+  */
   function position_text(text) {
     text 
       .attr("cx", function(d) {return xScale(d.x);})
@@ -1315,11 +1422,12 @@ function plotCellLineageTree(root) {
       })
 
       .attr("transform", function(d) {return "translate(-5, 15)rotate(90" + "," + xScale(d.x) + "," + d.y + ")"})
-
-        //.attr("cy", function(d) { return yScale(y(d)); }) // TODO commenting this out made tree height issues go away
-        //.attr("r", function(d) { return radiusScale(radius(d)); });
   }
 
+  /**
+  * Sets the position of links (edges) within the distorted lineage tree view.
+  * @callback - called to set link positions when distortion slider moves and on initial setup.
+  */
   function position_links(link) {
     diagonal.projection(function(d) {return [xScale(d.x), d.y]; }) 
     link.attr("d", diagonal);
