@@ -19,7 +19,8 @@ var highlights = false;
 //contains the data for each timepoint/cell
 var csvdata = [];
 
-//mapping of cell name to cell metadata
+//mapping of cell name to cell metadata, this metadata is linked to from the 
+//'meta' field of the objects in csvdata
 var cellmap = {P0: {name:'P0', parent:-1, children: [], selected: false,
                     userselected:false, color: defaultColor}};
 
@@ -83,7 +84,10 @@ controls_hidden = false;
 Lineage Highlighting Functions
 ****************************************************************/
 /**
-* TODO description here
+* This function generates the HTML for a single lineage picker. This template
+* is added to the page HTML, but hidden. When a new lineage picker is added by
+* clicking the '+' button in the control panel, this template is copied and the
+* copy made visible and assigned a unique id.
 */
 function makeLPDivTemplate(){
     var lpsubdiv = d3.select('div.lineage-pickers').append('div')
@@ -162,9 +166,12 @@ function makeLPDivTemplate(){
 }
 
 /**
-* TODO description here
-* @param {TODO type} e - TODO description
-* @param {TODO type} obj - TODO description
+* This function removes a lineage picker div section.
+* @param {Javascript event} e - Javascript event (not used in the function)
+* @param {HTML element} obj - element on which the event was called (a lineage
+*                             picker div in this case)
+* @callback - This function is a callback for the '-' button in a set of lineage
+*             picker controls
 */
 function removeLPDiv(e, obj) {
     $(obj).parent().remove(); $("#add-lp").prop("disabled", false); updatePlot();
@@ -175,7 +182,9 @@ function removeLPDiv(e, obj) {
 }
 
 /**
-* TODO description here
+* This function copies the lineage picker template (makeLPDivTemplate() must be
+* called first to set up this template), gives the copy a unique id, and sets
+* the display CSS attribute to 'block' so that the copied controls are visible.
 */
 function cloneLPDiv(){
     var highlightCount = $('.lineage-pickers').children().length
@@ -196,7 +205,7 @@ function cloneLPDiv(){
         $('#selhi'+lpidx).chosen({search_contains:true});
         lpidx++;
 
-
+        //only allow up to 4 sets of lineage picker controls
         if($('#lineage-pickers').children().length === 4){
             $('#add-lp').prop('disabled', true);
         }
@@ -214,8 +223,11 @@ function cloneLPDiv(){
 }
 
 /**
-* TODO description here
-* @param {string} showhide - TODO description
+* This function will make non-highlighted cells invisible in the 3D plot.
+* @param {string} showhide - value of the Show/Hide Non-Highlighted button
+*
+* @callback - This function is a callback fired when the Show/Hide 
+*             Non-Highlighted button is clicked.
 */
 function showHideHighlights(showhide){
     //here, show means hide and hide means show
@@ -231,7 +243,9 @@ function showHideHighlights(showhide){
 }
 
 /**
-* TODO description here
+* This function is called as the visualization is loading to set up the lineage
+* picker controls. It calls makeLPDivTemplate(), cloneLPDiv(), and then sets up
+* the the buttons to add LP controls and to show or hide non-highlighted cells.
 */
 function initializeLineagePicker(){
     d3.select('#highlighting')
@@ -253,9 +267,9 @@ function initializeLineagePicker(){
 }
 
 /**
-* TODO make description more clear: check to see if name is the name of a parent of object d
+* APPEARS TO NO LONGER BE USED 
+*TODO make description more clear: check to see if name is the name of a parent of object d
 * @param {string} showhide - TODO description
-*/
 function isParentOf(d, name){
     //return true if name matches d
     if(d.name === name){
@@ -280,12 +294,22 @@ function isParentOf(d, name){
         }
     }
 }
+*/
 
 /**
-* TODO make description more clear: takes a cell name and concatenates any blastomere cell names to get a cell
-* name string suitable for querying with .indexOf(<cellname>)
-* @param {string} timepoint - TODO description
-* @returns {string} - TODO description
+* Takes an array of cells for a particular time point (i.e. an element from 
+* csvdata), concatenates the names of the cells present at this time point with
+* '.' delimiters, and then calls cellNameStr() to add the blastomere name(s) for
+* the cells that are present. Returns this string of '.'-delimited cell names.
+* This produces a string such that any cell present at this time point or any 
+* ancestor of such a cell can be identified by simply querying the cell name
+* against this string with .indexOf(<cellname>)
+* @param {string} timepoint - array from csvdata corresponding to a particular
+*                             timepoint
+* @returns {string} - a string of '.'-delimited cell names that contains all 
+*                     leaf cells at this time point, and, by virtue of the 
+*                     C. elegans cell naming convention, names of all ancestors
+*                     of leaf cells at this time point.
 */
 function timePointCellNames(timepoint){
     var timepoint_str = $.map(timepoint, function(elt, idx){return elt.meta.name;}).join('.');
@@ -293,9 +317,16 @@ function timePointCellNames(timepoint){
 }
 
 /**
-* TODO add description
-* @param {string} cellstr - TODO description
-* @returns {string} - TODO description
+* Takes a string of cell names (delimited with '.', as from timePointCellNames),
+* finds the blastomere prefixes on these cell names, concatenates these 
+* blastomere names with '.' delimiters, and adds this blastomere string to the 
+* string of cell names. This is necessary because the blastomere naming does
+* not follow branch cell naming conventions (e.g. EMS is the parent of the E and
+* MS branches).
+* @param {string} cellstr - '.'-delimited cell name string, as generated by
+*                           timePointCellNames()
+* @returns {string} - a '.'-delimited cell name string with blastomere names
+*                     added
 */
 function cellNamesStr(cellstr){
     var regex = /\.(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/g;
@@ -309,21 +340,30 @@ function cellNamesStr(cellstr){
 }
 
 /**
-* TODO add description
+* Filtering function to return only unique entries in the list.
 * Based on http://stackoverflow.com/questions/1960473/unique-values-in-an-array
-* @param {TODO type} value - TODO description
-* @param {TODO type} index - TODO description
-* @param {TODO type} self - TODO description
-* @returns {boolean} - TODO description
+* @param {list element} value - value to search the list for
+* @param {int} index - current index for the list.filter() method
+* @param {list} self - list being filtered by this function
+* @returns {boolean} - whether the current element is the first time this value
+*                      has been encountered in the list. The filtering function
+*                      will throw away any subsequent identical values (they 
+*                      will cause this function to return false instead of true)
 */
 function onlyUnique(value, index, self){
     return self.indexOf(value) === index;
 }
 
 /**
-* TODO add description
-* @param {TODO type} obj - TODO description
-* @returns {TODO type} - TODO description
+* Recursively build a string of cell names by appending names of parent cells
+* to a growing '.'-delimited string. This can work on any cell metadata object
+* present in cellmap, but in practice is used to resolve blastomere parents, as
+* blastomere naming conventions do not follow the convenient progressive names
+* of their children.
+* @param {cellmap object} obj - object from cellmap representing a cell in the 
+*                               C. elegans lineage tree
+* @returns {string} - '.'-delimited string of cell names of the provided cell 
+*                     and all ancestors.
 */
 function _cellnamesStrHelper(obj){
     if (obj.parent === -1){
@@ -334,9 +374,19 @@ function _cellnamesStrHelper(obj){
 }
 
 /**
-* TODO make description more clear: Produces an object mapping blastomere names to concatenated lineage suffixes.
-* @param {TODO type} cellname - TODO description
-* @returns {TODO type} - TODO description
+* Produces an object mapping blastomere names to concatenated lineage suffixes.
+* The role of this function is very similar to that of cellNameStr(), but it 
+* tries to handle the blastomere/branch cell distinction more explicitly. This 
+* avoids EMS bugs in which the E cell gets highlighted when the EMS cell is 
+* present in a selection.
+* @param {string} cellname - The name of a cell in the lineage tree.
+* @returns {object} - a javascript object mapping blastomere names as keys to
+*                     strings of concatenated branch cell suffixes as values.
+*                     To check if any cell is an ancestor, match that cell's
+*                     branch suffix (lower case letters in a branch cell's name)
+*                     to the concatenated suffix string of the corresponding 
+*                     blastomere (capital letters in the cell name) using 
+*                     .indexOf()
 */
 function cellLineageStr(cellname){
     var lineage_obj = {};
@@ -345,9 +395,13 @@ function cellLineageStr(cellname){
 }
 
 /**
-* TODO make description more clear: Helper function for cellLineageStr
-* @param {TODO type} cellname - TODO description
-* @returns {TODO type} - TODO description
+* Helper function for cellLineageStr() that recursively builds the cell name-
+* based lineage_obj
+* @param {object} lineage_obj - object mapping blastomere names (i.e. 
+*                               capitalized part of cell names) to strings of 
+*                               concatenated branch suffixes (i.e. lower case 
+*                               part of cell names)
+* @param {string} cellname - the name of a cell in the lineage tree
 */
 function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
     var cell = cellmap[cellname];
@@ -382,7 +436,9 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
 }
 
 /**
-* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+* Function to set cell colors in the 3D plot and lineage tree based on the
+* 'color' entry in each cells metadata in the cellmap
+* @callback - called whenever a lineage picker selection is changed
 */
 function updateCellColors(){
     setCellColors();
@@ -393,7 +449,10 @@ function updateCellColors(){
 }
 
 /**
-* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+* Parses the highlght selections made in the lineage picker controls, and then
+* sets the 'color' attribute for each cell in cellmap based on the current 
+* lineage picker selections. Called by updateCellColors() whenever a lineage 
+* picker selection is changed.
 */
 function setCellColors(){
     //Collect highlight classes
@@ -470,7 +529,9 @@ function setCellColors(){
 }
 
 /**
-* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+* Function to erase and redraw cells in the 3D plot that should have changes in 
+* radius due to changes in lineage picker selections.
+* @callback - called whenever a lineage picker selection is changed
 */
 function updateCellSize(){
     //find cells that are selected and are small, or cells that aren't selected 
@@ -491,7 +552,10 @@ function updateCellSize(){
 }
 
 /**
-* TODO maybe add some to description: update the plots if the highlight options are changed when the development animation is not playing.
+* update the plots to have the correct highlights when changes are made in 
+* lineage picker selections
+* @callback - final function called when the lineage picker selections are 
+*             changed
 */
 function updatePlot(){
     var ppbutton = document.getElementById('playpause');
@@ -508,7 +572,15 @@ function updatePlot(){
 }
 
 /**
-* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
+* Function to load in the mapping of leaf nodes (cell names) to cell 
+* descriptions, cell types, and tissue types. These are hierarchical 
+* characterizations of the roles that cells play in the adult worm, and they are
+* used in the lineage picker select boxes to highlight cells based on what 
+* tissue or function they have in their fully differentiated state. This 
+* function reads in these metadata values and maps them to concatenated names
+* of cells so that cells that correspond to a particular cell/tissue type can be
+* found by simply querying the cell name against the concatenation with 
+* the .indexOf() string method.
 */
 function loadCellTypeMap(){
     d3.text('waterston_celltypes_filtered.csv', function (csvtext){
@@ -582,10 +654,13 @@ function loadCellTypeMap(){
 /****************************************************************
  USER NODE SELECTION
 ****************************************************************/
-
 /**
-* TODO add description (should include requirements of this function (for example, where it draws data from such as controls, etc.) and what effects it has)
-* @param {TODO type} cellname - TODO description
+* Set the userselected attribute of a cell in the cellmap when a user clicks on 
+* that cell, call userSelectPoints to add/remove highlights to the corresponding
+* data point in the 3D plot and node in the lineage tree
+* @param {string} cellname - the name of a cell that the user clicked on
+* @callback - called when a user clicks on a 3D plot data point or a lineage 
+*             tree node.
 */
 function clickSelect(cellname){
     cellmap[cellname].userselected = !cellmap[cellname].userselected;
@@ -594,8 +669,9 @@ function clickSelect(cellname){
 }
 
 /**
-* TODO maybe add some to description: This function adds outlines to highlight user-selected cells
-* @param {TODO type} selection - TODO description
+* This function adds or removes outlines to user-selected or -deselected nodes
+* @param {list} selection - list of cell name strings for cells that should have
+*                           their user selections toggled
 */
 function userSelectPoints(selection){
     //3Dplot
@@ -760,7 +836,11 @@ function drawAxis( axisIndex, key, duration ) {
 /**
 * Plots data in the 3D view. Determines show/hide status of points and adds popover text to each cell.
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
-* @returns {TODO type} - TODO description
+* @returns {d3 data selection} - a selection containing shape elements appended 
+*                                to the to_plot selection. Used later in 
+*                                plotData() to identify the names of the newly
+*                                plotted cells, which are then used in plotting
+*                                the lineage tree.
 */
 function plot3DView(to_plot){
     var x = scales[0], y = scales[1], z = scales[2];
@@ -956,8 +1036,10 @@ function plotYZSmallMultiple(to_plot) {
 
 /**
 * Updates visible nodes on the lineage tree to show only specified cells by name.
-* @param {TODO type} cellnames - TODO description
-* @param {TODO type} new_data_names - TODO description
+* @param {list} cellnames - list of cell names (strings) for cells to show in 
+*                           the lineage tree (all visible cells)
+* @param {list} new_data_names - list of names of cells that should be newly 
+*                                revealed on the lineage tree
 */
 function plotLineageTree(cellnames, new_data_names){
     var allnodes = d3.selectAll('.node');
@@ -1017,7 +1099,6 @@ function plotData( time_point, duration ) {
     var timepoint_data = csvdata[time_point % csvdata.length];
     var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
     datapoints.exit().remove();
-    var cellnames = timePointCellNames(timepoint_data);
 
     // Get small multiples data
     var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xy';});
@@ -1046,6 +1127,7 @@ function plotData( time_point, duration ) {
     });
     
     //plot the lineage tree
+    var cellnames = timePointCellNames(timepoint_data);
     var newnodes = plotLineageTree(cellnames, new_data_names);
 
     //transition points
@@ -1081,8 +1163,8 @@ HELPER FUNCTIONS FOR DATA PARSING AND INITIALIZATION
 ****************************************************************/
 
 /**
-* TODO add description
-* @param {TODO type} csvdata_in - TODO description
+* Read in text data that is in csv format and parse it into the csvdata object
+* @param {text from file} csvdata_in - file text generated by a call to d3.text
 */
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
@@ -1114,7 +1196,9 @@ function parseCSV(csvdata_in) {
 }
 
 /**
-* TODO add description. 
+* Read in the csv file at the URL specified in the url variable, parse the rows
+* using parseCSV, and then iterate over the parsed csvdata objects, storing all
+* meta attributes in the cellmap object to avoid storing duplicate metadata
 */
 function loadTimePoints(){
 
