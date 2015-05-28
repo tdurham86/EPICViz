@@ -13,7 +13,8 @@ GLOBAL VARIABLES
 //global highlighting variables
 var defaultColor='#a8a8a8';
 var selectionColor = '#FFFF00';
-var highlightColorDefaults = ['#e41a1c', '#377eb8', '#ff7f00', '#f781bf'];
+//boolean value indicates whether this color is currently in use
+var highlightColorDefaults = {'#e41a1c':false, '#377eb8':false, '#ff7f00':false, '#f781bf':false};
 var highlights = false;
 
 //contains the data for each timepoint/cell
@@ -152,7 +153,8 @@ function makeLPDivTemplate(){
 
     lpsubdiv.append('input')
         .attr('type', 'color')
-        .attr('value', '#ff0000')
+//        .attr('value', '#ff0000')
+//        .attr('defaultValue', '#ff0000')
         .attr('class', 'hicolor')
         .attr('id', 'hicolor'+lpidx)
         .attr('onchange', 'updateCellColors(); updateCellSize(); updatePlot();');
@@ -174,8 +176,10 @@ function makeLPDivTemplate(){
 *             picker controls
 */
 function removeLPDiv(e, obj) {
-    $(obj).parent().remove(); $("#add-lp").prop("disabled", false); updatePlot();
-    lpidx--;
+    var defcolor = $(obj).parent().children('.hicolor').attr('defaultValue');
+    highlightColorDefaults[defcolor] = false;
+    $(obj).parent().remove();
+    $("#add-lp").prop("disabled", false);
     
     // Restore color of + button
     $('#add-lp').removeAttr('style');
@@ -189,6 +193,18 @@ function removeLPDiv(e, obj) {
 function cloneLPDiv(){
     var highlightCount = $('.lineage-pickers').children().length
     if(highlightCount < 5){
+        // Automatically set the new color picker's default color and record
+        // that default as used by setting its value to true
+        for(var highlight_color in highlightColorDefaults){
+            if(!highlightColorDefaults[highlight_color]){
+                highlightColorDefaults[highlight_color] = true;
+                break;
+            }
+        }
+        d3.select('#hicolor' + 1)
+            .attr('value', highlight_color)
+            .attr('defaultValue', highlight_color);
+
         var lpdivclone = $('#lineage-picker-template').clone(true);
 
         lpdivclone.attr('id', 'lineage-picker'+lpidx)
@@ -210,11 +226,6 @@ function cloneLPDiv(){
             $('#add-lp').prop('disabled', true);
         }
     }
-
-    // Automatically set the new color picker's default color
-    highlight_color = highlightColorDefaults[lpidx - 3]
-    console.log('#hicolor' + (lpidx -1))
-    d3.select('#hicolor' + (lpidx -1)).attr('value', highlight_color)
 
     // Grey out the button when too many highlights are added
     if (highlightCount >= 4) {
@@ -446,6 +457,8 @@ function updateCellColors(){
         .attr('diffuseColor', function(d){return d.meta.color;});
     d3.selectAll('.node-circle')
         .attr('fill', function(d){return d.color;});
+    d3.selectAll('.small_multiples_datapoint')
+        .attr('fill', function(d){return d.meta.color;});
 }
 
 /**
@@ -539,16 +552,32 @@ function updateCellSize(){
     var to_update = d3.selectAll('.datapoint')
         .filter(function(d){
             var scale = +$(this).attr('scale').split(',')[0];
-            if((d.meta.selected && scale == 5) || //small and should be big
+            if((d.meta.selected && scale === 5) || //small and should be big
                (!d.meta.selected && scale > 5) || //big and should be small
-               (!highlights && scale == 5)){      //reset any small to big
-                   return this;
+               (!highlights && scale === 5)){      //reset any small to big
+                return this;
             }else{
                 return null;
             }
         });
     to_update.remove();
     plot3DView(to_update);
+    
+    var to_update = d3.selectAll('.small_multiples_datapoint')
+        .filter(function(d){
+            var rad = +$(this).attr('r');
+            if((d.meta.selected && rad === (d.radius / 25)) ||
+               (!d.meta.selected && rad > (d.radius / 25)) ||
+               (!highlights && rad === (d.radius / 25))){
+                return this;
+            }else{
+                return null;
+            }
+        });
+    to_update.remove();
+    plotXYSmallMultiple(to_update);
+    plotXZSmallMultiple(to_update);
+    plotYZSmallMultiple(to_update);
 }
 
 /**
@@ -1114,8 +1143,8 @@ function plotData( time_point, duration ) {
     plotYZSmallMultiple(small_multiples_datapoints_yz.enter());
 
     //Draw points with coloring and code to highlight a specific lineage
-    var transp = 0;
-    var pt_color_map = {};
+//    var transp = 0;
+//    var pt_color_map = {};
 
     //plot data in 3D view
     var new_data = plot3DView(datapoints.enter())
