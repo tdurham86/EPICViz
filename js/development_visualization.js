@@ -81,6 +81,47 @@ var speed = "slow"
 // Hiding controls 
 controls_hidden = false;
 
+//Gene Expression Globals
+var exprPlot_scale;
+var gene_names = ['nfyc-1', 'eor-1', 'acp-5', 'sdz-38', 'wrm-1', 'F57A8.1', 
+                  'unc-120', 'dpy-31', 'dpy-30', 'ZK185.1', 'somi-1', 'swsn-7', 
+                  'T22C8.3', 'F17C11.1', 'F21D5.9', 'crh-2', 'tbx-37', 'tbx-38',
+                  'nhr-69', 'nhr-68', 'eyg-1', 'ztf-3', 'elt-3', 'elt-2', 
+                  'elt-1', 'zip-8', 'cpl-1', 'elt-6', 'gadr-1', 'daf-16', 
+                  'Y116A8C.19', 'nhr-2', 'nob-1', 'dpy-7', 'daf-19', 
+                  'Y71G12B.6', 'lpd-2', 'nurf-1', 'lin-40', 'nhr-57', 'ref-1', 
+                  'hmg-1.2', 'hmg-11', 'efl-3', 'ges-1', 'lin-15B', 'R02D3.7', 
+                  'mep-1', 'nfya-1', 'sdc-2', 'pal-1', 'lim-4', 'nhr-127', 
+                  'lim-6', 'ces-1', 'sea-1', 'B0336.3', 'pha-4', 'F16B12.6', 
+                  'hsf-1', 'sem-2', 'alr-1', 'nhr-171', 'nhr-49', 'T19B10.2', 
+                  'vab-15', 'tps-2', 'dsc-1', 'sma-9', 'ceh-58', 'zip-3', 
+                  'irx-1', 'dpff-1', 'ref-2', 'tbx-2', 'vab-7', 'ceh-39', 
+                  'ceh-36', 'ceh-34', 'drr-1', 'ceh-32', 'cnd-1', 'ceh-31', 
+                  'tlp-1', 'F36A2.3', 'F57C9.4', 'vab-23', 'tbx-35', 'lin-26', 
+                  'madf-10', 'ztf-16', 'atf-2', 'skr-8', 'K02D7.1', 'nhr-34', 
+                  'aha-1', 'lin-1', 'ceh-43', 'ceh-41', 'ceh-40', 'nfyb-1', 
+                  'F38C2.7', 'mes-4', 'ceh-27', 'nhr-102', 'ceh-21', 'B0310.2',
+                  'elf-1', 'cebp-2', 'D1081.8', 'copa-1', 'C25D7.10', 'egl-5', 
+                  'dhhc-10', 'his-55', 'lin-32', 'pes-10', 'hnd-1', 'flh-3', 
+                  'lin-39', 'dve-1', 'pros-1', 'F39B2.1', 'unc-39', 'nhr-23', 
+                  'unc-30', 'dpl-1', 'daf-3', 'nhr-28', 'pgp-3', 'pgp-2', 
+                  'F32H2.6', 'pbrm-1', 'unc-130', 'aly-1', 'ceh-14', 'die-1', 
+                  'ceh-16', 'ceh-93', 'rad-26', 'F21A10.2', 'lsy-27', 'egl-38', 
+                  'sdz-28', 'mml-1', 'mab-5', 'elt-7', 'hsp-3', 'nhr-64', 
+                  'saeg-2', 'R144.3', 'nhr-15', 'tbx-8', 'chd-7', 'dyf-7', 
+                  'repo-1', 'flh-1', 'cep-1', 'T28H10.3', 'icd-2', 'C50F7.5', 
+                  'nhr-25', 'pes-1', 'ama-1', 'sup-37', 'egl-27', 'moe-3', 
+                  'tbx-9', 'ceh-86', 'spr-4', 'T01B11.2', 'ztf-11', 'F22D6.2', 
+                  'attf-2', 'attf-4', 'nhr-232', 'tbx-11', 'ceh-6', 'lsy-2', 
+                  'K09A11.1', 'lag-1', 'lin-13', 'pax-3', 'lin-11', 'hlh-26', 
+                  'med-2', 'dmd-4', 'mnm-2', 'T20F7.1', 'fkh-4', 'sbp-1', 
+                  'hlh-4', 'F49E8.2', 'hlh-2', 'hlh-3', 'hlh-1', 'hlh-8', 
+                  'F37B4.10', 'aptf-4', 'ztf-13', 'ets-7', 'isw-1', 'F23B12.7', 
+                  'egl-18', 'his-72', 'unc-86', 'vha-12', 'mir-57', 'glp-1', 
+                  'lir-2', 'ccch-5', 'ccch-2', 'cwn-1', 'nhr-67', 'sex-1', 
+                  'C28G1.4', 'ttx-3', 'nhr-79', 'hlh-16', 'hlh-17', 'C05B5.4', 
+                  'hlh-19', 'nhr-71', 'end-1', 'let-381', 'end-3', 'mel-28'];
+
 /****************************************************************
 Lineage Highlighting Functions
 ****************************************************************/
@@ -276,36 +317,6 @@ function initializeLineagePicker(){
         .attr('id', 'showhide-highlight')
         .attr('onclick', '(function(e, obj) {obj.value = obj.value.substr(0,4) === "Hide" ? "Show Non-Highlighted" : "Hide Non-Highlighted"; showHideHighlights(obj.value);})(event, this)');
 }
-
-/**
-* APPEARS TO NO LONGER BE USED 
-*TODO make description more clear: check to see if name is the name of a parent of object d
-* @param {string} showhide - TODO description
-function isParentOf(d, name){
-    //return true if name matches d
-    if(d.name === name){
-        return true;
-    //this will work if name is blastomere or below
-    }else if(d.name.indexOf(name) > -1){
-        return true;
-    //if this is the root node, then there are no more parents to check
-    }else if(d.parent === -1){
-        return false;
-    //if name is not a substring of d, then the only way it can be a parent is 
-    //for name to be a pre-blastomere. Find the blastomere node for this lineage
-    //branch and recurse to either find parent or end at P0 (root).
-    }else{
-        var regex = /^(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/;
-        var blast = regex.exec(d.name);
-        if(blast === null){
-            return false;
-        }else{
-            console.log(blast, name);
-            return isParentOf(cellmap[blast[0]].parent, name);
-        }
-    }
-}
-*/
 
 /**
 * Takes an array of cells for a particular time point (i.e. an element from 
@@ -675,6 +686,7 @@ function loadCellTypeMap(){
 //            initializeLineageTree(root);
         initializePlot();
         initializeSmallMultiples();
+        initializeGeneExpressionPlot();
         initializeLineageTree(cellmap.P0);
         plotData(0, 5);
     });
@@ -1116,6 +1128,75 @@ function plotLineageTree(cellnames, new_data_names){
 }
 
 /**
+* Plots the gene expression pattern for the cells passed in as datapoints
+* @param {d3 selection} datapoints - time point data points (as determined for 
+*                                    the 3D plot)
+*/
+function plotGeneExpression(datapoints){
+    var expr_data = generate_expr_data(datapoints);
+    var cellcount = expr_data.length/gene_names.length;
+    var cellorder = Object.keys(namemap[timepoint % namemap.length]).sort();
+    var xdim = Math.floor(+$('#exprPlot').attr('width') / gene_names.length);
+    var ydim = Math.floor(+$('#exprPlot').attr('height') / cellcount);
+    var exprmap = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
+        .data(expr_data, function (d){return d.cell + '.' + d.gene;});
+    exprmap.exit().remove();
+    exprmap.enter().append('rect')
+        .attr('x', function(d){return gene_names.indexOf(d.gene) * xdim;})
+        .attr('y', function(d){return cellorder.indexOf(d.cell) * ydim;})
+        .attr('class', 'exprPlot_data_point')
+        .attr('width', xdim)
+        .attr('height', ydim);
+    exprmap.attr('fill', function(d){return d.expressed ? '#0055ff' : '#ffffff';});
+}
+
+/**
+* Iterates over the data points for the current time point and constructs an 
+* array of expression data objects that can be linked to the heatmap rectangle
+* elements. The expression data objects contain the cell name, gene name, and
+* a boolean indicating whether or not the gene is expressed in the cell at this
+* time point.
+* @param {d3 selection} datapoints - time point data points (e.g. as determined
+*                                    for the 3D plot)
+* @returns {list} expr_data - list of javascript objects for expression data.
+*                             Each object contains the cell name, gene name, 
+*                             and whether or not that gene is expressed in that
+*                             cell.
+*/
+function generate_expr_data(datapoints){
+    var expr_data = [];
+    datapoints.each(function(d){
+        for(var i=0; i<gene_names.length; i++){
+            expr_data.push({cell: d.meta.name,
+                            gene: gene_names[i],
+                            expressed: d.expr.charAt(i) === '1'
+            });
+        }
+    });
+    return expr_data;
+}
+
+function initializeGeneExpressionPlot(){
+    var width = 500,
+        height = 600;
+    
+    var exprPlot = d3.select('#divPlot')
+        .append('svg:svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('class', 'exprPlot')
+        .attr('id', 'exprPlot');
+
+    var main = exprPlot.append('g')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('class', 'main');
+
+    var g = main.append('svg:g')
+        .attr('id', 'exprPlot_data_points');
+}
+
+/**
 * Wrapper function that transitions all plots to a specified timepoint. Determines new data to plot and then passes along to individual plotting functions to update.
 * @param {integer} time_point - Index of the timepoint to transition to
 * @param {integer} duration - Duration of the smooth animation to transition datapoints in milliseconds
@@ -1150,6 +1231,8 @@ function plotData( time_point, duration ) {
 
     //plot data in 3D view
     var new_data = plot3DView(datapoints.enter())
+
+    plotGeneExpression(datapoints);
 
     //use new_data to identify which nodes in the tree should be revealed
     var new_data_names = [];
@@ -1212,6 +1295,7 @@ function parseCSV(csvdata_in) {
                      'y': +row[3],
                      'z': +row[4] * 11.1,
                      'radius': +row[5],
+                     'expr': row[6],
                      'pred': -1,
                      'succ': [],
                      'meta':{'name': row[0].trim().replace(/\s/g, '_'),
@@ -1233,7 +1317,7 @@ function parseCSV(csvdata_in) {
 */
 function loadTimePoints(){
 
-    var url = 'http://localhost:2255/ImageExpressionTable.timesort.fixed.normalized.bincollapsed.csv';
+    var url = 'http://localhost:2255/ImageExpressionTable.timesort.fixed.centered.binarystr.csv';
     d3.text(url, function(tpdata){
         parseCSV(tpdata);
         for(var idx = 0; idx < csvdata.length; idx++){
