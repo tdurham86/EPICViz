@@ -947,7 +947,9 @@ function initializeSmallMultiples() {
 
  
     // Make the axes for the x-y chart
-    var xyChart = d3.select('#divPlot')
+    var xyChart = d3.select('#top_display_panel')
+    .append('div')
+    .attr('id', 'small_multiples')
     .append('svg:svg')
     .attr('width', width)
     .attr('height', height)
@@ -964,7 +966,7 @@ function initializeSmallMultiples() {
 
 
     // Make the axes for the x-z chart
-    var xzChart = d3.select('#divPlot')
+    var xzChart = d3.select('#small_multiples')
     .append('svg:svg')
     .attr('width', width)
     .attr('height', height)
@@ -980,7 +982,7 @@ function initializeSmallMultiples() {
         .attr('id', 'xz_data_points');
 
     // Make the axes for the x-z chart
-    var yzChart = d3.select('#divPlot')
+    var yzChart = d3.select('#small_multiples')
     .append('svg:svg')
     .attr('width', width)
     .attr('height', height)
@@ -1332,12 +1334,12 @@ function hideControls() {
         controls_hidden = true;
         $('#divControls').animate({width: "0px"}, 500, function() {});
         $('#hide-controls').attr('value', '>')
-        $('#divPlot').animate({margin: "0"}, 500, function() {});
+        $('#divPlot').animate({margin: "0", width: "100%"}, 500, function() {});
     } else {
         controls_hidden = false;
         $('#divControls').animate({width: "415"}, 500, function() {});
         $('#hide-controls').attr('value', '<')
-        $('#divPlot').animate({"margin-left": "415"}, 500, function() {});
+        $('#divPlot').animate({"margin-left": "415", "width": "-=415px"}, 500, function() {});
     }
 }
 
@@ -1565,9 +1567,11 @@ Main Thread of execution
 ****************************************************************/
 function scatterPlot3d( parent ) {
     x3d = parent  
+        .append('div')
+        .attr('id', 'top_display_panel')
+        .append('div')
+        .attr('id', 'three_d_plot')
         .append("x3d")
-        .attr('id', '3dplot')
-        .style( "border", "none" )
 
     scene = x3d.append("scene")
 

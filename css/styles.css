@@ -1,9 +1,10 @@
-body {
+html, body, form {
     font-family: 'Open Sans', 'Segoe UI', Helvetica, Verdana, Arial, sans-serif;
     font-weight: 300;
     background-color: #eee;
     outline: none;
     color: #777;
+    height: 100%;
 }
 
 body > .container-fluid {
@@ -58,9 +59,23 @@ body > .container-fluid {
 }
 
 /* Styling for 3D view */
+#top_display_panel {
+  height: 50%;
+  width: 100%;
+}
+
+#three_d_plot {
+  height: 100%;
+  width: 35%;
+  display: inline-block;
+}
+
 x3d {
-  margin: 0 auto;
-  width: 60%;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-right: 1px solid #CCCCCC;
+
 }
 
 .control-section {
@@ -93,14 +108,32 @@ x3d {
 
 #divPlot {
   padding-top: 50px;
-  margin-left:415px; 
+  margin-left:415px;
+  height: 100%; 
+  width: calc(100% - 415px);
+  display: inline-block;
 }
+
+/* Styling for small multiples */
+#small_multiples {
+  display: inline-block;
+  height: 100%;
+  top: 0;
+}
+
+.small_multiples_chart {
+  display: block;
+  height: 33%;
+}
+
 
 /* Styling for lineage tree */
 .lineage_tree {
   width: 100%;
+  height: 50%;
   margin-left: auto;
   margin-right: auto;
+  display: inline-block;
 }
 
 .lineage_tree svg{
