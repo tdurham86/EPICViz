@@ -54,6 +54,7 @@ var playback_id;
 
 //3d variables
 var x3d, scene;
+currentViewpoint = 0;
 
 //lineage picker idx, for unique ids
 var lpidx = 1;
@@ -955,6 +956,7 @@ function initializeSmallMultiples() {
     .attr('height', height)
     .attr('class', 'small_multiples_chart')
     .attr('id', 'xyChart')
+    .attr('onclick', 'setViewpoint(1)')
 
     var main = xyChart.append('g')
     .attr('width', width)
@@ -972,6 +974,7 @@ function initializeSmallMultiples() {
     .attr('height', height)
     .attr('class', 'small_multiples_chart')
     .attr('id', 'xzChart')
+    .attr('onclick', 'setViewpoint(2)')
 
     var main = xzChart.append('g')
         .attr('width', width)
@@ -988,6 +991,7 @@ function initializeSmallMultiples() {
     .attr('height', height)
     .attr('class', 'small_multiples_chart')
     .attr('id', 'yzChart')
+    .attr('onclick', 'setViewpoint(3)')
 
     var main = yzChart.append('g')
         .attr('width', width)
@@ -1326,8 +1330,31 @@ function playpausedev(){
 * @callback - callback function for Reset View button
 */
 function resetView() {
-  x3d.node().runtime.resetView()
+  setViewpoint(0);
 }
+
+
+/**
+* Sets the 3D viewpoint of the 3D plot to one of three predefined viewpoints relies on global variable currentViewpoint.
+* @param {int} viewPoint - the number (1-3) of viewpoint to set 
+* @callback - callback function for small multiples
+*/
+function setViewpoint(viewPoint) {
+    var viewPointChange = viewPoint - currentViewpoint
+      
+    if (viewPointChange > 0) {
+        for (var i = 0; i < Math.abs(viewPointChange); i++) {
+            x3d.node().runtime.nextView()
+            currentViewpoint++;
+        }
+    } else if (viewPointChange < 0) {
+        for (var i = 0; i < Math.abs(viewPointChange); i++) {
+            x3d.node().runtime.prevView()
+            currentViewpoint--;
+        }
+    }    
+}
+
 
 function hideControls() {
     if(! controls_hidden) {
@@ -1575,11 +1602,31 @@ function scatterPlot3d( parent ) {
 
     scene = x3d.append("scene")
 
-    var viewpoint = scene.append("orthoviewpoint")
+    // Define the four different viewpoints (ISO and each of the small multiples)
+    scene.append("orthoviewpoint")
         .attr( "centerOfRotation", [0, 0, 0])
         .attr( "fieldOfView", [-300, -300, 800, 800])
         .attr( "orientation", [-0.5, 1, 0.2, 1.12*Math.PI/4])
         .attr( "position", [600, 150, 800])
+
+    scene.append("orthoviewpoint")
+        .attr( "centerOfRotation", [0, 0, 0])
+        .attr( "fieldOfView", [-300, -300, 800, 800])
+        .attr( "orientation", [0, 0, 0, 0])
+        .attr( "position", [-100, -200, 800])
+
+    scene.append("orthoviewpoint")
+        .attr( "centerOfRotation", [0, 0, 0])
+        .attr( "fieldOfView", [-300, -300, 800, 800])
+        .attr( "orientation", [0, 0, 0, 0])
+        .attr( "position", [-100, -200, 800])
+
+    scene.append("orthoviewpoint")
+        .attr( "centerOfRotation", [0, 0, 0])
+        .attr( "fieldOfView", [-300, -300, 800, 800])
+        .attr( "orientation", [0, 1.5, 0, 3.14/2])
+        .attr( "position", [600, -200, 250])
+
 
     console.log("Reading in embryo positions.");
     loadTimePoints();
