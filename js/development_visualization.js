@@ -1186,29 +1186,36 @@ function plotGeneExpression(datapoints){
     updateExprRects();
 }
 
+/**
+* Iterates over all exprPlot_data_point elements and updates the positions and
+* colors to reflect the current time point. Called by plotGeneExpression().
+*/
 function updateExprRects(){
     var tpcells = namemap[timepoint % namemap.length];
     var cellorder = tpcells.sort();
     expr_gene_scale.domain(gene_names);
     expr_cell_scale.domain(cellorder);
-//    var xdim = Math.floor(+$('#exprPlot').attr('width') / gene_names.length);
-//    var ydim = Math.floor(+$('#exprPlot').attr('height') / cellorder.length);
     d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
         .attr('x', function(d){
-//            var gene = gene_names[i % gene_names.length];
-//            return exprdata[d][1] * xdim;
               return expr_gene_scale(gene_names[exprdata[d][1]]);
         })
         .attr('y', function(d){
-//            var cell = tpcells[Math.floor(i/gene_names.length)];
-//            return cellorder.indexOf(exprdata[d][0].meta.name) * ydim;
             return expr_cell_scale(exprdata[d][0].meta.name);
         })
         .attr('width', expr_gene_scale.rangeBand())
         .attr('height', expr_cell_scale.rangeBand())
         .attr('fill', function(d){
             var dp = exprdata[d];
-            if(dp[0].expr.charAt(dp[1]) === '1'){
+            var exprval;
+            if(dp[0].first_tp === -1){
+                exprval = dp[0].expr.charAt(dp[1]) === '1';
+            }else{
+                exprval = dp[0].first_tp.expr.charAt(dp[1]) === '1';
+                if(dp[0].expr.indexOf(dp[1]) > -1){
+                    exprval = !exprval;
+                }
+            }
+            if(exprval){
                 return '#0055ff';
             }else{
                 return '#ffffff';
@@ -1217,49 +1224,42 @@ function updateExprRects(){
 }
 
 /**
-* Iterates over the data points for the current time point and constructs an 
-* array of expression data objects that can be linked to the heatmap rectangle
-* elements. The expression data objects contain the cell name, gene name, and
-* a boolean indicating whether or not the gene is expressed in the cell at this
-* time point.
-* @param {d3 selection} datapoints - time point data points (e.g. as determined
-*                                    for the 3D plot)
-* @returns {list} expr_data - list of javascript objects for expression data.
-*                             Each object contains the cell name, gene name, 
-*                             and whether or not that gene is expressed in that
-*                             cell.
+* Iterates over the data points for the current time point and updates the 
+* exprdata object to contain only the cell/gene combos present at this time 
+* point. The expression data objects contain the csvdata element corresponding 
+* to a given cell at a given time, and the index of the gene name in gene_names.
 */
 function generate_expr_data(){
     var tidx = timepoint % csvdata.length;
     var datapoints = csvdata[timepoint % csvdata.length];
-//    var next_exprdata = [];
     var del, predname;
-    //remove data for cells no longer in the current time point
+    //remove data for cells no longer in the current time point and keep track
+    //of the cells that should remain present for the new time point
+    var cells_present = {};
     for(var dp in exprdata){
         if(namemap[tidx].indexOf(exprdata[dp][0].meta.name) === -1){
             delete exprdata[dp];
+        }else{
+            cells_present[exprdata[dp][0].meta.name] = null;
         }
     }
     for(var i=0; i < datapoints.length; i++){
-//        del = false;
-//        predname = datapoints[i].pred != -1 ? datapoints[i].pred.meta.name : null;
-//        if(predname && datapoints[i].meta.name != predname){
-//            del = true;
-//        }
-        for(var n=0; n < gene_names.length; n++){
-//            if(del){
-//                delete exprdata[predname + '_' + gene_names[n]];
-//            }
-            var dpname = datapoints[i].meta.name + '_' + gene_names[n];
-            exprdata[dpname] = [datapoints[i], n];
+        //if this cell doesn't already exist in exprdata, we need to generate 
+        //all expression data points
+        if(!(datapoints[i].meta.name in cells_present)){
+            for(var n=0; n < gene_names.length; n++){
+                var dpname = datapoints[i].meta.name + '_' + gene_names[n];
+                exprdata[dpname] = [datapoints[i], n];
+            }
         }
     }
-//    return next_exprdata;
 }
 
+/* Initialize the gene expression plot by setting up the containing div and 
+* svg group elements, and initializing the range of the scales.
+*/
 var expr_gene_scale = d3.scale.ordinal(),
 expr_cell_scale = d3.scale.ordinal();
-  
 function initializeGeneExpressionPlot(){
     var width = 500,
         height = 600;
@@ -1313,23 +1313,10 @@ function plotData( time_point, duration ) {
     small_multiples_datapoints_yz.exit().remove();
     plotYZSmallMultiple(small_multiples_datapoints_yz.enter());
 
-    //Draw points with coloring and code to highlight a specific lineage
-//    var transp = 0;
-//    var pt_color_map = {};
-
     //plot data in 3D view
     var new_data = plot3DView(datapoints.enter())
 
     //plot gene expression patterns
-//    var expr_data = exprdata[tp_idx];
-//    var cell_names = namemap[tp_idx];
-//    var expr_points = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
-//        .data(expr_data, function (d, i){
-//            var tp = timepoint % csvdata.length;
-//            var cname = namemap[tp][Math.floor(i/gene_names.length)];
-//            var gname = gene_names[i % gene_names.length];
-//            return cname + '.' + gname;
-//        });
     generate_expr_data();
     var expr_points = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
     .data(Object.keys(exprdata), function (d){
@@ -1389,29 +1376,25 @@ function get_parent_name(cellname){
 }
 
 /**
-* Read in text data that is in csv format and parse it into the csvdata object
+* Read in text data that is in csv format and parse it into the csvdata object.
+* This function also populates the namemap array to allow lookups into the 
+* time series data based on cell name, and the cellmap, which contains all 
+* cell-level metadata.
 * @param {text from file} csvdata_in - file text generated by a call to d3.text
 */
+//globals to allow parseCSV to work even if a time point is split across csvs
 var tp = 1,
 tpdata = [],
-//tpexpr = '',
 tpnames = [];
-
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
-//    var tp = 1;
-//    var tpdata = [];
-//    var tpexpr = '';
-//    var tpnames = [];
     for (var i=1; i < rows.length; i++){
         row = rows[i];
         if(+row[1] != tp){
             csvdata[tp - 1] = tpdata;
-//            exprdata[tp - 1] = tpexpr;
             namemap[tp - 1] = tpnames;
             tp = +row[1];
             tpdata = [];
-//            tpexpr = '';
             tpnames = [];
         }
         //Set up cellmap in parallel with csvdata
@@ -1421,6 +1404,7 @@ function parseCSV(csvdata_in) {
             cell = cellmap[cellname];
         }else{
             cell = {'name':cellname,
+                    'birthtp':tp - 1,
                     'parent':-1,
                     'children': [],
                     'selected':false,
@@ -1439,20 +1423,12 @@ function parseCSV(csvdata_in) {
                      'y': +row[3],
                      'z': +row[4] * 11.1,
                      'radius': +row[5],
-                     'expr': row[6],
+                     'first_tp': cell.birthtp === tp - 1 ? -1 : csvdata[cell.birthtp][namemap[cell.birthtp].indexOf(cell.name)],
+                     'expr': cell.birthtp === tp - 1 ? row[6] : exprDiff(row[6], cell),
                      'pred': -1,
                      'succ': [],
                      'meta':cell
         });
-        //assemble object for exprdata
-//        var cell_idx_str = (tpdata.length - 1).toString();
-//        for(var n=0; n < gene_names.length; n++){
-////            tpexpr.push([cellmap[cellname], n, row[6].charAt(n) === '1']);
-////            tpexpr.push([tpdata.length - 1, n, row[6].charAt(n) === '1']);
-//            tpexpr += cell_idx_str + n.toString() + row[6].charAt(n);
-//        }
-////        tpexpr += row[6];
-        //record order of cell names
         tpnames.push(cellname);
         
         //Set up predecessor/successor
@@ -1465,6 +1441,27 @@ function parseCSV(csvdata_in) {
             csvdata[tp - 2][pred_idx].succ.push(tpdata[tpdata.length - 1]);
         }
     }
+}
+
+/* Function to calculate the indices where an expression pattern string differs
+* from the original expression pattern string of a given cell.
+* @param {string} exprStr - string of zeros and ones indicating an expression 
+*                           pattern of genes in a given cell at a given time 
+*                           point
+* @param {object} cell - javascript object containing metadata about a cell
+* @returns {list} diff_idx - a list containing indices where the expression
+*                            pattern in the string is different from the 
+*                            original expression pattern for the given cell.
+*/
+function exprDiff(exprStr, cell){
+    var diff_idx = [];
+    var orig_expr = csvdata[cell.birthtp][namemap[cell.birthtp].indexOf(cell.name)].expr;
+    for(var i=0; i < exprStr.length; i++){
+        if(exprStr.charAt(i) != orig_expr.charAt(i)){
+            diff_idx.push(i);
+        }
+    }
+    return diff_idx;
 }
 
 /**
@@ -1485,49 +1482,6 @@ function loadTimePoints(file_idx){
         }
         parseCSV(tpdata);
         loadTimePoints(file_idx + 1);
-/*        for(var idx = 0; idx < csvdata.length; idx++){
-            for(var i = 0; i < csvdata[idx].length; i++){
-                //make entry in namemap for this cell at this timepoint
-                var cell = csvdata[idx][i];
-                //get predecessor in previous time point
-                var pred_idx;
-                if(idx > 0){
-                    pred_idx = namemap[idx-1].indexOf(cell.meta.name);
-                }
-                if(typeof pred_idx === 'undefined' || pred_idx === -1){
-                    var pred_name;
-                    //blastomere names are not systematic, so we have to look them up
-                    if(cell.meta.name in blastpred){
-                        pred_name = blastpred[cell.meta.name];
-                    }else{
-                        pred_name = cell.meta.name.substr(0, cell.meta.name.length - 1);
-                    }
-                    if(idx > 0){
-                        pred_idx = namemap[idx-1].indexOf(pred_name);
-                    }
-                }
-                if(typeof pred_idx === 'undefined' || pred_idx === -1){
-                    cell.pred = -1;
-                    if(pred_name){
-                        cell.meta.parent = cellmap[pred_name];
-                        cell.meta.parent.children.push(cell.meta);
-                    }
-                }else{
-                    //link cell to time point data structure
-                    cell.pred = csvdata[idx-1][pred_idx];
-                    cell.pred.succ.push(cell);
-
-                    //add entries to lineage data structure (if it's not there already)
-                    if(!(cell.meta.name in cellmap)){
-                        cell.meta.parent = cellmap[cell.pred.meta.name];
-                        cell.meta.parent.children.push(cell.meta);
-                        cellmap[cell.meta.name] = cell.meta;
-                    }else{
-                        cell.meta = cellmap[cell.meta.name];
-                    }
-                }
-            }
-        }*/
     });
 }
 
