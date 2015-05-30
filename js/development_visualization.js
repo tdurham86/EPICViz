@@ -20,6 +20,9 @@ var highlights = false;
 //contains the data for each timepoint/cell
 var csvdata = [];
 
+//contains data points for current gene expression pattern
+var exprdata = {};
+
 //mapping of cell name to cell metadata, this metadata is linked to from the 
 //'meta' field of the objects in csvdata
 var cellmap = {P0: {name:'P0', parent:-1, children: [], selected: false,
@@ -84,6 +87,46 @@ controls_hidden = false;
 
 //Gene Expression Globals
 var exprPlot_scale;
+var gene_names = ['ceh-14', 'ges-1', 'nhr-25', 'tbx-35', 'lir-2', 'hlh-19', 
+                  'icd-2', 'elf-1', 'rad-26', 'mml-1', 'pgp-3', 'hlh-4', 
+                  'C05B5.4', 'nhr-102', 'T22C8.3', 'B0336.3', 'lin-1', 'hlh-8', 
+                  'cep-1', 'ets-7', 'hsf-1', 'fkh-4', 'F23B12.7', 'tbx-11', 
+                  'nhr-34', 'C50F7.5', 'glp-1', 'elt-6', 'zip-3', 'hlh-3', 
+                  'nhr-64', 'efl-3', 'nhr-71', 'ceh-58', 'hlh-26', 'zip-8', 
+                  'pes-1', 'ztf-11', 'aha-1', 'ref-1', 'gadr-1', 'madf-10', 
+                  'ZK185.1', 'C25D7.10', 'ceh-41', 'F37B4.10', 'spr-4', 
+                  'hsp-3', 'isw-1', 'sdz-38', 'egl-18', 'D1081.8', 'attf-4', 
+                  'ztf-13', 'F57A8.1', 'crh-2', 'lpd-2', 'F21A10.2', 'moe-3', 
+                  'nfyc-1', 'cebp-2', 'nfyb-1', 'daf-19', 'dpl-1', 'saeg-2', 
+                  'repo-1', 'sup-37', 'nhr-49', 'ztf-3', 'R144.3', 'nurf-1', 
+                  'vha-12', 'aptf-4', 'flh-1', 'lsy-2', 'nhr-28', 'lin-26', 
+                  'eor-1', 'sdz-28', 'hlh-2', 'egl-27', 'F16B12.6', 'attf-2', 
+                  'his-72', 'hmg-11', 'lsy-27', 'Y116A8C.19', 'ccch-5', 
+                  'pes-10', 'F38C2.7', 'ccch-2', 'R02D3.7', 'mes-4', 'ceh-93', 
+                  'copa-1', 'lin-15B', 'C28G1.4', 'dhhc-10', 'ama-1', 'swsn-7', 
+                  'sex-1', 'daf-3', 'F39B2.1', 'lin-40', 'T20F7.1', 'mep-1', 
+                  'sea-1', 'aly-1', 'dpy-30', 'die-1', 'K09A11.1', 'nfya-1', 
+                  'lin-13', 'B0310.2', 'ceh-39', 'sdc-2', 'skr-8', 'nhr-2', 
+                  'ceh-40', 'flh-3', 'pbrm-1', 'wrm-1', 'ceh-86', 'F22D6.2', 
+                  'ceh-21', 'F57C9.4', 'chd-7', 'hmg-1.2', 'dpff-1', 'ceh-31', 
+                  'his-55', 'sem-2', 'lim-4', 'lim-6', 'tlp-1', 'pha-4', 
+                  'alr-1', 'nhr-127', 'ref-2', 'egl-5', 'egl-38', 'sbp-1', 
+                  'unc-30', 'tbx-37', 'tbx-38', 'sma-9', 'let-381', 'dsc-1', 
+                  'tbx-2', 'elt-1', 'tbx-8', 'tbx-9', 'ceh-36', 'dyf-7', 
+                  'somi-1', 'ceh-34', 'Y71G12B.6', 'nhr-171', 'vab-23', 
+                  'ceh-27', 'unc-39', 'ceh-32', 'ceh-43', 'irx-1', 'nhr-15', 
+                  'hnd-1', 'F32H2.6', 'unc-120', 'mnm-2', 'cnd-1', 'mab-5', 
+                  'unc-86', 'T19B10.2', 'dpy-31', 'F21D5.9', 'lin-32', 'ceh-6', 
+                  'atf-2', 'ces-1', 'nob-1', 'T01B11.2', 'unc-130', 'elt-3', 
+                  'hlh-1', 'cpl-1', 'dpy-7', 'mel-28', 'nhr-23', 'vab-15', 
+                  'ttx-3', 'nhr-67', 'eyg-1', 'daf-16', 'pal-1', 'vab-7', 
+                  'cwn-1', 'F49E8.2', 'nhr-232', 'pax-3', 'ceh-16', 'hlh-16',
+                  'mir-57', 'dmd-4', 'lin-11', 'lin-39', 'pros-1', 'F17C11.1', 
+                  'dve-1', 'med-2', 'nhr-68', 'nhr-57', 'nhr-69', 'lag-1', 
+                  'end-3', 'hlh-17', 'tps-2', 'end-1', 'nhr-79', 'elt-7', 
+                  'ztf-16', 'K02D7.1', 'drr-1', 'T28H10.3', 'elt-2', 'F36A2.3', 
+                  'acp-5', 'pgp-2']
+/*
 var gene_names = ['nfyc-1', 'eor-1', 'acp-5', 'sdz-38', 'wrm-1', 'F57A8.1', 
                   'unc-120', 'dpy-31', 'dpy-30', 'ZK185.1', 'somi-1', 'swsn-7', 
                   'T22C8.3', 'F17C11.1', 'F21D5.9', 'crh-2', 'tbx-37', 'tbx-38',
@@ -122,6 +165,7 @@ var gene_names = ['nfyc-1', 'eor-1', 'acp-5', 'sdz-38', 'wrm-1', 'F57A8.1',
                   'lir-2', 'ccch-5', 'ccch-2', 'cwn-1', 'nhr-67', 'sex-1', 
                   'C28G1.4', 'ttx-3', 'nhr-79', 'hlh-16', 'hlh-17', 'C05B5.4', 
                   'hlh-19', 'nhr-71', 'end-1', 'let-381', 'end-3', 'mel-28'];
+*/
 
 /****************************************************************
 Lineage Highlighting Functions
@@ -1134,21 +1178,42 @@ function plotLineageTree(cellnames, new_data_names){
 *                                    the 3D plot)
 */
 function plotGeneExpression(datapoints){
-    var expr_data = generate_expr_data(datapoints);
-    var cellcount = expr_data.length/gene_names.length;
-    var cellorder = Object.keys(namemap[timepoint % namemap.length]).sort();
-    var xdim = Math.floor(+$('#exprPlot').attr('width') / gene_names.length);
-    var ydim = Math.floor(+$('#exprPlot').attr('height') / cellcount);
-    var exprmap = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
-        .data(expr_data, function (d){return d.cell + '.' + d.gene;});
-    exprmap.exit().remove();
-    exprmap.enter().append('rect')
-        .attr('x', function(d){return gene_names.indexOf(d.gene) * xdim;})
-        .attr('y', function(d){return cellorder.indexOf(d.cell) * ydim;})
+    datapoints.append('rect')
         .attr('class', 'exprPlot_data_point')
-        .attr('width', xdim)
-        .attr('height', ydim);
-    exprmap.attr('fill', function(d){return d.expressed ? '#0055ff' : '#ffffff';});
+        .attr('id', function (d){
+            return d;
+        });
+    updateExprRects();
+}
+
+function updateExprRects(){
+    var tpcells = namemap[timepoint % namemap.length];
+    var cellorder = tpcells.sort();
+    expr_gene_scale.domain(gene_names);
+    expr_cell_scale.domain(cellorder);
+//    var xdim = Math.floor(+$('#exprPlot').attr('width') / gene_names.length);
+//    var ydim = Math.floor(+$('#exprPlot').attr('height') / cellorder.length);
+    d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
+        .attr('x', function(d){
+//            var gene = gene_names[i % gene_names.length];
+//            return exprdata[d][1] * xdim;
+              return expr_gene_scale(gene_names[exprdata[d][1]]);
+        })
+        .attr('y', function(d){
+//            var cell = tpcells[Math.floor(i/gene_names.length)];
+//            return cellorder.indexOf(exprdata[d][0].meta.name) * ydim;
+            return expr_cell_scale(exprdata[d][0].meta.name);
+        })
+        .attr('width', expr_gene_scale.rangeBand())
+        .attr('height', expr_cell_scale.rangeBand())
+        .attr('fill', function(d){
+            var dp = exprdata[d];
+            if(dp[0].expr.charAt(dp[1]) === '1'){
+                return '#0055ff';
+            }else{
+                return '#ffffff';
+            }
+        });
 }
 
 /**
@@ -1164,22 +1229,43 @@ function plotGeneExpression(datapoints){
 *                             and whether or not that gene is expressed in that
 *                             cell.
 */
-function generate_expr_data(datapoints){
-    var expr_data = [];
-    datapoints.each(function(d){
-        for(var i=0; i<gene_names.length; i++){
-            expr_data.push({cell: d.meta.name,
-                            gene: gene_names[i],
-                            expressed: d.expr.charAt(i) === '1'
-            });
+function generate_expr_data(){
+    var tidx = timepoint % csvdata.length;
+    var datapoints = csvdata[timepoint % csvdata.length];
+//    var next_exprdata = [];
+    var del, predname;
+    //remove data for cells no longer in the current time point
+    for(var dp in exprdata){
+        if(namemap[tidx].indexOf(exprdata[dp][0].meta.name) === -1){
+            delete exprdata[dp];
         }
-    });
-    return expr_data;
+    }
+    for(var i=0; i < datapoints.length; i++){
+//        del = false;
+//        predname = datapoints[i].pred != -1 ? datapoints[i].pred.meta.name : null;
+//        if(predname && datapoints[i].meta.name != predname){
+//            del = true;
+//        }
+        for(var n=0; n < gene_names.length; n++){
+//            if(del){
+//                delete exprdata[predname + '_' + gene_names[n]];
+//            }
+            var dpname = datapoints[i].meta.name + '_' + gene_names[n];
+            exprdata[dpname] = [datapoints[i], n];
+        }
+    }
+//    return next_exprdata;
 }
 
+var expr_gene_scale = d3.scale.ordinal(),
+expr_cell_scale = d3.scale.ordinal();
+  
 function initializeGeneExpressionPlot(){
     var width = 500,
         height = 600;
+    
+    expr_gene_scale.rangeRoundBands([0, width]);
+    expr_cell_scale.rangeRoundBands([0, height]);
     
     var exprPlot = d3.select('#divPlot')
         .append('svg:svg')
@@ -1209,7 +1295,8 @@ function plotData( time_point, duration ) {
     }
 
     //Get the data for this timepoint
-    var timepoint_data = csvdata[time_point % csvdata.length];
+    var tp_idx = time_point % csvdata.length;
+    var timepoint_data = csvdata[tp_idx];
     var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
     datapoints.exit().remove();
 
@@ -1233,7 +1320,23 @@ function plotData( time_point, duration ) {
     //plot data in 3D view
     var new_data = plot3DView(datapoints.enter())
 
-    plotGeneExpression(datapoints);
+    //plot gene expression patterns
+//    var expr_data = exprdata[tp_idx];
+//    var cell_names = namemap[tp_idx];
+//    var expr_points = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
+//        .data(expr_data, function (d, i){
+//            var tp = timepoint % csvdata.length;
+//            var cname = namemap[tp][Math.floor(i/gene_names.length)];
+//            var gname = gene_names[i % gene_names.length];
+//            return cname + '.' + gname;
+//        });
+    generate_expr_data();
+    var expr_points = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
+    .data(Object.keys(exprdata), function (d){
+        return d;
+    });
+    expr_points.exit().remove();
+    plotGeneExpression(expr_points.enter());
 
     //use new_data to identify which nodes in the tree should be revealed
     var new_data_names = [];
@@ -1277,21 +1380,61 @@ function plotData( time_point, duration ) {
 HELPER FUNCTIONS FOR DATA PARSING AND INITIALIZATION
 ****************************************************************/
 
+function get_parent_name(cellname){
+    if(cellname in blastpred){
+        return blastpred[cellname];
+    }else{
+        return cellname.substr(0, cellname.length - 1);
+    }
+}
+
 /**
 * Read in text data that is in csv format and parse it into the csvdata object
 * @param {text from file} csvdata_in - file text generated by a call to d3.text
 */
+var tp = 1,
+tpdata = [],
+//tpexpr = '',
+tpnames = [];
+
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
-    var tp = 1;
-    var tpdata = []
+//    var tp = 1;
+//    var tpdata = [];
+//    var tpexpr = '';
+//    var tpnames = [];
     for (var i=1; i < rows.length; i++){
         row = rows[i];
         if(+row[1] != tp){
             csvdata[tp - 1] = tpdata;
+//            exprdata[tp - 1] = tpexpr;
+            namemap[tp - 1] = tpnames;
             tp = +row[1];
             tpdata = [];
+//            tpexpr = '';
+            tpnames = [];
         }
+        //Set up cellmap in parallel with csvdata
+        var cellname = row[0].trim().replace(/\s/g, '_');
+        var cell;
+        if(cellname in cellmap){
+            cell = cellmap[cellname];
+        }else{
+            cell = {'name':cellname,
+                    'parent':-1,
+                    'children': [],
+                    'selected':false,
+                    'userselected':false,
+                    'color':defaultColor
+            };
+            cellmap[cellname] = cell;
+            if(cellname != 'P0'){
+                var parent_name = get_parent_name(cellname);
+                cellmap[cellname].parent = cellmap[parent_name];
+                cellmap[parent_name].children.push(cellmap[cellname]);
+            }
+        }
+        //assemble object for csvdata
         tpdata.push({'x': +row[2],
                      'y': +row[3],
                      'z': +row[4] * 11.1,
@@ -1299,16 +1442,29 @@ function parseCSV(csvdata_in) {
                      'expr': row[6],
                      'pred': -1,
                      'succ': [],
-                     'meta':{'name': row[0].trim().replace(/\s/g, '_'),
-                             'parent': -1,
-                             'children': [],
-                             'selected':false,
-                             'userselected':false,
-                             'color':defaultColor}
+                     'meta':cell
         });
+        //assemble object for exprdata
+//        var cell_idx_str = (tpdata.length - 1).toString();
+//        for(var n=0; n < gene_names.length; n++){
+////            tpexpr.push([cellmap[cellname], n, row[6].charAt(n) === '1']);
+////            tpexpr.push([tpdata.length - 1, n, row[6].charAt(n) === '1']);
+//            tpexpr += cell_idx_str + n.toString() + row[6].charAt(n);
+//        }
+////        tpexpr += row[6];
+        //record order of cell names
+        tpnames.push(cellname);
+        
+        //Set up predecessor/successor
+        if(tp > 1){
+            var pred_idx = namemap[tp - 2].indexOf(cellname);
+            if(pred_idx === -1){
+               pred_idx = namemap[tp - 2].indexOf(get_parent_name(cellname));
+            }
+            tpdata[tpdata.length - 1].pred = csvdata[tp - 2][pred_idx];
+            csvdata[tp - 2][pred_idx].succ.push(tpdata[tpdata.length - 1]);
+        }
     }
-    csvdata[tp - 1] = tpdata;
-    return;
 }
 
 /**
@@ -1316,23 +1472,29 @@ function parseCSV(csvdata_in) {
 * using parseCSV, and then iterate over the parsed csvdata objects, storing all
 * meta attributes in the cellmap object to avoid storing duplicate metadata
 */
-function loadTimePoints(){
-
-    var url = 'http://localhost:2255/ImageExpressionTable.timesort.fixed.centered.binarystr.csv';
+function loadTimePoints(file_idx){
+    var url = 'http://localhost:2255/exprTable/ImageExpressionTable.timesort.fixed.centered.binary.clustered.expstr.' + file_idx + '.csv';
+    console.log(url);
     d3.text(url, function(tpdata){
+        if(!tpdata){
+            ready = true;
+            d3.select('#timerange').attr('max', csvdata.length - 1);
+            //load cell type data
+            loadCellTypeMap();
+            return;
+        }
         parseCSV(tpdata);
-        for(var idx = 0; idx < csvdata.length; idx++){
-            namemap[idx] = {};
+        loadTimePoints(file_idx + 1);
+/*        for(var idx = 0; idx < csvdata.length; idx++){
             for(var i = 0; i < csvdata[idx].length; i++){
                 //make entry in namemap for this cell at this timepoint
                 var cell = csvdata[idx][i];
-                namemap[idx][cell.meta.name] = i;
                 //get predecessor in previous time point
                 var pred_idx;
                 if(idx > 0){
-                    pred_idx = namemap[idx-1][cell.meta.name];
+                    pred_idx = namemap[idx-1].indexOf(cell.meta.name);
                 }
-                if(typeof pred_idx === 'undefined'){
+                if(typeof pred_idx === 'undefined' || pred_idx === -1){
                     var pred_name;
                     //blastomere names are not systematic, so we have to look them up
                     if(cell.meta.name in blastpred){
@@ -1341,16 +1503,15 @@ function loadTimePoints(){
                         pred_name = cell.meta.name.substr(0, cell.meta.name.length - 1);
                     }
                     if(idx > 0){
-                        pred_idx = namemap[idx-1][pred_name];
+                        pred_idx = namemap[idx-1].indexOf(pred_name);
                     }
                 }
-                if(typeof pred_idx === 'undefined'){
+                if(typeof pred_idx === 'undefined' || pred_idx === -1){
                     cell.pred = -1;
                     if(pred_name){
                         cell.meta.parent = cellmap[pred_name];
                         cell.meta.parent.children.push(cell.meta);
                     }
-                    cellmap[cell.meta.name] = cell.meta;
                 }else{
                     //link cell to time point data structure
                     cell.pred = csvdata[idx-1][pred_idx];
@@ -1366,13 +1527,7 @@ function loadTimePoints(){
                     }
                 }
             }
-        }
-        ready = true;
-        d3.select('#timerange').attr('max', csvdata.length - 1);
-
-        //load cell type data
-        loadCellTypeMap();
-        return;
+        }*/
     });
 }
 
@@ -1710,7 +1865,7 @@ function scatterPlot3d( parent ) {
 
 
     console.log("Reading in embryo positions.");
-    loadTimePoints();
+    loadTimePoints(0);
     console.log("Loading data");
 
     d3.select('#hide-controls')
