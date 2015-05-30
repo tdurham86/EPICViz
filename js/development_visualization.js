@@ -1023,7 +1023,6 @@ function plotXYSmallMultiple(to_plot) {
     to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
         .attr('id', function(d){return d.meta.name})
-        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
         .attr("cx", function (d) { return small_multiples_scale(d.x); } )
         .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
         .attr("r", function(d) {
@@ -1045,7 +1044,6 @@ function plotXZSmallMultiple(to_plot) {
     to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
         .attr('id', function(d){return d.meta.name})
-        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
         .attr("cx", function (d) { return small_multiples_scale(d.z); } )
         .attr("cy", function (d) { return small_multiples_scale(d.x); } )
         .attr("r", function(d) {
@@ -1067,7 +1065,6 @@ function plotYZSmallMultiple(to_plot) {
     to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
         .attr('id', function(d){return d.meta.name})
-        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)')
         .attr("cx", function (d) { return small_multiples_scale(d.z); } )
         .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
         .attr("r", function(d) {
