@@ -1178,10 +1178,23 @@ function plotLineageTree(cellnames, new_data_names){
 *                                    the 3D plot)
 */
 function plotGeneExpression(datapoints){
-    datapoints.append('rect')
+    datapoints.append('g')
         .attr('class', 'exprPlot_data_point')
         .attr('id', function (d){
-            return d;
+            return d.meta.name + '_expr';
+        }).each(function(d){
+            var expr_grp = d3.select(this)
+            for(var i=0; i < gene_names.length; i++){
+                expr_grp.append('rect')
+                    .attr('class', gene_names[i])
+                    .attr('id', function(d){
+                        return d.meta.name + '.' + gene_names[i];
+                    })
+                    .attr('x', function(d){
+                        return expr_gene_scale(gene_names[i]);
+                    })
+                    .attr('width', expr_gene_scale.rangeBand());
+            }
         });
     updateExprRects();
 }
@@ -1191,32 +1204,26 @@ function plotGeneExpression(datapoints){
 * colors to reflect the current time point. Called by plotGeneExpression().
 */
 function updateExprRects(){
-    var tpcells = namemap[timepoint % namemap.length];
-    var cellorder = tpcells.sort();
-    expr_gene_scale.domain(gene_names);
-    expr_cell_scale.domain(cellorder);
-    d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
-        .attr('x', function(d){
-              return expr_gene_scale(gene_names[exprdata[d][1]]);
-        })
+    var tpcells = namemap[timepoint % namemap.length];;
+    expr_cell_scale.domain(tpcells);
+    d3.select('#exprPlot_data_points').selectAll('rect')
         .attr('y', function(d){
-            return expr_cell_scale(exprdata[d][0].meta.name);
+            return expr_cell_scale(d.meta.name);
         })
-        .attr('width', expr_gene_scale.rangeBand())
         .attr('height', expr_cell_scale.rangeBand())
         .attr('fill', function(d){
-            var dp = exprdata[d];
-            var exprval;
-            if(dp[0].first_tp === -1){
-                exprval = dp[0].expr.charAt(dp[1]) === '1';
+            var exprval,
+            g_idx = gene_names.indexOf($(this).attr('class'));
+            if(d.first_tp === -1){
+                exprval = d.expr.charAt(g_idx) === '1';
             }else{
-                exprval = dp[0].first_tp.expr.charAt(dp[1]) === '1';
-                if(dp[0].expr.indexOf(dp[1]) > -1){
+                exprval = d.first_tp.expr.charAt(g_idx) === '1';
+                if(d.expr.indexOf(g_idx) > -1){
                     exprval = !exprval;
                 }
             }
             if(exprval){
-                return '#0055ff';
+                return d.color;
             }else{
                 return '#ffffff';
             }
@@ -1228,7 +1235,7 @@ function updateExprRects(){
 * exprdata object to contain only the cell/gene combos present at this time 
 * point. The expression data objects contain the csvdata element corresponding 
 * to a given cell at a given time, and the index of the gene name in gene_names.
-*/
+*
 function generate_expr_data(){
     var tidx = timepoint % csvdata.length;
     var datapoints = csvdata[timepoint % csvdata.length];
@@ -1254,12 +1261,14 @@ function generate_expr_data(){
         }
     }
 }
+*/
 
 /* Initialize the gene expression plot by setting up the containing div and 
 * svg group elements, and initializing the range of the scales.
 */
 var expr_gene_scale = d3.scale.ordinal(),
 expr_cell_scale = d3.scale.ordinal();
+expr_gene_scale.domain(gene_names);
 function initializeGeneExpressionPlot(){
     var width = 500,
         height = 600;
@@ -1317,10 +1326,10 @@ function plotData( time_point, duration ) {
     var new_data = plot3DView(datapoints.enter())
 
     //plot gene expression patterns
-    generate_expr_data();
+//    generate_expr_data();
     var expr_points = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
-    .data(Object.keys(exprdata), function (d){
-        return d;
+    .data(timepoint_data, function (d){
+        return d.meta.name + '_expr';
     });
     expr_points.exit().remove();
     plotGeneExpression(expr_points.enter());
@@ -1391,8 +1400,8 @@ function parseCSV(csvdata_in) {
     for (var i=1; i < rows.length; i++){
         row = rows[i];
         if(+row[1] != tp){
-            csvdata[tp - 1] = tpdata;
-            namemap[tp - 1] = tpnames;
+            csvdata[tp - 1] = tpdata.sort(function(a,b){return a.meta.name.localeCompare(b.meta.name);});
+            namemap[tp - 1] = tpnames.sort();
             tp = +row[1];
             tpdata = [];
             tpnames = [];
