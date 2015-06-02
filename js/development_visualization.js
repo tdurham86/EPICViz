@@ -1423,8 +1423,11 @@ function parseCSV(csvdata_in) {
                      'y': +row[3],
                      'z': +row[4] * 11.1,
                      'radius': +row[5],
+                     'pc1': +row[6],
+                     'pc2': +row[7],
+                     'pc3': +row[8],
                      'first_tp': cell.birthtp === tp - 1 ? -1 : csvdata[cell.birthtp][namemap[cell.birthtp].indexOf(cell.name)],
-                     'expr': cell.birthtp === tp - 1 ? row[6] : exprDiff(row[6], cell),
+                     'expr': cell.birthtp === tp - 1 ? row[9] : exprDiff(row[9], cell),
                      'pred': -1,
                      'succ': [],
                      'meta':cell
@@ -1470,7 +1473,7 @@ function exprDiff(exprStr, cell){
 * meta attributes in the cellmap object to avoid storing duplicate metadata
 */
 function loadTimePoints(file_idx){
-    var url = 'http://localhost:2255/exprTable/ImageExpressionTable.timesort.fixed.centered.binary.clustered.expstr.' + file_idx + '.csv';
+    var url = 'http://localhost:2255/exprTable/ImageExpressionTable.timesort.fixed.centered.binary.clustered.pca.expstr.' + file_idx + '.csv';
     console.log(url);
     d3.text(url, function(tpdata){
         if(!tpdata){
