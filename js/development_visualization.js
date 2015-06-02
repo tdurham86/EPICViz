@@ -1223,7 +1223,7 @@ function updateExprRects(){
                 }
             }
             if(exprval){
-                return d.color;
+                return d.meta.color;
             }else{
                 return '#ffffff';
             }
@@ -1385,6 +1385,26 @@ function get_parent_name(cellname){
 }
 
 /**
+* Comparator function to return lineage order of cell names
+* @param {string} a - first cell name
+* @param {string} b - second cell name
+* @returns {int} cmpval - as required by the javascript array sort function,
+*                         returns a value less than zero if a is "less than" b
+*                         (i.e. comes before b in sort order), otherwise returns
+*                         a value greater than zero.
+*/
+function lineageComparator(a,b){
+    var astart = a.charAt(0),
+    bstart = b.charAt(0),
+    blastorder = 'AMECDPZ'
+    if(astart === bstart){
+        return a.localeCompare(b);
+    }else{
+        return blastorder.indexOf(astart) - blastorder.indexOf(bstart);
+    }
+}
+
+/**
 * Read in text data that is in csv format and parse it into the csvdata object.
 * This function also populates the namemap array to allow lookups into the 
 * time series data based on cell name, and the cellmap, which contains all 
@@ -1400,8 +1420,12 @@ function parseCSV(csvdata_in) {
     for (var i=1; i < rows.length; i++){
         row = rows[i];
         if(+row[1] != tp){
-            csvdata[tp - 1] = tpdata.sort(function(a,b){return a.meta.name.localeCompare(b.meta.name);});
-            namemap[tp - 1] = tpnames.sort();
+            csvdata[tp - 1] = tpdata.sort(function(a,b){
+                return lineageComparator(a.meta.name, b.meta.name);
+            });
+            namemap[tp - 1] = tpnames.sort(function(a,b){
+                return lineageComparator(a, b);
+            });
             tp = +row[1];
             tpdata = [];
             tpnames = [];
@@ -1700,7 +1724,7 @@ function initializeLineageTree(root) {
   ****************************************************************/   
   var tree = d3.layout.tree()
       .size([height/2, width])
-      .sort(function(a, b) { return d3.ascending(a.name, b.name); });
+      .sort(function(a, b) { return lineageComparator(a.name, b.name); });
 
   var diagonal = d3.svg.diagonal()
       .projection(function(d) { return [xScale(d.x), d.y]; });
