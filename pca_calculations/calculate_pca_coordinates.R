@@ -27,7 +27,7 @@ expression_matrix = as.matrix(expression_values[, 7:ncol(expression_values)])
 
 # Calculate PCA coordinates and combine with original data
 pca = prcomp(expression_matrix, scale. = TRUE)
-expression_values = cbind(expression_values, subset(pca$x, select=c(PC2, PC3)))
+expression_values = cbind(expression_values, subset(pca$x, select=c(PC1, PC2, PC3)))
 
 # Output the data with the additional columns for principle components
 write.table(expression_values, file=args$output_file, quote=FALSE, row.names=FALSE, sep=',')

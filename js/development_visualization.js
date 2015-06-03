@@ -1419,6 +1419,7 @@ function parseCSV(csvdata_in) {
             }
         }
         //assemble object for csvdata
+        
         tpdata.push({'x': +row[2],
                      'y': +row[3],
                      'z': +row[4] * 11.1,
