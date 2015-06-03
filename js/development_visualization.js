@@ -188,7 +188,7 @@ function makeLPDivTemplate(){
         .attr('class', 'selhi')
         .attr('id', id)
         .attr('data-placeholder', 'Cell Lineage or Cell Type...')
-        .attr('onchange', 'updateCellColors(); updateCellSize(); updatePlot()');
+        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectHighlights(); updatePlot()');
 
     select.append('option').attr('value', '');
     var optgroup = select.append('optgroup')
@@ -243,13 +243,13 @@ function makeLPDivTemplate(){
 //        .attr('defaultValue', '#ff0000')
         .attr('class', 'hicolor')
         .attr('id', 'hicolor'+lpidx)
-        .attr('onchange', 'updateCellColors(); updateCellSize(); updatePlot();');
+        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectHighlights(); updatePlot();');
     lpsubdiv.append('input')
         .attr('type', 'button')
         .attr('value', '-')
         .attr('class', 'removehi')
         .attr('id', 'removehi'+lpidx)
-        .attr('onclick', 'removeLPDiv(event, this); updateCellColors(); updateCellSize(); updatePlot();');
+        .attr('onclick', 'removeLPDiv(event, this); updateCellColors(); updateCellSize(); updateExprRectHighlights(); updatePlot();');
     lpidx++;
 }
 
@@ -1178,47 +1178,96 @@ function plotLineageTree(cellnames, new_data_names){
 *                                    the 3D plot)
 */
 function plotGeneExpression(datapoints){
-    datapoints.append('g')
+    var new_rows = datapoints.append('svg')
         .attr('class', 'exprPlot_data_point')
         .attr('id', function (d){
             return d.meta.name + '_expr';
-        }).each(function(d){
+        })
+        .attr('x', 0)
+        .attr('width', expr_gene_scale.rangeExtent()[1]);
+    new_rows.each(function(d){
             var expr_grp = d3.select(this)
             for(var i=0; i < gene_names.length; i++){
                 expr_grp.append('rect')
-                    .attr('class', gene_names[i])
+                    .attr('class', i)
                     .attr('id', function(d){
                         return d.meta.name + '.' + gene_names[i];
                     })
                     .attr('x', function(d){
                         return expr_gene_scale(gene_names[i]);
                     })
-                    .attr('width', expr_gene_scale.rangeBand());
+                    .attr('width', expr_gene_scale.rangeBand())
+                    .attr('y', '0')
+                    .attr('height', '100%')
+                    .attr('fill', function(d){
+                        var exprval,
+                        g_idx = +$(this).attr('class');
+                        if(d.first_tp === -1){
+                            exprval = d.expr.charAt(g_idx) === '1';
+                        }else{
+                            exprval = d.first_tp.expr.charAt(g_idx) === '1';
+                            if(d.expr.indexOf(g_idx) > -1){
+                                exprval = !exprval;
+                            }
+                        }
+                        if(exprval){
+                            return d.meta.color;
+                        }else{
+                            return '#ffffff';
+                        }
+                    });
             }
         });
-    updateExprRects();
+    if(!new_rows.empty()){
+        updateExprRowSize();
+    }
+}
+
+function updateExprRowSize(){
+    var tpcells = namemap[timepoint % namemap.length];
+    expr_cell_scale.domain(tpcells);
+    d3.selectAll('.exprPlot_data_point')
+        .attr('y', function(d){
+            return expr_cell_scale(d.meta.name);
+        })
+        .attr('height', expr_cell_scale.rangeBand());
 }
 
 /**
 * Iterates over all exprPlot_data_point elements and updates the positions and
 * colors to reflect the current time point. Called by plotGeneExpression().
 */
-function updateExprRects(){
-    var tpcells = namemap[timepoint % namemap.length];;
-    expr_cell_scale.domain(tpcells);
-    d3.select('#exprPlot_data_points').selectAll('rect')
-        .attr('y', function(d){
-            return expr_cell_scale(d.meta.name);
+function updateExprRectHighlights(){
+    d3.selectAll('.exprPlot_data_point')
+        .selectAll('rect', function(){
+            return $(this).attr('fill') === '#ffffff' ? null : this;
         })
-        .attr('height', expr_cell_scale.rangeBand())
+        .attr('fill', function(d){
+            return d.meta.color;
+        });
+}
+
+function updateExprRectColors(selection){
+//    d3.select('#exprPlot').selectAll('rect')
+    selection.filter(function(d){
+            return d.expr.length > 0 ? this : null;})
+        .selectAll('rect', function(d){
+            var parentdata = this.parentNode.__data__;
+            if(typeof parentdata.expr === 'list'){
+                return parentdata.expr.indexOf(+$(this).attr('class')) > -1 ? this : null;
+            }else{
+                return this;
+            }
+        })
         .attr('fill', function(d){
             var exprval,
-            g_idx = gene_names.indexOf($(this).attr('class'));
-            if(d.first_tp === -1){
-                exprval = d.expr.charAt(g_idx) === '1';
+            g_idx = +$(this).attr('class'),
+            parentdata = this.parentNode.__data__;
+            if(parentdata.first_tp === -1){
+                exprval = +parentdata.expr.charAt(g_idx);
             }else{
-                exprval = d.first_tp.expr.charAt(g_idx) === '1';
-                if(d.expr.indexOf(g_idx) > -1){
+                exprval = +parentdata.first_tp.expr.charAt(g_idx);
+                if(parentdata.expr.indexOf(g_idx) > -1){
                     exprval = !exprval;
                 }
             }
@@ -1283,13 +1332,14 @@ function initializeGeneExpressionPlot(){
         .attr('class', 'exprPlot')
         .attr('id', 'exprPlot');
 
-    var main = exprPlot.append('g')
-        .attr('width', width)
-        .attr('height', height)
-        .attr('class', 'main');
+//    var main = exprPlot.append('g')
+//        .attr('width', width)
+//        .attr('height', height)
+//        .attr('class', 'main');
 
-    var g = main.append('svg:g')
-        .attr('id', 'exprPlot_data_points');
+//    var g = main.append('svg:g')
+//    exprPlot.append('g')
+//        .attr('id', 'exprPlot_data_points');
 }
 
 /**
@@ -1327,12 +1377,13 @@ function plotData( time_point, duration ) {
 
     //plot gene expression patterns
 //    generate_expr_data();
-    var expr_points = d3.select('#exprPlot_data_points').selectAll('.exprPlot_data_point')
+    var expr_points = d3.select('#exprPlot').selectAll('.exprPlot_data_point')
     .data(timepoint_data, function (d){
         return d.meta.name + '_expr';
     });
     expr_points.exit().remove();
     plotGeneExpression(expr_points.enter());
+    updateExprRectColors(expr_points);
 
     //use new_data to identify which nodes in the tree should be revealed
     var new_data_names = [];
