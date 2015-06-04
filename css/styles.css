@@ -62,16 +62,35 @@ body > .container-fluid {
 #top_display_panel {
   height: 50%;
   width: 100%;
+  display: inline-block;
+  position: relative;
 }
 
 #three_d_plot {
   height: 100%;
-  width: 35%;
+  width: 45%;
   display: inline-block;
+  position: relative;
+}
+
+#small_multiples{
+    height: 100%;
+    width: 20%;
+    display: inline-block;
+    position: relative;
+}
+
+#exprDiv{
+    height: 100%;
+    width: 55%;
+    display: inline-block;
+    position: relative;
+    border: none;
+    border-left: 1px solid #CCCCCC;
 }
 
 x3d {
-  width: 100%;
+  width: 80%;
   height: 100%;
   border: none;
   border-right: 1px solid #CCCCCC;
