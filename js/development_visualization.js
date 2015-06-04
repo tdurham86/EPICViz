@@ -1443,6 +1443,7 @@ function parseCSV(csvdata_in) {
                 expr_on.push(c_idx);
             }
         }
+
         tpdata.push({'x': +row[2],
                      'y': +row[3],
                      'z': +row[4] * 11.1,
