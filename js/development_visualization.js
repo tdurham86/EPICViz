@@ -1213,6 +1213,22 @@ function plotGeneExpression(timepoint_data){
             .attr('x', '0')
             .attr('width', '100%')
             .attr('fill', d.meta.color);
+//            .attr('data-toggle', 'popover')
+//            .attr('title', function(d) {return this.id;})
+//            .attr('data-trigger', 'hover')
+//            .attr('data-placement', 'bottom');
+//            .on('mouseover', function(d){
+//                var height = this.height,
+//                width = this.parentNode.width;
+//                this.height = height + 5;
+//                this.parentNodewidth = width + 5;
+//            })
+//            .on('mouseout', function(d){
+//                var height = this.height,
+//                width = this.parentNode.width;
+//                this.height = height - 5;
+//                this.parentNode.width = width - 5;
+//            });
         });
     if(changed){
         updateExprRowSize();

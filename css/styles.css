@@ -89,6 +89,11 @@ body > .container-fluid {
     border-left: 1px solid #CCCCCC;
 }
 
+.exprPlot_data_point_rect:hover{
+    stroke: #FFFF00;
+    stroke-width: 1px;
+}
+
 x3d {
   width: 80%;
   height: 100%;
