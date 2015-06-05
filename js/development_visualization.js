@@ -191,6 +191,16 @@ function makeLPDivTemplate(){
         .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()');
 
     select.append('option').attr('value', '');
+    //Construct a select box for picking logic to allow users to customly pick highlghted dataset
+    var id = 'loghi'+lpidx;
+    var select = lpsubdiv.append('select')
+        .attr('class', 'loghi')
+        .attr('id', id)
+        .attr('data-placeholder', 'Set Operation (default :None)')
+        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()');
+
+    select.append('option').attr('value', '');
+    
     var optgroup = select.append('optgroup')
         .attr('label', 'Tissue Type');
 
@@ -305,6 +315,9 @@ function cloneLPDiv(){
 
         lpdivclone.appendTo('.lineage-pickers');
         $('#selhi'+lpidx).chosen({search_contains:true});
+        
+        //lpdivclone.appendTo('.lineage-pickers');
+        //$('#loghi'+lpidx).chosen({search_contains:true});
         lpidx++;
 
         //only allow up to 4 sets of lineage picker controls
