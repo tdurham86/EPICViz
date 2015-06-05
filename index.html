@@ -112,8 +112,9 @@
       </div>
       <div class="modal-body">
         <h1>3D <i>C. elegans</i> Embryogenesis</h1>
-        <h2>Melissa Chiasson, Timothy Durham, and Andrew Hill, UW Genome Sciences</h2>
-        <h4>Note: Please use the Chrome or Opera browser for the best experience.</h4>
+        <h2>Melissa Chiasson, Timothy Durham, Andrew Hill, and Ning Li, UW Genome Sciences and Statistics</h2>
+        <h4><p><i>Caenorhabditis elegans</i> (<i>C. elegans</i>) is a small roundworm used widely as a model organism in genetics and genomics. Its development has been well studied; each worm takes around 14 hours to grow from a single fertilized cell to a hatched larvae with 558 cells. This process of embryonic development progresses in a stereotyped pattern that follows an invariant cell lineage; the same branches in this tree always produce the same tissues in the hatched worm. We have a dataset that describes the spatial orientation of every cell throughout <i>C. elegans</i> embryo development time points, along with cell lineages (which cell derives from which), cell type, and cell-specific expression measurements for a set of about 250 genes. These data provide an expansive view of gene expression in the <i>C. elegans</i> embryo; however, to derive insights intogene expression patterns in different cells across time we need a tool to integrate and to allow interactive exploration of the data. Despite intense study of <i>C. elegans</i>, currently there does not exist a resource where one can interactively visualize <i>C. elegans</i> embryo development through time and interrogate how gene expression patterns change withtime, lineage, or cell type. </p>
+        <p>We seek to address this lack of resource by developing an interactive visualization that includes a 3D plot of the <i>C. elegans</i> developing embryo, a lineage tree that is synched to the 3D plot, and plots of gene expression patterns. Users will be able to explore data using filters for lineage, cell type, and time point. In this way we hope to build a tool that <i>C. elegans</i> researchers can use to easily investigate patterns of gene expression during worm embryogenesis.</p></h4>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -131,7 +132,9 @@
         <h4 class="modal-title" id="myModalLabel">Help</h4>
       </div>
       <div class="modal-body">
-        We can put some information about how to use the visualization, etc.
+        <p>Confused about where to start? We have two compelling examples of how this visualization can be used to better understand the development and gene expression patterns of specific lineages and cell types.</p>
+        <p>For the first example, select "intestine" from the dropdown menu. Those cells that will form the intestine will then be highlighted in the color of your choice (the default is red). At the gastrulation stage of development these cells migrate dorsally from ventral locations on the outside of the embryo to locations inside the embryo, with other cells migrating ventrally to fill in the space left by their migration. When the intestinal cell type is highlighted in our 3D plot, this migration can be observed clearly from any orientation, and other interacting lineages and cell types can be identified by using the multiple lineage highlighting feature.</p>
+        <p>For the second example, select "C" from the dropdown menu. By the end of our time series, cells from the C lineage migrate to the posterior-dorsal edge of the embryo, forming a complex curvature around the back of the embryo from left to right. Patterns like this are hard to understand in two-dimensions (as seen in our 2D small multiple plots), but our 3D plot provides a more natural way to gain this insight.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
