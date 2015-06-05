@@ -334,7 +334,7 @@ input[type="text"].focus {
 
 /* Styling for color picker selector */
 .chosen-container {
-  width: 280px !important;
+  width: 140px !important;
 }
 
 input[type="color"] {
