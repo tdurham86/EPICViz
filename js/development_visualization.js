@@ -188,21 +188,15 @@ function makeLPDivTemplate(){
         .attr('class', 'selhi')
         .attr('id', id)
         .attr('data-placeholder', 'Cell Lineage or Cell Type...')
-        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()');
-
-    select.append('option').attr('value', '');
-    //Construct a select box for picking logic to allow users to customly pick highlghted dataset
-    var id = 'loghi'+lpidx;
-    var select = lpsubdiv.append('select')
-        .attr('class', 'loghi')
-        .attr('id', id)
-        .attr('data-placeholder', 'Set Operation (default :None)')
-        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()');
+        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()')
+        .attr('multiple','multiple')
+        .attr('data-max-options', '2');
 
     select.append('option').attr('value', '');
     
     var optgroup = select.append('optgroup')
-        .attr('label', 'Tissue Type');
+        .attr('label', 'Tissue Type')
+        .attr('data-max-options', '2');
 
     var disp;
     for(var i=0; i < tissuetype.length; i++){
@@ -215,7 +209,8 @@ function makeLPDivTemplate(){
     }
 
     optgroup = select.append('optgroup')
-        .attr('label', 'Cell Type');
+        .attr('label', 'Cell Type')
+        .attr('data-max-options', '2');
     for(i=0; i < celltype.length; i++){
         if(celltype[i].length > 50){
             disp = celltype[i].substr(0, 50) + '...';
@@ -226,7 +221,8 @@ function makeLPDivTemplate(){
     }
 
     optgroup = select.append('optgroup')
-        .attr('label', 'Cell Description');
+        .attr('label', 'Cell Description')
+        .attr('data-max-options', '2');
     for(i=0; i < celldesc.length; i++){
         if(celldesc[i].length > 50){
             disp = celldesc[i].substr(0, 50) + '...';
@@ -237,7 +233,8 @@ function makeLPDivTemplate(){
     }
 
     optgroup = d3.select('#'+id).append('optgroup')
-        .attr('label', 'Cell Name');
+        .attr('label', 'Cell Name')
+        .attr('data-max-options', '2');
     for(i=0; i < cellnames.length; i++){
         if(cellnames[i].length > 50){
             disp = cellnames[i].substr(0, 50) + '...';
@@ -246,6 +243,21 @@ function makeLPDivTemplate(){
         }
         optgroup.append('option').attr('value', 'cn' + cellnames[i]).html(disp);
     }
+   
+     //optgroup.append('option').attr('value', 'cn' + 'cellname').html('cellname');
+    //Construct a select box for picking logic to allow users to customly pick highlghted dataset
+    var id = 'loghi'+lpidx;
+    var select = lpsubdiv.append('select')
+        .attr('class', 'loghi')
+        .attr('id', id)
+        .attr('data-placeholder', 'Set Operation (default :None)')
+        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()');
+    
+    select.append('option').attr('value', '');
+    outgroup = d3.select('#'+id).append('optgroup')
+                .attr('label','Operation');
+    outgroup.append('option').attr('value','op' + 'Union').html('Union');
+    outgroup.append('option').attr('value','op' + 'Intersection').html('Intersection');
 
     lpsubdiv.append('input')
         .attr('type', 'color')
@@ -316,8 +328,8 @@ function cloneLPDiv(){
         lpdivclone.appendTo('.lineage-pickers');
         $('#selhi'+lpidx).chosen({search_contains:true});
         
-        //lpdivclone.appendTo('.lineage-pickers');
-        //$('#loghi'+lpidx).chosen({search_contains:true});
+        lpdivclone.appendTo('.lineage-pickers');
+        $('#loghi'+lpidx).chosen({search_contains:true});
         lpidx++;
 
         //only allow up to 4 sets of lineage picker controls
