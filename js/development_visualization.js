@@ -1488,6 +1488,36 @@ function parseCSV(csvdata_in) {
 }
 
 /**
+* Takes a gene name, looks up its wormbase.org ID and constructs the url to
+* the wormbase.org page about that gene.
+* @param {string} gene - gene name for which the corresponding wormbase.org url
+*                        should be generated
+* @returns {string} url - the wormbase.org url for the info about that gene
+*/
+function makeWormBaseUrl(gene){
+    var wb = wormbase_map[gene];
+    return 'http://www.wormbase.org/db/get?name=' + wb + ';class=Gene';
+}
+
+/**
+* Reads in the csv file mapping gene names to wormbase.org IDs and stores this
+* mapping in a global object, wormbase_map. The wormbase.org IDs are used to
+* construct URLs for use in links where users can find more info about genes.
+*/
+var wormbase_map = {};
+function loadWormBaseIdMap(){
+    var url = 'http://localhost:2255/wormbase_id_map.csv';
+    console.log(url)
+    d3.text(url, function(id_map){
+        var rows = d3.csv.parseRows(id_map);
+        for(var i=0; i < rows.length; i++){
+            //map gene name to wormbase id
+            wormbase_map[rows[i][0]] = rows[i][1];
+        }
+    });
+}
+
+/**
 * Read in the csv file at the URL specified in the url variable, parse the rows
 * using parseCSV, and then iterate over the parsed csvdata objects, storing all
 * meta attributes in the cellmap object to avoid storing duplicate metadata
@@ -1851,6 +1881,7 @@ function scatterPlot3d( parent ) {
     console.log("Reading in embryo positions.");
     loadTimePoints(0);
     console.log("Loading data");
+    loadWormBaseIdMap();
 
     d3.select('#hide-controls')
       .attr('onclick', 'hideControls()');
