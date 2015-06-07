@@ -189,14 +189,13 @@ function makeLPDivTemplate(){
         .attr('id', id)
         .attr('data-placeholder', 'Cell Lineage or Cell Type...')
         .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()')
-        .attr('multiple','multiple')
-        .attr('data-max-options', '2');
+        .attr('multiple','multiple');
+       
 
     select.append('option').attr('value', '');
     
     var optgroup = select.append('optgroup')
-        .attr('label', 'Tissue Type')
-        .attr('data-max-options', '2');
+        .attr('label', 'Tissue Type');
 
     var disp;
     for(var i=0; i < tissuetype.length; i++){
@@ -209,8 +208,8 @@ function makeLPDivTemplate(){
     }
 
     optgroup = select.append('optgroup')
-        .attr('label', 'Cell Type')
-        .attr('data-max-options', '2');
+        .attr('label', 'Cell Type');
+       
     for(i=0; i < celltype.length; i++){
         if(celltype[i].length > 50){
             disp = celltype[i].substr(0, 50) + '...';
@@ -221,8 +220,8 @@ function makeLPDivTemplate(){
     }
 
     optgroup = select.append('optgroup')
-        .attr('label', 'Cell Description')
-        .attr('data-max-options', '2');
+        .attr('label', 'Cell Description');
+        
     for(i=0; i < celldesc.length; i++){
         if(celldesc[i].length > 50){
             disp = celldesc[i].substr(0, 50) + '...';
@@ -233,8 +232,8 @@ function makeLPDivTemplate(){
     }
 
     optgroup = d3.select('#'+id).append('optgroup')
-        .attr('label', 'Cell Name')
-        .attr('data-max-options', '2');
+        .attr('label', 'Cell Name');
+       
     for(i=0; i < cellnames.length; i++){
         if(cellnames[i].length > 50){
             disp = cellnames[i].substr(0, 50) + '...';
@@ -555,18 +554,22 @@ function setCellColors(){
     var selections = [];
     var colors = [];
     highlights = false;
-    for(var i=0; i < picker_sel.length; i++){
-        var selected = picker_sel[i].value;
-        if(selected){
-            highlights = true;
-            var sel_type = selected.substr(0, 2);
-            var sel_val = selected.substr(2);
-            if(sel_type === 'cn'){
-                selections.push(cellLineageStr(sel_val));
-            }else {
-                selections.push(celltypes[sel_val]);
-            }
+    for(var i=1; i < picker_sel.length; i++){
+        for(var j=0; j < picker_sel[i].selectedOptions.length; j++){
+            var selected = picker_sel[i].selectedOptions[j].value;
+            if(selected){
+                highlights = true;
+                var sel_type = selected.substr(0, 2);
+                var sel_val = selected.substr(2);
+                if(sel_type === 'cn'){
+                    selections.push(cellLineageStr(sel_val));
+                }else {
+                    selections.push(celltypes[sel_val]);
+                }
             colors.push(picker_col[i].value);
+        
+        
+        }
         }
     }
     //Calculate whether a data point should be highlighted and if so what color(s)
