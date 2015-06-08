@@ -24,7 +24,8 @@
     <script type="text/javascript" src="http://cdn.jsdelivr.net/jstat/1.2.1/jstat.min.js"></script>
     <script type="text/javascript" src="/js/development_visualization.js"></script>
     <script type="text/javascript" src="/libraries/Color_mixer-master/color_mixer.js"></script>
-    <script type="text/javascript" src="/libraries/tablesorter-master/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="/libraries/tablesorter-master/js/jquery.tablesorter.js"></script>
+    <script type="text/javascript" src="/libraries/tablesorter-master/js/jquery.tablesorter.widgets.js"></script>
     <script type="text/javascript" src="/js/fisheye.js"></script>
     <!--Add IntroJs js-->
     <script type="text/javascript" src="/js/intro.js"></script>
@@ -35,7 +36,7 @@
     <link rel="stylesheet" type="text/css" href="http://bgrins.github.io/spectrum/spectrum.css"/>
     <link rel="stylesheet" type="text/css" href="/libraries/chosen_v1.4.2/chosen.min.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
-    <link rel="stylesheet" type="text/css" href="/libraries/tablesorter-master/themes/blue/style.css"/>
+    <link rel="stylesheet" type="text/css" href="/libraries/tablesorter-master/css/theme.blue.css"/>
 
     <script type="text/javascript">
         $(document).ready(function() {
@@ -52,7 +53,12 @@
                     }, 
                     type: 'numeric' 
             });
-            $("#gene_report").tablesorter();
+            $("#gene_report").tablesorter({theme: 'blue',
+                                           //widgets: ['zebra'],
+                                           //widgetOptions: {
+                                           // zebra: ["odd", "even"]
+                                           //}
+                                           });
             scatterPlot3d( d3.select('#divPlot'));
         });
     </script>
@@ -74,7 +80,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <div class="navbar-title">C. Elegans Development</div>
+                <div class="navbar-title"><b>EPICViz:</b> Expression Patterns in <i>Caenorhabditis elegans</i> Visualization</div>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
      
@@ -94,17 +100,17 @@
 
           <div id="three_d_plot"> 
 
-            <x3d data-intro="<b>Cell Positions: </b>3D-plot of cell positions during C.Elegans development. Drag to rotate in any direction and scroll to zoom."  data-step="5">
-              <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="<b>Collapse: </b>click to collapse or expand the control panel to make more space for viewing."  data-step="4" data-position='right'>
-              <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="<b>Reset: </b>reset 3D plot to default position if the view gets all turned around."  data-step="6">
+            <x3d data-intro="<b>Cell Positions: </b>3D-plot of cell positions during <i>C. elegans</i> development. Drag to rotate in any direction and scroll to zoom."  data-step="4">
+              <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="<b>Collapse: </b>Click to collapse or expand the control panel to make more space for viewing."  data-step="3" data-position='right'>
+              <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="<b>Reset: </b>Reset 3D plot to default position if the view gets all turned around."  data-step="5">
 
             </x3d>
-            <div id="small_multiples" data-intro="<b>Small Multiples: </b>Small multiples of the 3D view. Clicking on a small multiple rotates the 3D view to that position."  data-step="7">
+            <div id="small_multiples" data-intro="<b>Small Multiples: </b>Small multiples of the 3D view. Clicking on a small multiple rotates the 3D view to that position."  data-step="6">
             </div>
           </div>
           
           <!-- Tab interface for expression plots -->
-          <div id='expressionPlotTabs' role="tabpanel" data-intro="<b>Gene Expression: </b>summaries of gene expression in heatmap and PCA form. Click on a highlighted group to generate a summary of differential gene expression." data-step="8" data-position='left'>
+          <div id='expressionPlotTabs' role="tabpanel" data-intro="<b>Gene Expression: </b>Summaries of gene expression in heatmap and PCA form. Click on a highlighted group to generate a summary of differential gene expression." data-step="7" data-position='left'>
 
             <!-- Nav tabs -->
             <ul id='tabs' class="nav nav-tabs" role="tablist" data-tabs="tabs">
@@ -122,12 +128,12 @@
 
         </div>
 
-        <div class="lineage_tree" data-intro="<b>Lineage Tree: </b>C. Elegans has stereotyped cell divisions and development. Divisions are represented as a binary tree that populates as the embryo develops. Drag the slider to navigate."  data-step="9" data-position='top'>
+        <div class="lineage_tree" data-intro="<b>Lineage Tree: </b><i>C. elegans</i> has stereotyped cell divisions and development. Divisions are represented as a binary tree that populates as the embryo develops. Drag the slider to navigate."  data-step="8" data-position='top'>
         </div>
 
     </div>
     <div id="divControls" class="divControls">
-        <div id="playback" class="control-section" data-intro="<b>Playback: </b>development can be played back at various speeds."  data-step="1" data-position='right'>
+        <div id="playback" class="control-section" data-intro="<b>Playback: </b>Development can be played back at various speeds."  data-step="1" data-position='right'>
           <h4>Playback</h4>
           <button id="playpause" >Play</button>
           <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
@@ -139,15 +145,16 @@
             </select>
           </div>
         </div>
-        <div id="highlighting" class="control-section" data-intro="<b>Highlighting: </b>up to four specific cell types and lineages can be highlighted. Set operations like AND and OR are also supported for complex queries over multiple groups." data-step="2" data-position='right'>
+        <div id="highlighting" class="control-section" data-intro="<b>Highlighting: </b>Highlight up to four groups of cells in different colors. Set operations like AND and OR are also supported for complex queries over multiple groups." data-step="2" data-position='right'>
           <h4>Highlighting</h4>
 
         </div>
-
+<!--
         <div id="expression" class="control-section" data-intro="Placeholder."  data-step="3" data-position='right'>
           <h4>Expression</h4>
           ...Placeholder...
         </div>
+        -->
     </div>
 
 <!-- About modal dialog  -->
@@ -200,7 +207,7 @@
                 <h4 class="modal-title" id="myModalLabel">Gene Expression Report</h4>
             </div>
             <div class="modal-body">
-                <h5>Gene expression and expression specificity for all genes within the selected population:</h5>
+                <h5>Gene expression specificity for all genes within the selected population. Gene specificity p-values were calculated using a hypergeometric test for the number of cells expressing each gene in the highlighted selection vs the total population. The p-values are Bonferroni corrected based on the number of genes.</h5>
                 <table id="gene_report" cellspacing="1" class="tablesorter">
                     <thead>
                         <tr>
