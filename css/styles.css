@@ -100,7 +100,7 @@ svg:not(:root) {
 }
 
 #exprDiv, #pcaDiv{
-  overflow: scroll;
+    overflow-y: scroll;
     height: 100%;
     width: 100%;
     position: relative;
@@ -111,6 +111,13 @@ svg:not(:root) {
 .exprPlot_data_point_rect:hover{
     stroke: #FFFF00;
     stroke-width: 1px;
+    cursor: pointer;
+}
+
+.pca_datapoint:hover{
+    stroke: #FFFF00;
+    stroke-width: 1px;
+    cursor: pointer;
 }
 
 /* Styling for 3D plot */

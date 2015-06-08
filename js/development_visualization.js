@@ -1212,9 +1212,9 @@ function initializePCA() {
     // Make the axes for the x-y chart
     var xyChart = d3.select('#pcaDiv')
     .append('svg:svg')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('id', 'pcaChart')
+      .attr("viewBox", "0 0 " + width + " " + height)
+      .attr("preserveAspectRatio", "xMidYMid")
+      .attr('id', 'pcaChart')
 
     var main = xyChart.append('g')
     .attr('width', width)
@@ -1407,8 +1407,8 @@ function initializeGeneExpressionPlot(){
 
     var exprPlot = d3.select('#exprDiv')
         .append('svg:svg')
-        .attr('width', '100%')
-        .attr('height', '100%')
+        .attr("viewBox", "0 0 " + width + " " + height)
+        .attr("preserveAspectRatio", "xMidYMid")
         .attr('class', 'exprPlot')
         .attr('id', 'exprPlot')
         .append('rect')
