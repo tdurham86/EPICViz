@@ -626,6 +626,7 @@ function setCellColors(){
             }
                         
            }
+           // If we can intersection operation, only the point has the colors of the number as same as the number 0f multiple containers, then we add new color, otherwise, it's zero.'
            if(logic_sel[i-1]=="opIntersection"){
                 if (pt_part.length ===picker_length[i-1])
                     {pt_colors = pt_colors.concat(pt_part[0])}
