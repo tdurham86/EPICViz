@@ -91,7 +91,7 @@ controls_hidden = false;
 
 //Gene Expression Globals
 var exprPlot_scale;
-var gene_names = ['ceh-14', 'ges-1', 'nhr-25', 'tbx-35', 'lir-2', 'hlh-19', 
+var gene_names;/* = ['ceh-14', 'ges-1', 'nhr-25', 'tbx-35', 'lir-2', 'hlh-19', 
                   'icd-2', 'elf-1', 'rad-26', 'mml-1', 'pgp-3', 'hlh-4', 
                   'C05B5.4', 'nhr-102', 'T22C8.3', 'B0336.3', 'lin-1', 'hlh-8', 
                   'cep-1', 'ets-7', 'hsf-1', 'fkh-4', 'F23B12.7', 'tbx-11', 
@@ -130,7 +130,7 @@ var gene_names = ['ceh-14', 'ges-1', 'nhr-25', 'tbx-35', 'lir-2', 'hlh-19',
                   'end-3', 'hlh-17', 'tps-2', 'end-1', 'nhr-79', 'elt-7', 
                   'ztf-16', 'K02D7.1', 'drr-1', 'T28H10.3', 'elt-2', 'F36A2.3', 
                   'acp-5', 'pgp-2']
-/*
+
 var gene_names = ['nfyc-1', 'eor-1', 'acp-5', 'sdz-38', 'wrm-1', 'F57A8.1', 
                   'unc-120', 'dpy-31', 'dpy-30', 'ZK185.1', 'somi-1', 'swsn-7', 
                   'T22C8.3', 'F17C11.1', 'F21D5.9', 'crh-2', 'tbx-37', 'tbx-38',
@@ -1673,9 +1673,10 @@ function calcGeneEnrichment(selcolor){
         .filter(function(d){
             return d.meta.color === selcolor ? this : null;
         });
-    var gene_name;
-    var gene_exp;
-    var gene_exp_sel;
+    var gene_name,
+    gene_exp,
+    gene_exp_sel,
+    pval;
     for(var i=0; i < gene_names.length; i++){
         gene_name = gene_names[i];
         gene_exp = $('._'+i);
@@ -1683,11 +1684,13 @@ function calcGeneEnrichment(selcolor){
         wormbase_map[gene_name].frac_exp = gene_exp.length/popsize;
         wormbase_map[gene_name].frac_exp_sel = gene_exp_sel.size()/selrows.size();
         if(gene_exp.length === 0){
-            wormbase_map[gene_name].pval = 1;
+            pval = 1;
         }else{
-            wormbase_map[gene_name].pval = jStat.hypgeom.pdf(gene_exp_sel.size(),
-                                                             popsize, gene_exp.length,
-                                                             selrows.size());
+            pval = jStat.hypgeom.pdf(gene_exp_sel.size(), popsize, 
+                                     gene_exp.length,selrows.size());
+            //Bonferroni correction for multiple testing
+            pval *= gene_names.length;
+            pval = pval > 1 ? 1 : pval;
         }
     }
     printGeneTable();
