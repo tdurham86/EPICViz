@@ -24,7 +24,8 @@
     <script type="text/javascript" src="http://cdn.jsdelivr.net/jstat/1.2.1/jstat.min.js"></script>
     <script type="text/javascript" src="/js/development_visualization.js"></script>
     <script type="text/javascript" src="/libraries/Color_mixer-master/color_mixer.js"></script>
-    <script type="text/javascript" src="/libraries/tablesorter-master/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="/libraries/tablesorter-master/js/jquery.tablesorter.js"></script>
+    <script type="text/javascript" src="/libraries/tablesorter-master/js/jquery.tablesorter.widgets.js"></script>
     <script type="text/javascript" src="/js/fisheye.js"></script>
     <!--Add IntroJs js-->
     <script type="text/javascript" src="/js/intro.js"></script>
@@ -35,7 +36,7 @@
     <link rel="stylesheet" type="text/css" href="http://bgrins.github.io/spectrum/spectrum.css"/>
     <link rel="stylesheet" type="text/css" href="/libraries/chosen_v1.4.2/chosen.min.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
-    <link rel="stylesheet" type="text/css" href="/libraries/tablesorter-master/themes/blue/style.css"/>
+    <link rel="stylesheet" type="text/css" href="/libraries/tablesorter-master/css/theme.blue.css"/>
 
     <script type="text/javascript">
         $(document).ready(function() {
@@ -52,7 +53,12 @@
                     }, 
                     type: 'numeric' 
             });
-            $("#gene_report").tablesorter();
+            $("#gene_report").tablesorter({theme: 'blue',
+                                           //widgets: ['zebra'],
+                                           //widgetOptions: {
+                                           // zebra: ["odd", "even"]
+                                           //}
+                                           });
             scatterPlot3d( d3.select('#divPlot'));
         });
     </script>
