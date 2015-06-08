@@ -1209,6 +1209,17 @@ function plotPCA(to_plot) {
         .attr("fill", function (d) {return d.meta.color; } )
         .attr('opacity', 0.8)
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
+        .attr('data-toggle', 'tooltip')
+        .attr('title', function(d) {return d.meta.name})
+        .attr('data-trigger', 'hover')
+        .attr('data-placement', 'bottom')
+        .attr('data-html', 'true')
+        .attr('container', 'body')
+        .attr('data-container', 'body')
+    // Add the popover behavior for cells
+    $(document).ready(function(){
+        $('.pca_datapoint').tooltip();   
+    });
 }
 
 
@@ -1299,17 +1310,29 @@ function plotGeneExpression(timepoint_data){
         expressed.exit().remove();
         expressed.enter().append('rect')
             .attr('class', function(e){return 'exprPlot_data_point_rect _' + e;})
-            .attr('id', function(e){return d.meta.name + '.' + gene_names[e];})
+            .attr('id', function(e){return d.meta.name + '_' + gene_names[e];})
             .attr('y', function(e){return expr_gene_scale(gene_names[e]);})
             .attr('height', expr_gene_scale.rangeBand())
             .attr('x', '0')
             .attr('width', '100%')
             .attr('fill', d.meta.color)
-            .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");
+            .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
+            .attr('data-toggle', 'tooltip')
+            .attr('title', function(d) {return '<b>Cell:</b> ' + this.id.split('_')[0] + '<br />' + '<b>Gene:</b> ' + this.id.split('_')[1] })
+            .attr('data-trigger', 'hover')
+            .attr('data-placement', 'bottom')
+            .attr('data-html', 'true')
+            .attr('container', 'body')
+            .attr('data-container', 'body')
         });
     if(changed){
         updateExprRowSize();
     }
+
+        // Add the popover behavior for cells
+    $(document).ready(function(){
+        $('.exprPlot_data_point_rect').tooltip();   
+    });
 }
 
 /**
