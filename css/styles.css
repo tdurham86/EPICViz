@@ -41,7 +41,6 @@ body > .container-fluid {
 
 #reset-button {
   float: right;
-  margin-top: 20px;
 }
 
 #hide-controls {
@@ -80,10 +79,26 @@ body > .container-fluid {
     position: relative;
 }
 
-#exprDiv{
+/* Styling for expression plot tabs and plots */
+svg:not(:root) {
+  overflow: visible;
+}
+
+#expressionPlotTabs {
+  width: 50%;
+  height: 100%;
+  display: inline-block;
+}
+
+.tab-content {
+  height: 100%;
+  width: 100%;
+}
+
+#exprDiv, #pcaDiv{
+  overflow: scroll;
     height: 100%;
-    width: 55%;
-    display: inline-block;
+    width: 100%;
     position: relative;
     border: none;
     border-left: 1px solid #CCCCCC;
@@ -94,6 +109,7 @@ body > .container-fluid {
     stroke-width: 1px;
 }
 
+/* Styling for 3D plot */
 x3d {
   width: 80%;
   height: 100%;
