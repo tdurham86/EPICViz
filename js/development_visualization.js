@@ -41,6 +41,9 @@ var celldesc = [];
 var celltype = [];
 var tissuetype = [];
 
+// Wormbase gene map
+var wormbase_map = {};
+
 //detect when all time points are loaded
 var ready = false;
 
@@ -1646,7 +1649,6 @@ function makeWormBaseUrl(gene){
 * mapping in a global object, wormbase_map. The wormbase.org IDs are used to
 * construct URLs for use in links where users can find more info about genes.
 */
-var wormbase_map = {};
 function loadWormBaseIdMap(){
     var url = 'http://localhost:2255/wormbase_id_map.csv';
     console.log(url)
@@ -1673,11 +1675,20 @@ function calcGeneEnrichment(selcolor){
         .filter(function(d){
             return d.meta.color === selcolor ? this : null;
         });
+        
     var gene_name;
     var gene_exp;
     var gene_exp_sel;
     for(var i=0; i < gene_names.length; i++){
+
         gene_name = gene_names[i];
+        
+        // Some gene names load with a period when they have a dash in the map, this normalizes names
+        // to make sure gene names always match those in the map.
+        if ( !(gene_name in wormbase_map)) {
+          gene_name = gene_name.replace('.', '-')
+        }
+
         gene_exp = $('._'+i);
         gene_exp_sel = selrows.selectAll('._'+i);
         wormbase_map[gene_name].frac_exp = gene_exp.length/popsize;
