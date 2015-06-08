@@ -567,8 +567,6 @@ function setCellColors(){
                     selections.push(celltypes[sel_val]);
                 }
             colors.push(picker_col[i].value);
-        
-        
         }
         }
     }
