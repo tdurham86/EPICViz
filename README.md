@@ -43,7 +43,7 @@ We sought to address this lack of resource by developing an interactive visualiz
 * Genes of interest can be selected from the heat map for further study.
 
 
-![Figure 1](https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/master/img/figure1.png)
+![Figure 1](https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/master/img/Figure1.png)
 
 
 ## Development Process 
