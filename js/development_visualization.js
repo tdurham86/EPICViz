@@ -1268,8 +1268,8 @@ function updateExprRectColors(){
 var expr_gene_scale = d3.scale.ordinal(),
 expr_cell_scale = d3.scale.ordinal();
 function initializeGeneExpressionPlot(){
-    var width = $('#exprDiv').width(),
-        height = $('#exprDiv').height();
+    var width = $('#expressionPlotTabs').width(),
+        height = $('#expressionPlotTabs').height();
     
     expr_gene_scale.domain(gene_names);
     expr_gene_scale.rangeRoundBands([0, height]);
@@ -1287,6 +1287,12 @@ function initializeGeneExpressionPlot(){
         .attr('width', '100%')
         .attr('height', '100%')
         .attr('fill', '#ffffff');
+
+    // Adds callback on click for tabbed interface
+    $('.nav-tabs a').on('click', function (e) {
+        e.preventDefault();
+        $(this).tab('show');
+    });
 
 }
 
@@ -1836,20 +1842,7 @@ function initializeLineageTree(root) {
 Main Thread of execution
 ****************************************************************/
 function scatterPlot3d( parent ) {
-    var top = parent  
-        .append('div')
-        .attr('id', 'top_display_panel');
-
-    var three_d = top.append('div')
-        .attr('id', 'three_d_plot');
-    x3d = three_d.append("x3d");
-
-    three_d.append('div')
-        .attr('id', 'small_multiples');
-
-    top.append('div')
-        .attr('id', 'exprDiv');
-
+    x3d = d3.select('x3d')
     scene = x3d.append("scene")
 
     // Define the four different viewpoints (ISO and each of the small multiples)
