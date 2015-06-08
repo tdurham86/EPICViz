@@ -1580,6 +1580,7 @@ function playpausedev(){
 */
 function resetView() {
   setViewpoint(0);
+  x3d.node().runtime.resetView();
 }
 
 

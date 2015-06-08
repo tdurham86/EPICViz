@@ -70,12 +70,16 @@
 
     <div id="divPlot" class="divPlot" >
         <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="Enlarge view."  data-step="2">
-        <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="Reset 3D plot."  data-step="1">
+        
 
         <div id="top_display_panel">
 
           <div id="three_d_plot"> 
-            <x3d></x3d>
+
+            <x3d>
+              <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="Reset 3D plot."  data-step="1">
+
+            </x3d>
             <div id="small_multiples">
             </div>
           </div>
