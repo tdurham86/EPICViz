@@ -1001,11 +1001,11 @@ function initializeSmallMultiples() {
     // Make the axes for the x-y chart
     var xyChart = d3.select('#small_multiples')
     .append('svg:svg')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('class', 'small_multiples_chart')
-    .attr('id', 'xyChart')
-    .attr('onclick', 'setViewpoint(1)')
+      .attr("viewBox", "0 0 " + width + " " + height)
+      .attr("preserveAspectRatio", "xMidYMid")
+      .attr('class', 'small_multiples_chart')
+      .attr('id', 'xyChart')
+      .attr('onclick', 'setViewpoint(1)')
 
     var main = xyChart.append('g')
     .attr('width', width)
@@ -1019,8 +1019,8 @@ function initializeSmallMultiples() {
     // Make the axes for the x-z chart
     var xzChart = d3.select('#small_multiples')
     .append('svg:svg')
-    .attr('width', width)
-    .attr('height', height)
+    .attr("viewBox", "0 0 " + width + " " + height)
+    .attr("preserveAspectRatio", "xMidYMid")
     .attr('class', 'small_multiples_chart')
     .attr('id', 'xzChart')
     .attr('onclick', 'setViewpoint(2)')
@@ -1036,8 +1036,8 @@ function initializeSmallMultiples() {
     // Make the axes for the x-z chart
     var yzChart = d3.select('#small_multiples')
     .append('svg:svg')
-    .attr('width', width)
-    .attr('height', height)
+    .attr("viewBox", "0 0 " + width + " " + height)
+    .attr("preserveAspectRatio", "xMidYMid")
     .attr('class', 'small_multiples_chart')
     .attr('id', 'yzChart')
     .attr('onclick', 'setViewpoint(3)')
