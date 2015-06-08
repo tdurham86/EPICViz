@@ -1702,6 +1702,7 @@ function calcGeneEnrichment(selcolor){
             pval *= gene_names.length;
             pval = pval > 1 ? 1 : pval;
         }
+        wormbase_map[gene_name].pval = pval;
     }
     printGeneTable();
 }
