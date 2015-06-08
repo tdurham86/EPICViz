@@ -81,7 +81,7 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li><a href="" data-toggle="modal" data-target="#aboutModal">About</a></li>
                     <li><a href="" data-toggle="modal" data-target="#helpModal">Help</a></li>
-                     <li><a class="btn btn-large btn-success" href="javascript:void(0);" onclick="javascript:introJs().start();">Show Me How</a></li>
+                     <li><a href="javascript:void(0);" onclick="javascript:introJs().start();">Tour</a></li>
                 </ul>
             </div>
             
@@ -90,23 +90,23 @@
 
 
     <div id="divPlot" class="divPlot" >
-        <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="Hide control panel, and enlarge view."  data-step="2">
+        <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="<b>Collapse: </b>click to collapse or expand the control panel to make more space for viewing."  data-step="4" data-position='right'>
         
 
         <div id="top_display_panel">
 
-          <div id="three_d_plot" data-intro="3D-plot of C.Elegans, drag it to rotate by any direction."  data-step="6"> 
+          <div id="three_d_plot"> 
 
-            <x3d>
-              <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="Reset 3D plot to default position."  data-step="1">
+            <x3d data-intro="<b>Cell Positions: </b>3D-plot of cell positions during C.Elegans development. Drag to rotate in any direction and scroll to zoom."  data-step="5">
+              <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="<b>Reset: </b>reset 3D plot to default position if the view gets all turned around."  data-step="6">
 
             </x3d>
-            <div id="small_multiples" data-intro="3 different multiples based on 3D-plot. Also the 3D-plot rotates as one specific multiple is clicked."  data-step="7">
+            <div id="small_multiples" data-intro="<b>Small Multiples: </b>Small multiples of the 3D view. Clicking on a small multiple rotates the 3D view to that position."  data-step="7">
             </div>
           </div>
           
           <!-- Tab interface for expression plots -->
-          <div id='expressionPlotTabs' role="tabpanel" data-intro="Gene expression heatmap."  data-step="8">
+          <div id='expressionPlotTabs' role="tabpanel" data-intro="<b>Gene Expression: </b>summaries of gene expression in heatmap and PCA form. Click on a highlighted group to generate a summary of differential gene expression." data-step="8" data-position='left'>
 
             <!-- Nav tabs -->
             <ul id='tabs' class="nav nav-tabs" role="tablist" data-tabs="tabs">
@@ -125,9 +125,12 @@
 
         </div>
 
+        <div class="lineage_tree" data-intro="<b>Lineage Tree: </b>C. Elegans has stereotyped cell divisions and development. Divisions are represented as a binary tree that populates as the embryo develops. Drag the slider to navigate."  data-step="9" data-position='top'>
+        </div>
+
     </div>
-    <div id="divControls" class="divControls" >
-        <div id="playback" class="control-section"  data-intro="play the growth of the lineage tree. Set the speed or drag the slider to the specific time point."  data-step="3">
+    <div id="divControls" class="divControls">
+        <div id="playback" class="control-section" data-intro="<b>Playback: </b>development can be played back at various speeds."  data-step="1" data-position='right'>
           <h4>Playback</h4>
           <button id="playpause" >Play</button>
           <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
@@ -139,12 +142,12 @@
             </select>
           </div>
         </div>
-        <div id="highlighting" class="control-section" data-intro="Customly highlight the datapoints that you are intersted, also you can use union/intersection set operations to get more details."  data-step="4">
+        <div id="highlighting" class="control-section" data-intro="<b>Highlighting: </b>up to four specific cell types and lineages can be highlighted. Set operations like AND and OR are also supported for complex queries over multiple groups." data-step="2" data-position='right'>
           <h4>Highlighting</h4>
 
         </div>
 
-        <div id="expression" class="control-section" data-intro="Gene Expression."  data-step="5">
+        <div id="expression" class="control-section" data-intro="Placeholder."  data-step="3" data-position='right'>
           <h4>Expression</h4>
           ...Placeholder...
         </div>

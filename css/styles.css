@@ -397,3 +397,9 @@ input[type="color"]:focus {
 .select-style select:focus {
     outline: none;
 }
+
+/* Intro.js tour custom CSS */
+.introjs-tooltiptext {
+  font-size: 15spx;
+}
+

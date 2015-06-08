@@ -1896,9 +1896,7 @@ function initializeLineageTree(root) {
   var margin = {top: 10, right: 10, bottom: 10, left: 10},
   height = 700 - margin.top - margin.bottom;
 
-  var tree_div = d3.select("#divPlot")
-    .append('div')
-    .attr("class", 'lineage_tree')
+  var tree_div = d3.select(".lineage_tree")
 
   /****************************************************************
   Set up distortion scale and associate slider
