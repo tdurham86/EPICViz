@@ -1180,7 +1180,7 @@ function plotYZSmallMultiple(to_plot) {
     to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
         .attr('id', function(d){return d.meta.name})
-        .attr("cx", function (d) { return small_multiples_scale(d.z); } )
+        .attr("cx", function (d) { return small_multiples_scale(-d.z); } )
         .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
         .attr("r", function(d) {
             if(d.meta.selected || !highlights){
@@ -1493,9 +1493,10 @@ function plotData( time_point, duration ) {
         .attr("cy", function(row) {return small_multiples_scale(row.x);})
 
     small_multiples_datapoints_yz.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return small_multiples_scale(row.z);})
+        .attr("cx", function(row) {return small_multiples_scale(-row.z);})
         .attr("cy", function(row) {return small_multiples_scale(-row.y);})
 
+    // transition pca points
     pca_datapoints.transition().ease(ease).duration(duration)
         .attr("cx", function(row) {return pca_scale_x(row.pc2);})
         .attr("cy", function(row) {return pca_scale_y(row.pc3);})
