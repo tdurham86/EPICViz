@@ -81,7 +81,7 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li><a href="" data-toggle="modal" data-target="#aboutModal">About</a></li>
                     <li><a href="" data-toggle="modal" data-target="#helpModal">Help</a></li>
-                     <li><a class="btn btn-large btn-success" href="javascript:void(0);" onclick="javascript:introJs().start();">Show me how</a></li>
+                     <li><a class="btn btn-large btn-success" href="javascript:void(0);" onclick="javascript:introJs().start();">Show Me How</a></li>
                 </ul>
             </div>
             
@@ -90,23 +90,23 @@
 
 
     <div id="divPlot" class="divPlot" >
-        <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="Enlarge view."  data-step="2">
+        <input type="button" id="hide-controls" value="<" class="divPlot" data-intro="Hide control panel, and enlarge view."  data-step="2">
         
 
         <div id="top_display_panel">
 
-          <div id="three_d_plot"> 
+          <div id="three_d_plot" data-intro="3D-plot of C.Elegans, drag it to rotate by any direction."  data-step="6"> 
 
             <x3d>
-              <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="Reset 3D plot."  data-step="1">
+              <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="Reset 3D plot to default position."  data-step="1">
 
             </x3d>
-            <div id="small_multiples">
+            <div id="small_multiples" data-intro="3 different multiples based on 3D-plot. Also the 3D-plot rotates as one specific multiple is clicked."  data-step="7">
             </div>
           </div>
           
           <!-- Tab interface for expression plots -->
-          <div id='expressionPlotTabs' role="tabpanel">
+          <div id='expressionPlotTabs' role="tabpanel" data-intro="Gene expression heatmap."  data-step="8">
 
             <!-- Nav tabs -->
             <ul id='tabs' class="nav nav-tabs" role="tablist" data-tabs="tabs">
@@ -127,7 +127,7 @@
 
     </div>
     <div id="divControls" class="divControls" >
-        <div id="playback" class="control-section"  data-intro="play lineage tree."  data-step="3">
+        <div id="playback" class="control-section"  data-intro="play the growth of the lineage tree. Set the speed or drag the slider to the specific time point."  data-step="3">
           <h4>Playback</h4>
           <button id="playpause" >Play</button>
           <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
@@ -139,12 +139,12 @@
             </select>
           </div>
         </div>
-        <div id="highlighting" class="control-section" data-intro="Highlighting."  data-step="4">
+        <div id="highlighting" class="control-section" data-intro="Customly highlight the datapoints that you are intersted, also you can use union/intersection set operations to get more details."  data-step="4">
           <h4>Highlighting</h4>
 
         </div>
 
-        <div id="expression" class="control-section" data-intro="Expression."  data-step="5">
+        <div id="expression" class="control-section" data-intro="Gene Expression."  data-step="5">
           <h4>Expression</h4>
           ...Placeholder...
         </div>
