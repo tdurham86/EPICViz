@@ -1206,13 +1206,14 @@ function plotGeneExpression(timepoint_data){
             .data(d.expr, function(e){return e;});
         expressed.exit().remove();
         expressed.enter().append('rect')
-            .attr('class', function(e){return 'exprPlot_data_point_rect ' + e;})
+            .attr('class', function(e){return 'exprPlot_data_point_rect _' + e;})
             .attr('id', function(e){return d.meta.name + '.' + gene_names[e];})
             .attr('y', function(e){return expr_gene_scale(gene_names[e]);})
             .attr('height', expr_gene_scale.rangeBand())
             .attr('x', '0')
             .attr('width', '100%')
-            .attr('fill', d.meta.color);
+            .attr('fill', d.meta.color)
+            .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");
 //            .attr('data-toggle', 'popover')
 //            .attr('title', function(d) {return this.id;})
 //            .attr('data-trigger', 'hover')
@@ -1415,7 +1416,7 @@ tpnames = [];
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
     if(tp === 1){
-        gene_names = rows[0][rows[0].length - 1].split(' ');
+        gene_names = $.trim(rows[0][rows[0].length - 1]).split(' ');
     }
     for (var i=1; i < rows.length; i++){
         row = rows[i];
@@ -1495,7 +1496,7 @@ function parseCSV(csvdata_in) {
 * @returns {string} url - the wormbase.org url for the info about that gene
 */
 function makeWormBaseUrl(gene){
-    var wb = wormbase_map[gene];
+    var wb = wormbase_map[gene].wb_id;
     return 'http://www.wormbase.org/db/get?name=' + wb + ';class=Gene';
 }
 
@@ -1510,11 +1511,71 @@ function loadWormBaseIdMap(){
     console.log(url)
     d3.text(url, function(id_map){
         var rows = d3.csv.parseRows(id_map);
-        for(var i=0; i < rows.length; i++){
+        for(var i=1; i < rows.length; i++){
             //map gene name to wormbase id
-            wormbase_map[rows[i][0]] = rows[i][1];
+            wormbase_map[rows[i][0]] = {'wb_id': rows[i][1]};
         }
     });
+}
+
+/**
+* Function to calculate gene-specific metrics with respect to a particular 
+* set of highlighted cells. When a user clicks on a rect in the gene expression
+* plot this function is called with the color of that rect as a parameter. Then
+* metrics for all the genes are calculated, and they are displayed in a sortable
+* table in the geneModal modal dialog.
+* @param {string} selcolor - color of the rect in hex format
+*/
+function calcGeneEnrichment(selcolor){
+    var popsize = csvdata[timepoint % csvdata.length].length;
+    var selrows = d3.selectAll('.exprPlot_data_point')
+        .filter(function(d){
+            return d.meta.color === selcolor ? this : null;
+        });
+    var gene_name;
+    var gene_exp;
+    var gene_exp_sel;
+    for(var i=0; i < gene_names.length; i++){
+        gene_name = gene_names[i];
+        gene_exp = $('._'+i);
+        gene_exp_sel = selrows.selectAll('._'+i);
+        wormbase_map[gene_name].frac_exp = gene_exp.length/popsize;
+        wormbase_map[gene_name].frac_exp_sel = gene_exp_sel.size()/selrows.size();
+        if(gene_exp.length === 0){
+            wormbase_map[gene_name].pval = 1;
+        }else{
+            wormbase_map[gene_name].pval = jStat.hypgeom.pdf(gene_exp_sel.size(),
+                                                             popsize, gene_exp.length,
+                                                             selrows.size());
+        }
+    }
+    printGeneTable();
+}
+
+/**
+* Function to populate the modal dialog "geneModal", which contains a report on
+* the enrichment of genes for a particular selection. 
+* Triggered from calcGeneEnrichment.
+*/
+function printGeneTable(){
+    var table = d3.select('#gene_report_body'), 
+        row;
+    table.selectAll('tr').remove();
+    $('#gene_report').trigger("update");
+    for(var gene in wormbase_map){
+        row = table.append('tr')
+        row.append('td').text(gene);
+        row.append('td')
+            .append('a')
+            .attr('href', makeWormBaseUrl(gene))
+            .attr('target', '_blank')
+            .text(wormbase_map[gene].wb_id);
+        row.append('td').text(wormbase_map[gene].frac_exp);
+        row.append('td').text(wormbase_map[gene].frac_exp_sel);
+        row.append('td').text(wormbase_map[gene].pval);
+    }
+    $('#gene_report').trigger("update");
+//    $('#gene_report').trigger("sorton", [[[4,0]]]);
 }
 
 /**
