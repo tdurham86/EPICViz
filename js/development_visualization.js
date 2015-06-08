@@ -1193,6 +1193,7 @@ function initializePCA() {
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 */
 function plotPCA(to_plot) { 
+
     to_plot.append("svg:circle")
         .attr('class', 'pca_datapoint')
         .attr('id', function(d){return d.meta.name})
@@ -1207,7 +1208,7 @@ function plotPCA(to_plot) {
         })
         .attr("fill", function (d) {return d.meta.color; } )
         .attr('opacity', 0.8)
-        .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");;
+        .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
 }
 
 
