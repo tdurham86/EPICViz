@@ -636,7 +636,7 @@ function setCellColors(){
            if(logic_sel[i-1]=="opIntersection"){
                 if (pt_part.length ===picker_length[i-1])
                     {pt_colors = pt_colors.concat(pt_part[0])}
-                else{pt_colors=[]}
+                else{pt_colors=pt_colors.concat([])}
                 }
            else {pt_colors = pt_colors.concat(pt_part)}
         }
