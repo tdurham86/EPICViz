@@ -77,6 +77,10 @@ var load_idx = 0;
 // Scale for small multiples plots
 var small_multiples_scale = null;
 
+// Scale for PCA plot
+var pca_scale_x = null;
+var pca_scale_y = null;
+
 //variables for speed dropdown
 var speedarray = ["slow", "medium", "fast"];
 var options = [0,1,2];
@@ -539,6 +543,8 @@ function updateCellColors(){
         .attr('fill', function(d){return d.color;});
     d3.selectAll('.small_multiples_datapoint')
         .attr('fill', function(d){return d.meta.color;});
+    d3.selectAll('.pca_datapoint')
+        .attr('fill', function(d){return d.meta.color;});
 }
 
 /**
@@ -685,6 +691,19 @@ function updateCellSize(){
     plotXYSmallMultiple(to_update);
     plotXZSmallMultiple(to_update);
     plotYZSmallMultiple(to_update);
+
+    var to_update = d3.selectAll('.pca_datapoint')
+        .filter(function(d){
+            var rad = +$(this).attr('r');
+            if((d.meta.selected && rad === (d.radius / 15)) ||
+               (!d.meta.selected && rad > (d.radius / 15)) ||
+               (!highlights && rad === (d.radius / 15))){
+                return this;
+            }else{
+                return null;
+            }
+        });
+    to_update.remove();
 }
 
 /**
@@ -781,6 +800,7 @@ function loadCellTypeMap(){
 //            var root = getTreeRootFromTimepoints(csvdata, csvdata.length - 1);
 //            initializeLineageTree(root);
         initializePlot();
+        initializePCA();
         initializeSmallMultiples();
         initializeGeneExpressionPlot();
         initializeLineageTree(cellmap.P0);
@@ -1172,6 +1192,62 @@ function plotYZSmallMultiple(to_plot) {
 }
 
 /**
+* Initializes axes for PCA plot, appending to #pcaDiv div element.
+*/
+function initializePCA() {
+    var width = $('#expressionPlotTabs').width(),
+        height = $('#expressionPlotTabs').height();
+
+    pca_scale_x = d3.scale.linear()
+              .domain([-30, 10])
+              .range([0, width]);
+
+    pca_scale_y = d3.scale.linear()
+              .domain([-15, 15])
+              .range([0, height]);
+
+ 
+    // Make the axes for the x-y chart
+    var xyChart = d3.select('#pcaDiv')
+    .append('svg:svg')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('id', 'pcaChart')
+
+    var main = xyChart.append('g')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('class', 'main')   
+
+    var g = main.append("svg:g")
+        .attr('id', 'pca_data_points');
+}
+
+
+/**
+* Plots points on the PCA plot. intializePCA must be called first.
+* @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
+*/
+function plotPCA(to_plot) { 
+    to_plot.append("svg:circle")
+        .attr('class', 'pca_datapoint')
+        .attr('id', function(d){return d.meta.name})
+        .attr("cx", function (d) { return pca_scale_x(d.pc2); } )
+        .attr("cy", function (d) { return pca_scale_y(d.pc3); } )
+        .attr("r", function(d) {
+            if(d.meta.selected || !highlights){
+                return d.radius/10;
+            }else{
+                return  d.radius/15;
+            }
+        })
+        .attr("fill", function (d) {return d.meta.color; } )
+        .attr('opacity', 0.8)
+        .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");;
+}
+
+
+/**
 * Updates visible nodes on the lineage tree to show only specified cells by name.
 * @param {list} cellnames - list of cell names (strings) for cells to show in 
 *                           the lineage tree (all visible cells)
@@ -1257,13 +1333,30 @@ function plotGeneExpression(timepoint_data){
             .data(d.expr, function(e){return e;});
         expressed.exit().remove();
         expressed.enter().append('rect')
-            .attr('class', function(e){return 'exprPlot_data_point_rect ' + e;})
+            .attr('class', function(e){return 'exprPlot_data_point_rect _' + e;})
             .attr('id', function(e){return d.meta.name + '.' + gene_names[e];})
             .attr('y', function(e){return expr_gene_scale(gene_names[e]);})
             .attr('height', expr_gene_scale.rangeBand())
             .attr('x', '0')
             .attr('width', '100%')
-            .attr('fill', d.meta.color);
+            .attr('fill', d.meta.color)
+            .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");
+//            .attr('data-toggle', 'popover')
+//            .attr('title', function(d) {return this.id;})
+//            .attr('data-trigger', 'hover')
+//            .attr('data-placement', 'bottom');
+//            .on('mouseover', function(d){
+//                var height = this.height,
+//                width = this.parentNode.width;
+//                this.height = height + 5;
+//                this.parentNodewidth = width + 5;
+//            })
+//            .on('mouseout', function(d){
+//                var height = this.height,
+//                width = this.parentNode.width;
+//                this.height = height - 5;
+//                this.parentNode.width = width - 5;
+//            });
         });
     if(changed){
         updateExprRowSize();
@@ -1303,8 +1396,8 @@ function updateExprRectColors(){
 var expr_gene_scale = d3.scale.ordinal(),
 expr_cell_scale = d3.scale.ordinal();
 function initializeGeneExpressionPlot(){
-    var width = $('#exprDiv').width(),
-        height = $('#exprDiv').height();
+    var width = $('#expressionPlotTabs').width(),
+        height = $('#expressionPlotTabs').height();
     
     expr_gene_scale.domain(gene_names);
     expr_gene_scale.rangeRoundBands([0, height]);
@@ -1322,6 +1415,12 @@ function initializeGeneExpressionPlot(){
         .attr('width', '100%')
         .attr('height', '100%')
         .attr('fill', '#ffffff');
+
+    // Adds callback on click for tabbed interface
+    $('.nav-tabs a').on('click', function (e) {
+        e.preventDefault();
+        $(this).tab('show');
+    });
 
 }
 
@@ -1359,6 +1458,10 @@ function plotData( time_point, duration ) {
     var new_data = plot3DView(datapoints.enter())
 
     //plot gene expression patterns
+    var pca_datapoints = d3.select('#pca_data_points').selectAll(".pca_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xz';});
+    pca_datapoints.exit().remove();
+    plotPCA(pca_datapoints.enter());
+
     plotGeneExpression(timepoint_data);
 
     //use new_data to identify which nodes in the tree should be revealed
@@ -1390,6 +1493,10 @@ function plotData( time_point, duration ) {
     small_multiples_datapoints_yz.transition().ease(ease).duration(duration)
         .attr("cx", function(row) {return small_multiples_scale(row.z);})
         .attr("cy", function(row) {return small_multiples_scale(-row.y);})
+
+    pca_datapoints.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return pca_scale_x(row.pc2);})
+        .attr("cy", function(row) {return pca_scale_y(row.pc3);})
 
     //transition tree nodes
     var circ2 = newnodes.selectAll('circle').transition().ease(ease).duration(duration)
@@ -1450,7 +1557,7 @@ tpnames = [];
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
     if(tp === 1){
-        gene_names = rows[0][rows[0].length - 1].split(' ');
+        gene_names = $.trim(rows[0][rows[0].length - 1]).split(' ');
     }
     for (var i=1; i < rows.length; i++){
         row = rows[i];
@@ -1523,6 +1630,96 @@ function parseCSV(csvdata_in) {
 }
 
 /**
+* Takes a gene name, looks up its wormbase.org ID and constructs the url to
+* the wormbase.org page about that gene.
+* @param {string} gene - gene name for which the corresponding wormbase.org url
+*                        should be generated
+* @returns {string} url - the wormbase.org url for the info about that gene
+*/
+function makeWormBaseUrl(gene){
+    var wb = wormbase_map[gene].wb_id;
+    return 'http://www.wormbase.org/db/get?name=' + wb + ';class=Gene';
+}
+
+/**
+* Reads in the csv file mapping gene names to wormbase.org IDs and stores this
+* mapping in a global object, wormbase_map. The wormbase.org IDs are used to
+* construct URLs for use in links where users can find more info about genes.
+*/
+var wormbase_map = {};
+function loadWormBaseIdMap(){
+    var url = 'http://localhost:2255/wormbase_id_map.csv';
+    console.log(url)
+    d3.text(url, function(id_map){
+        var rows = d3.csv.parseRows(id_map);
+        for(var i=1; i < rows.length; i++){
+            //map gene name to wormbase id
+            wormbase_map[rows[i][0]] = {'wb_id': rows[i][1]};
+        }
+    });
+}
+
+/**
+* Function to calculate gene-specific metrics with respect to a particular 
+* set of highlighted cells. When a user clicks on a rect in the gene expression
+* plot this function is called with the color of that rect as a parameter. Then
+* metrics for all the genes are calculated, and they are displayed in a sortable
+* table in the geneModal modal dialog.
+* @param {string} selcolor - color of the rect in hex format
+*/
+function calcGeneEnrichment(selcolor){
+    var popsize = csvdata[timepoint % csvdata.length].length;
+    var selrows = d3.selectAll('.exprPlot_data_point')
+        .filter(function(d){
+            return d.meta.color === selcolor ? this : null;
+        });
+    var gene_name;
+    var gene_exp;
+    var gene_exp_sel;
+    for(var i=0; i < gene_names.length; i++){
+        gene_name = gene_names[i];
+        gene_exp = $('._'+i);
+        gene_exp_sel = selrows.selectAll('._'+i);
+        wormbase_map[gene_name].frac_exp = gene_exp.length/popsize;
+        wormbase_map[gene_name].frac_exp_sel = gene_exp_sel.size()/selrows.size();
+        if(gene_exp.length === 0){
+            wormbase_map[gene_name].pval = 1;
+        }else{
+            wormbase_map[gene_name].pval = jStat.hypgeom.pdf(gene_exp_sel.size(),
+                                                             popsize, gene_exp.length,
+                                                             selrows.size());
+        }
+    }
+    printGeneTable();
+}
+
+/**
+* Function to populate the modal dialog "geneModal", which contains a report on
+* the enrichment of genes for a particular selection. 
+* Triggered from calcGeneEnrichment.
+*/
+function printGeneTable(){
+    var table = d3.select('#gene_report_body'), 
+        row;
+    table.selectAll('tr').remove();
+    $('#gene_report').trigger("update");
+    for(var gene in wormbase_map){
+        row = table.append('tr')
+        row.append('td').text(gene);
+        row.append('td')
+            .append('a')
+            .attr('href', makeWormBaseUrl(gene))
+            .attr('target', '_blank')
+            .text(wormbase_map[gene].wb_id);
+        row.append('td').text(wormbase_map[gene].frac_exp);
+        row.append('td').text(wormbase_map[gene].frac_exp_sel);
+        row.append('td').text(wormbase_map[gene].pval);
+    }
+    $('#gene_report').trigger("update");
+//    $('#gene_report').trigger("sorton", [[[4,0]]]);
+}
+
+/**
 * Read in the csv file at the URL specified in the url variable, parse the rows
 * using parseCSV, and then iterate over the parsed csvdata objects, storing all
 * meta attributes in the cellmap object to avoid storing duplicate metadata
@@ -1579,6 +1776,7 @@ function playpausedev(){
 */
 function resetView() {
   setViewpoint(0);
+  x3d.node().runtime.resetView();
 }
 
 
@@ -1841,20 +2039,7 @@ function initializeLineageTree(root) {
 Main Thread of execution
 ****************************************************************/
 function scatterPlot3d( parent ) {
-    var top = parent  
-        .append('div')
-        .attr('id', 'top_display_panel');
-
-    var three_d = top.append('div')
-        .attr('id', 'three_d_plot');
-    x3d = three_d.append("x3d");
-
-    three_d.append('div')
-        .attr('id', 'small_multiples');
-
-    top.append('div')
-        .attr('id', 'exprDiv');
-
+    x3d = d3.select('x3d')
     scene = x3d.append("scene")
 
     // Define the four different viewpoints (ISO and each of the small multiples)
@@ -1886,6 +2071,7 @@ function scatterPlot3d( parent ) {
     console.log("Reading in embryo positions.");
     loadTimePoints(0);
     console.log("Loading data");
+    loadWormBaseIdMap();
 
     d3.select('#hide-controls')
       .attr('onclick', 'hideControls()');

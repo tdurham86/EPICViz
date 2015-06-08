@@ -7,3 +7,4 @@ ImageExpressionTable*
 *.ipynb
 *.zip
 .Rhistory
+gene_info.csv

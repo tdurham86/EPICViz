@@ -20,7 +20,7 @@ def transform_line(line, spacer=''):
     before the gene expression values and collapse the gene expression patterns
     into a single column.
     '''
-    return ','.join(line[:6] + line[-3:] + [spacer.join(line[6:-3])])
+    return ','.join(line[:8] + line[-2:] + [spacer.join(line[8:-2])])
 
 with open(args.csv_path) as csv_in:
     header = csv_in.readline().strip().split(',')
