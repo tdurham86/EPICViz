@@ -12,7 +12,7 @@ GLOBAL VARIABLES
 ****************************************************************/
 //global highlighting variables
 var defaultColor='#a8a8a8';
-var selectionColor = '#FFFF00';
+var selectionColor = '#FFD700';
 //boolean value indicates whether this color is currently in use
 var highlightColorDefaults = {'#e41a1c':false, '#377eb8':false, '#ff7f00':false, '#f781bf':false};
 var highlights = false;
@@ -791,6 +791,46 @@ function userSelectPoints(selection){
             return "translate(" + 0 + "," + d.y + ")"; }) // 0 is required for x to make edges match up with nodes
         .call(position_node)
         .call(scale_radius, 6, 0.5);
+
+    //small_multiples
+    d3.selectAll('.small_multiples_datapoint')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+        .attr('stroke', 'none')
+
+    var snode = d3.selectAll('.small_multiples_datapoint')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;})
+        .attr('stroke', selectionColor)
+        .attr('stroke-width', '2')
+
+    // PCA
+    d3.selectAll('.pca_datapoint')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+        .attr('stroke', 'none')
+
+    var snode = d3.selectAll('.pca_datapoint')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;})
+        .attr('stroke', selectionColor)
+        .attr('stroke-width', '2')
+
+    // PCA
+    d3.selectAll('.exprPlot_data_point')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+        .attr('stroke', 'none')
+
+
+    d3.selectAll('.exprPlot_data_point')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+        .selectAll('.expr-plot-node-select').remove();
+
+    var snode = d3.selectAll('.exprPlot_data_point')
+        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;})
+        .insert('rect', ':first-child')
+        .attr('class', 'expr-plot-node-select')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('fill', selectionColor)
+        .attr('x', 0)
+        .attr('y', 0)
 }
 
 /****************************************************************
@@ -943,7 +983,7 @@ function plot3DView(to_plot){
                     return [5, 5, 5];
                 }
         })
-        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this)');
+        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this);');
 
     var showhide = document.getElementById('showhide-highlight').value;
     var transp = 0;
@@ -1308,8 +1348,8 @@ function initializeGeneExpressionPlot(){
         height = $('#expressionPlotTabs').height();
     
     expr_gene_scale.domain(gene_names);
-    expr_gene_scale.rangeRoundBands([0, height]);
-    expr_cell_scale.rangeRoundBands([0, width]);
+    expr_gene_scale.rangeBands([0, height]);
+    expr_cell_scale.rangeBands([0, width]);
 
     var exprPlot = d3.select('#exprDiv')
         .append('svg:svg')

@@ -109,13 +109,13 @@ svg:not(:root) {
 }
 
 .exprPlot_data_point_rect:hover{
-    stroke: #FFFF00;
+    stroke: #2394F5;
     stroke-width: 1px;
     cursor: pointer;
 }
 
 .pca_datapoint:hover{
-    stroke: #FFFF00;
+    stroke: #2394F5;
     stroke-width: 1px;
     cursor: pointer;
 }
