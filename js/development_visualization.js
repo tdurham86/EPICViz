@@ -194,7 +194,7 @@ function makeLPDivTemplate(){
     var select = lpsubdiv.append('select')
         .attr('class', 'selhi')
         .attr('id', id)
-        .attr('data-placeholder', 'Cell Lineage or Cell Type...')
+        .attr('data-placeholder', 'Cell lineage/type...')
         .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()')
         .attr('multiple','multiple');
        
@@ -256,14 +256,13 @@ function makeLPDivTemplate(){
     var select = lpsubdiv.append('select')
         .attr('class', 'loghi')
         .attr('id', id)
-        .attr('data-placeholder', 'Set Operation (default :None)')
+        .attr('data-placeholder', 'Set Logic')
         .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()');
     
     select.append('option').attr('value', '');
     outgroup = d3.select('#'+id).append('optgroup')
-                .attr('label','Operation');
     outgroup.append('option').attr('value','op' + 'Union').html('Union');
-    outgroup.append('option').attr('value','op' + 'Intersection').html('Intersection');
+    outgroup.append('option').attr('value','op' + 'Intersection').html('Intersect');
 
     lpsubdiv.append('input')
         .attr('type', 'color')

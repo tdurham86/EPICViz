@@ -354,8 +354,12 @@ input[type="text"].focus {
 }
 
 /* Styling for color picker selector */
-.chosen-container {
-  width: 140px !important;
+.selhi {
+  width: 200px !important;
+}
+
+.loghi {
+  width: 100px !important;
 }
 
 input[type="color"] {
