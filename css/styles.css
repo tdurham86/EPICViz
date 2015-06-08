@@ -95,7 +95,8 @@ svg:not(:root) {
   width: 100%;
 }
 
-#exprDiv{
+#exprDiv, #pcaDiv{
+  overflow: scroll;
     height: 100%;
     width: 100%;
     position: relative;
