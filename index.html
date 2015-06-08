@@ -39,6 +39,19 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+            //see http://stackoverflow.com/questions/4126206/javascript-parsefloat-1-23e-7-gives-1-23e-7-when-need-0-000000123
+            // add parser to handle scientific notation through the tablesorter addParser method 
+            $.tablesorter.addParser({ 
+                    // set a unique id
+                    id: 'scinot', 
+                    is: function(s) { 
+                        return /[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?/.test(s); 
+                    }, 
+                    format: function(s) { 
+                        return $.tablesorter.formatFloat(s);
+                    }, 
+                    type: 'numeric' 
+            });
             $("#gene_report").tablesorter();
             scatterPlot3d( d3.select('#divPlot'));
         });

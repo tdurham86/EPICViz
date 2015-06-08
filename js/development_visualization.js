@@ -1191,7 +1191,8 @@ function plotPCA(to_plot) {
             }
         })
         .attr("fill", function (d) {return d.meta.color; } )
-        .attr('opacity', 0.8);
+        .attr('opacity', 0.8)
+        .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");;
 }
 
 
