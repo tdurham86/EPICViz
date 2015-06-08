@@ -41,11 +41,15 @@ body > .container-fluid {
 
 #reset-button {
   float: right;
+  margin-top: 5px;
 }
 
 #hide-controls {
   float: left;
   margin-top: 5px;
+  position: relative;
+  left: -12px;
+  top: -30px;
 }
 
 #divControls select {
