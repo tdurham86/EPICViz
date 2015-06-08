@@ -551,10 +551,16 @@ function setCellColors(){
     //Collect highlight classes
     var picker_sel = document.getElementsByClassName('selhi');
     var picker_col = document.getElementsByClassName('hicolor');
+    var picker_logic = document.getElementsByClassName('loghi');
     var selections = [];
+    var logic_sel = [];
     var colors = [];
+    var picker_length = [];
     highlights = false;
     for(var i=1; i < picker_sel.length; i++){
+        picker_length.push(picker_sel[i].selectedOptions.length);
+        logic_sel.push(picker_logic[i].value);
+        
         for(var j=0; j < picker_sel[i].selectedOptions.length; j++){
             var selected = picker_sel[i].selectedOptions[j].value;
             if(selected){
@@ -566,50 +572,68 @@ function setCellColors(){
                 }else {
                     selections.push(celltypes[sel_val]);
                 }
-            colors.push(picker_col[i].value);
+            
         }
+        
         }
+        colors.push(picker_col[i].value);
     }
     //Calculate whether a data point should be highlighted and if so what color(s)
     //it should get
     var blastregex = /^(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/;
     var linregex = /([aplrdv]+)$/;
     var pt_colors;
+    var pt_part;
+    var start;
     for(var cell_nm in cellmap){
         if(!cellmap.hasOwnProperty(cell_nm)){
             continue;
         }
         var cell = cellmap[cell_nm];
         pt_colors = []
-        for(i=0; i < selections.length; i++){
-            if(typeof selections[i] === 'string' && selections[i].indexOf(cell.name) > -1){
-                pt_colors.push($.Color(colors[i]));
-            }else if(typeof selections[i] === 'object'){
+        //for(i=0; i < selections.length; i++){
+        for(var i=1; i < picker_sel.length; i++){
+            pt_part = []
+            if(i>1){start = (i-1)*picker_length[i-2];}
+            else{start = 0;}
+            for( var j=0; j < picker_length[i-1]; j++){
+                if(typeof selections[start + j] === 'string' && selections[start+j].indexOf(cell.name) > -1){
+                    pt_part.push($.Color(colors[i-1]));
+                }else if(typeof selections[start+j] === 'object'){
                 //find blastomere name
-                var blastmatch = blastregex.exec(cell.name);
-                if(blastmatch === null){
-                    console.log('null blastmatch: ' + cell.name);
-                    continue;
+                    var blastmatch = blastregex.exec(cell.name);
+                    if(blastmatch === null){
+                        console.log('null blastmatch: ' + cell.name);
+                        continue;
                 }
                 var blast = blastmatch[1];
 
                 //find lineage suffix
                 var linmatch = linregex.exec(cell.name);
                 if(linmatch === null){
-                    if(blast === cell.name && cell.name in selections[i] 
-                       && selections[i][cell.name].indexOf(cell.name) > -1){
-                        pt_colors.push($.Color(colors[i]));
+                    if(blast === cell.name && cell.name in selections[start+j] 
+                       && selections[start+j][cell.name].indexOf(cell.name) > -1){
+                        pt_part.push($.Color(colors[i-1]));
                     }
                     continue;
                 }
                 var linsuffix = linmatch[1];
 
                 //if a color should be assigned to this blast/lineage combo, get it
-                if(blast in selections[i] && selections[i][blast].indexOf(linsuffix) > -1){
-                    pt_colors.push($.Color(colors[i]));
+                if(blast in selections[start+j] && selections[start+j][blast].indexOf(linsuffix) > -1){
+                    pt_part.push($.Color(colors[i-1]));
                 }
             }
+                        
+           }
+           if(logic_sel[i-1]=="opIntersection"){
+                if (pt_part.length ===picker_length[i-1])
+                    {pt_colors = pt_colors.concat(pt_part[0])}
+                else{pt_colors=[]}
+                }
+           else {pt_colors = pt_colors.concat(pt_part)}
         }
+        
         if(pt_colors.length === 0){
             cell.color = defaultColor;
             cell.selected = false;
