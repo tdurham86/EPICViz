@@ -1212,7 +1212,7 @@ function plotPCA(to_plot) {
         .attr('data-toggle', 'tooltip')
         .attr('title', function(d) {return d.meta.name})
         .attr('data-trigger', 'hover')
-        .attr('data-placement', 'bottom')
+        .attr('data-placement', 'left')
         .attr('data-html', 'true')
         .attr('container', 'body')
         .attr('data-container', 'body')
