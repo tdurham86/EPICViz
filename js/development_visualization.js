@@ -1208,7 +1208,7 @@ function plotPCA(to_plot) {
         })
         .attr("fill", function (d) {return d.meta.color; } )
         .attr('opacity', 0.8)
-        .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");
+        .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
         .attr('data-toggle', 'tooltip')
         .attr('title', function(d) {return d.meta.name})
         .attr('data-trigger', 'hover')
