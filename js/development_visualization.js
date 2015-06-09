@@ -1209,17 +1209,17 @@ function plotPCA(to_plot) {
         .attr("fill", function (d) {return d.meta.color; } )
         .attr('opacity', 0.8)
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");
-//        .attr('data-toggle', 'tooltip')
-//        .attr('title', function(d) {return d.meta.name})
-//        .attr('data-trigger', 'hover')
-//        .attr('data-placement', 'left')
-//        .attr('data-html', 'true')
-//        .attr('container', 'body')
-//        .attr('data-container', 'body')
+        .attr('data-toggle', 'tooltip')
+        .attr('title', function(d) {return d.meta.name})
+        .attr('data-trigger', 'hover')
+        .attr('data-placement', 'left')
+        .attr('data-html', 'true')
+        .attr('container', 'body')
+        .attr('data-container', 'body')
     // Add the popover behavior for cells
-//    $(document).ready(function(){
-//        $('.pca_datapoint').tooltip();   
-//    });
+    $(document).ready(function(){
+        $('.pca_datapoint').tooltip();   
+    });
 }
 
 
