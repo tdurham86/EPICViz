@@ -1317,22 +1317,22 @@ function plotGeneExpression(timepoint_data){
             .attr('width', '100%')
             .attr('fill', d.meta.color)
             .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
-            .attr('data-toggle', 'tooltip')
-            .attr('title', function(d) {return '<b>Cell:</b> ' + this.id.split('_')[0] + '<br />' + '<b>Gene:</b> ' + this.id.split('_')[1] })
-            .attr('data-trigger', 'hover')
-            .attr('data-placement', 'bottom')
-            .attr('data-html', 'true')
-            .attr('container', 'body')
-            .attr('data-container', 'body')
+//            .attr('data-toggle', 'tooltip')
+//            .attr('title', function(d) {return '<b>Cell:</b> ' + this.id.split('_')[0] + '<br />' + '<b>Gene:</b> ' + this.id.split('_')[1] })
+//            .attr('data-trigger', 'hover')
+//            .attr('data-placement', 'bottom')
+//            .attr('data-html', 'true')
+//            .attr('container', 'body')
+//            .attr('data-container', 'body')
         });
     if(changed){
         updateExprRowSize();
     }
 
         // Add the popover behavior for cells
-    $(document).ready(function(){
-        $('.exprPlot_data_point_rect').tooltip();   
-    });
+//    $(document).ready(function(){
+//        $('.exprPlot_data_point_rect').tooltip();   
+//    });
 }
 
 /**
