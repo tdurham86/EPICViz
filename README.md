@@ -1,4 +1,4 @@
-fp-tdurham-ajh24-chiasson-ningli30 
+EPICViz: An interactive visualization of _C. elegans_ embryogenesis and gene expression 
 ============
 
 ## Team Members 
@@ -10,8 +10,8 @@ fp-tdurham-ajh24-chiasson-ningli30
 
 ## Running Instructions
 
-Access our visualization at
-http://cse512-15s.github.io/fp-tdurham-ajh24-chiasson-ningli30/ or download this
+Access our visualization [here]
+(http://cse512-15s.github.io/fp-tdurham-ajh24-chiasson-ningli30/) or download this
 repository and run `python -m SimpleHTTPServer 2255` and access this
 from http://localhost:2255/.
 
