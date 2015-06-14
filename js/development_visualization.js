@@ -60,7 +60,6 @@ var playback_id;
 
 //3d variables
 var x3d, scene;
-currentViewpoint = 0;
 
 //lineage picker idx, for unique ids
 var lpidx = 1;
@@ -1045,7 +1044,7 @@ function initializeSmallMultiples() {
       .attr("preserveAspectRatio", "xMidYMid")
       .attr('class', 'small_multiples_chart')
       .attr('id', 'xyChart')
-      .attr('onclick', 'setViewpoint(1)')
+      .attr('onclick', 'setViewpoint("top_view")')
 
     var main = xyChart.append('g')
     .attr('width', width)
@@ -1063,7 +1062,7 @@ function initializeSmallMultiples() {
     .attr("preserveAspectRatio", "xMidYMid")
     .attr('class', 'small_multiples_chart')
     .attr('id', 'xzChart')
-    .attr('onclick', 'setViewpoint(2)')
+    .attr('onclick', 'setViewpoint("side_view")')
 
     var main = xzChart.append('g')
         .attr('width', width)
@@ -1080,7 +1079,7 @@ function initializeSmallMultiples() {
     .attr("preserveAspectRatio", "xMidYMid")
     .attr('class', 'small_multiples_chart')
     .attr('id', 'yzChart')
-    .attr('onclick', 'setViewpoint(3)')
+    .attr('onclick', 'setViewpoint("back_view")')
 
     var main = yzChart.append('g')
         .attr('width', width)
@@ -1760,30 +1759,18 @@ function playpausedev(){
 * @callback - callback function for Reset View button
 */
 function resetView() {
-  setViewpoint(0);
-  x3d.node().runtime.resetView();
+  setViewpoint("isometric_view");
 }
 
 
 /**
 * Sets the 3D viewpoint of the 3D plot to one of three predefined viewpoints relies on global variable currentViewpoint.
-* @param {int} viewPoint - the number (1-3) of viewpoint to set 
-* @callback - callback function for small multiples
+* @param {int} viewPoint - the id (isometric_view, top_view, side_view, back_view) of viewpoint to set 
+* @callback - callback function for small multiples buttons
 */
 function setViewpoint(viewPoint) {
-    var viewPointChange = viewPoint - currentViewpoint
-      
-    if (viewPointChange > 0) {
-        for (var i = 0; i < Math.abs(viewPointChange); i++) {
-            x3d.node().runtime.nextView()
-            currentViewpoint++;
-        }
-    } else if (viewPointChange < 0) {
-        for (var i = 0; i < Math.abs(viewPointChange); i++) {
-            x3d.node().runtime.prevView()
-            currentViewpoint--;
-        }
-    }    
+    document.getElementById(viewPoint).setAttribute('set_bind','true');
+    x3d.node().runtime.resetView();
 }
 
 
@@ -2031,24 +2018,28 @@ function scatterPlot3d( parent ) {
         .attr( "fieldOfView", [-300, -300, 800, 800])
         .attr( "orientation", [-0.5, 1, 0.2, 1.12*Math.PI/4])
         .attr( "position", [600, 150, 800])
+        .attr('id', 'isometric_view')
 
     scene.append("orthoviewpoint")
         .attr( "centerOfRotation", [0, 0, 0])
         .attr( "fieldOfView", [-300, -300, 800, 800])
         .attr( "orientation", [0, 0, 0, 0])
         .attr( "position", [-100, -200, 800])
+        .attr('id', 'side_view')
 
     scene.append("orthoviewpoint")
         .attr( "centerOfRotation", [0, 0, 0])
         .attr( "fieldOfView", [-300, -300, 800, 800])
         .attr( "orientation", [0, 0, 0, 0])
         .attr( "position", [-100, -200, 800])
+        .attr('id', 'top_view')
 
     scene.append("orthoviewpoint")
         .attr( "centerOfRotation", [0, 0, 0])
         .attr( "fieldOfView", [-300, -300, 800, 800])
         .attr( "orientation", [0, 1.5, 0, 3.14/2])
         .attr( "position", [600, -200, 250])
+        .attr('id', 'back_view')
 
 
     console.log("Reading in embryo positions.");
