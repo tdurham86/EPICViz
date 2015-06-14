@@ -1316,9 +1316,9 @@ function plotGeneExpression(timepoint_data){
             .attr('x', '0')
             .attr('width', '100%')
             .attr('fill', d.meta.color)
-            .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
+            .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");
 //            .attr('data-toggle', 'tooltip')
-            .attr('title', function(d) {return '<b>Cell:</b> ' + this.id.split('_')[0] + '<br />' + '<b>Gene:</b> ' + this.id.split('_')[1] })
+//            .attr('title', function(d) {return '<b>Cell:</b> ' + this.id.split('_')[0] + '<br />' + '<b>Gene:</b> ' + this.id.split('_')[1] })
 //            .attr('data-trigger', 'hover')
 //            .attr('data-placement', 'bottom')
 //            .attr('data-html', 'true')
@@ -1620,7 +1620,7 @@ function makeWormBaseUrl(gene){
 * construct URLs for use in links where users can find more info about genes.
 */
 function loadWormBaseIdMap(){
-    var url = 'http://localhost:2255/wormbase_id_map.csv';
+    var url = 'wormbase_id_map.csv';
     console.log(url)
     d3.text(url, function(id_map){
         var rows = d3.csv.parseRows(id_map);
@@ -1710,7 +1710,7 @@ function printGeneTable(){
 * meta attributes in the cellmap object to avoid storing duplicate metadata
 */
 function loadTimePoints(file_idx){
-    var url = 'http://localhost:2255/exprTable/ImageExpressionTable.lifespan.timesort.fixed.centered.binary.clustered.pca.expstr.' + file_idx + '.csv';
+    var url = 'exprTable/ImageExpressionTable.lifespan.timesort.fixed.centered.binary.clustered.pca.expstr.' + file_idx + '.csv';
     console.log(url);
     d3.text(url, function(tpdata){
         if(!tpdata){

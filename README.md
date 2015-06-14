@@ -1,4 +1,4 @@
-fp-tdurham-ajh24-chiasson-ningli30 
+EPICViz: An interactive visualization of _C. elegans_ embryogenesis and gene expression 
 ============
 
 ## Team Members 
@@ -10,8 +10,8 @@ fp-tdurham-ajh24-chiasson-ningli30
 
 ## Running Instructions
 
-Access our visualization at
-http://cse512-15s.github.io/fp-tdurham-ajh24-chiasson-ningli30/ or download this
+Access our visualization [here]
+(http://cse512-15s.github.io/fp-tdurham-ajh24-chiasson-ningli30/) or download this
 repository and run `python -m SimpleHTTPServer 2255` and access this
 from http://localhost:2255/.
 
@@ -43,12 +43,12 @@ We sought to address this lack of resource by developing an interactive visualiz
 * Genes of interest can be selected from the heat map for further study.
 
 
-![Figure 1](https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/master/img/Figure1.png)
+![Figure 1](https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/gh-pages/summary.png)
 
 
 ## Development Process 
 For the development process, we discussed the initial data set and
 storyboard idea together, then reconvened later to discuss the next set
 of goals once we had the basics of the original storyboard programmed.
-Significant time was spent discussing how the gene expression data should be displayed, formatting the gene expression data, and implementing the gene expression data in our visualization. Tim worked on the gene expression data formating, along with the gene expression gene report. Andrew worked on the PCA plot and small multiples. Ning worked on adding the intro.js tour of the visualization and highlighting logic. Melissa worked on the html modal dialogs, refining playback, and documentation of the code and process.
+Significant time was spent discussing how the gene expression data should be displayed, formatting the gene expression data, and implementing the gene expression data in our visualization. Tim worked on the gene expression data formating, along with the gene expression gene report. Andrew worked on the PCA plot and small multiples. Ning worked on adding the intro.js tour of the visualization and highlighting logic. Melissa worked on the html modal dialogs, refining playback, and the poster and paper.
 
