@@ -84,9 +84,9 @@ var pca_scale_x = null;
 var pca_scale_y = null;
 
 //variables for speed dropdown
-var speedarray = ["slow", "medium", "fast"];
-var options = [0,1,2];
 var speed = "slow"
+var rate = 1000
+var playback_id
 
 // Hiding controls 
 controls_hidden = false;
@@ -1729,6 +1729,27 @@ INITIALIZATION AND CALLBACKS FOR VISUALIZATION
 ****************************************************************/
 
 /**
+* Sets the speed of play upon speed menu selection
+* @callback for speed menu selection
+*/
+function speedselection(){
+    var selection = document.getElementById('speedoption').value;
+    console.log(selection)
+    
+    if(selection === "slow"){
+        rate = 1000
+    }
+    else if(selection === "medium"){
+        rate = 500
+    }
+    else if(selection === "fast"){
+        rate = 250
+    }
+    clearInterval(playback_id)
+    playback_id = setInterval(development,rate)
+}
+
+/**
 * Handles play and pause of development by starting and stopping playback, changing playback speed, and changing play button text.
 * @callback - callback function play/pause button
 */
@@ -1736,19 +1757,10 @@ function playpausedev(){
     var button = document.getElementById('playpause');
 
     if(button.innerHTML === "Play"){
-    	if(speed === "slow"){
-        	playback_id = setInterval(development, 1000);
-        	button.innerHTML = "Pause";
-        	}
-        else if(speed === "medium"){
-        	playback_id = setInterval(development, 500);
-        	button.innerHTML = "Pause";
-        	}
-        else if(speed === "fast"){
-        	playback_id = setInterval(development, 250);
-        	button.innerHTML = "Pause";
-        	}
-    }else{
+        playback_id = setInterval(development, rate);
+        button.innerHTML = "Pause";
+        }
+    else{
         clearInterval(playback_id);
         button.innerHTML = "Play";
     }
@@ -2065,6 +2077,7 @@ function scatterPlot3d( parent ) {
         .attr('value', 0)
         .attr('onchange', 'updatetime()');
            
-    d3.select('body').select('select')
-        .on("change", function(d) {speed = this.value;});
+    // Add menu for speed options
+    d3.select('#speedoption')
+        .attr('onchange', 'speedselection()');
 }
