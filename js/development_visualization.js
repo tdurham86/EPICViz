@@ -330,8 +330,10 @@ function initializeLineagePicker(){
 *                     of leaf cells at this time point.
 */
 function timePointCellNames(timepoint){
-    var timepoint_str = $.map(timepoint, function(elt, idx){return elt.meta.name;}).join('.');
-    return cellNamesStr('.'+timepoint_str);
+    var timepoint_str = $.map(timepoint, function(elt, idx){return elt.name;}).join('.');
+    return '.'+timepoint_str;
+//This is the original return statement; it is commented out for development
+//    return cellNamesStr('.'+timepoint_str);
 }
 
 /**
@@ -643,7 +645,8 @@ function updatePlot(){
         playpausedev();
     }
 
-    plotData(timepoint, 0);
+//    plotData(timepoint, 0);
+    plotData(0);
     if(playpause){
         playpausedev();
     }
@@ -725,9 +728,9 @@ function loadCellTypeMap(){
         initializePlot();
         initializePCA();
         initializeSmallMultiples();
-        initializeGeneExpressionPlot();
+//        initializeGeneExpressionPlot();
         initializeLineageTree(cellmap.P0);
-        plotData(0, 5);
+//        plotData(0, 5);
     });
 }
 
@@ -756,10 +759,10 @@ function clickSelect(cellname){
 function userSelectPoints(selection){
     //3Dplot
     d3.selectAll('.datapoint')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .selectAll('billboard').remove();
     var sdata = d3.selectAll('.datapoint')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;});
+//        .filter(function(d){return selection.indexOf(d.name) > -1 &&  d.meta.userselected ? this : null;});
     var user_highlight = sdata.append('billboard').attr('axisOfRotation', '0 0 0').append('shape');
     var appearance = user_highlight.append('appearance');
     appearance.append('material')
@@ -793,36 +796,36 @@ function userSelectPoints(selection){
 
     //small_multiples
     d3.selectAll('.small_multiples_datapoint')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .attr('stroke', 'none')
 
     var snode = d3.selectAll('.small_multiples_datapoint')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;})
+//        .filter(function(d){return selection.indexOf(d.name) > -1 && d.meta.userselected ? this : null;})
         .attr('stroke', selectionColor)
         .attr('stroke-width', '2')
 
     // PCA
     d3.selectAll('.pca_datapoint')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .attr('stroke', 'none')
 
     var snode = d3.selectAll('.pca_datapoint')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;})
+//        .filter(function(d){return selection.indexOf(d.name) > -1 && d.meta.userselected ? this : null;})
         .attr('stroke', selectionColor)
         .attr('stroke-width', '2')
 
     // PCA
     d3.selectAll('.exprPlot_data_point')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .attr('stroke', 'none')
 
 
     d3.selectAll('.exprPlot_data_point')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 ? this : null;})
+//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .selectAll('.expr-plot-node-select').remove();
 
     var snode = d3.selectAll('.exprPlot_data_point')
-        .filter(function(d){return selection.indexOf(d.meta.name) > -1 && d.meta.userselected ? this : null;})
+//        .filter(function(d){return selection.indexOf(d.name) > -1 && d.meta.userselected ? this : null;})
         .insert('rect', ':first-child')
         .attr('class', 'expr-plot-node-select')
         .attr('width', '100%')
@@ -967,20 +970,17 @@ function plot3DView(to_plot){
     // Draw a sphere at each x,y,z coordinate.
     var new_data = to_plot.append('transform')
         .attr('translation', function(d){
-            if (d.pred == -1){
-                return x(d.x) + " " + y(d.y) + " " + z(d.z);
-            }else{
-                return x(d.pred.x) + " " + y(d.pred.y) + " " + z(d.pred.z);
-        }})
+                return x(d.pred_x) + " " + y(d.pred_y) + " " + z(d.pred_z);
+        })
         .attr('class', 'datapoint')
-        .attr('id', function(d){return d.meta.name})
+        .attr('id', function(d){return d.name})
         .attr('scale', function(d){
-                if(d.meta.selected || !highlights){
-                    var ptrad = d.radius * 0.5; 
-                    return [ptrad, ptrad, ptrad];
-                }else{
-                    return [5, 5, 5];
-                }
+            if(false && (d.meta.selected || !highlights)){
+                var ptrad = d.radius * 0.5; 
+                return [ptrad, ptrad, ptrad];
+            }else{
+                return [5, 5, 5];
+            }
         })
         .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this);');
 
@@ -994,19 +994,19 @@ function plot3DView(to_plot){
         .attr('class', 'dp_sphere');
     new_data.append('appearance').append('material')
         .attr('transparency', function(d){
-            if(d.meta.selected || !highlights){
+            if(false && (d.meta.selected || !highlights)){
                 return 0;
             }else{
                 return transp;
             }
         })
         .attr('diffuseColor', function(d){
-            return d.meta.color;
+            return '#555555'; //d.meta.color;
         });
     new_data.append('sphere')
         // Add attributed for popover text
         .attr('data-toggle', 'popover')
-        .attr('title', function(d) {return d.meta.name})
+        .attr('title', function(d) {return d.name})
         .attr('data-content', function(d) {return '<b>x:</b> ' + Math.round(d.x * 10000) / 10000 + '<br />' + '<b>y:</b> ' + Math.round(d.y * 10000) / 10000 + '<br />' + '<b>z:</b> ' + Math.round(d.z * 10000) / 10000 + '<br />'})
         .attr('data-trigger', 'hover')
         .attr('data-placement', 'bottom')
@@ -1019,8 +1019,8 @@ function plot3DView(to_plot){
     
     //make sure that these new/updated points have the correct user highlighting
     var new_data_names = [];
-    new_data.select(function(d){new_data_names.push(d.meta.name); return null;});
-    userSelectPoints(new_data_names);
+    new_data.select(function(d){new_data_names.push(d.name); return null;});
+//    userSelectPoints(new_data_names);
 
     return new_data;
 }
@@ -1098,17 +1098,17 @@ function initializeSmallMultiples() {
 function plotXYSmallMultiple(to_plot) { 
     to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
-        .attr('id', function(d){return d.meta.name})
+        .attr('id', function(d){return d.name})
         .attr("cx", function (d) { return small_multiples_scale(d.x); } )
         .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
         .attr("r", function(d) {
-            if(d.meta.selected || !highlights){
+            if(false && (d.meta.selected || !highlights)){
                 return d.radius/15;
             }else{
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) { return d.meta.color; } )
+        .attr("fill", function (d) { return '#555555'; } )// d.meta.color; } )
         .attr('opacity', 0.8);
 }
 
@@ -1119,17 +1119,17 @@ function plotXYSmallMultiple(to_plot) {
 function plotXZSmallMultiple(to_plot) { 
     to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
-        .attr('id', function(d){return d.meta.name})
+        .attr('id', function(d){return d.name})
         .attr("cx", function (d) { return small_multiples_scale(d.z); } )
         .attr("cy", function (d) { return small_multiples_scale(d.x); } )
         .attr("r", function(d) {
-            if(d.meta.selected || !highlights){
+            if(false && (d.meta.selected || !highlights)){
                 return d.radius/15;
             }else{
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) { return d.meta.color; } )
+        .attr("fill", function (d) { return '#555555'; } )// d.meta.color; } )
         .attr('opacity', 0.8);
 }
 
@@ -1140,17 +1140,17 @@ function plotXZSmallMultiple(to_plot) {
 function plotYZSmallMultiple(to_plot) { 
     to_plot.append("svg:circle")
         .attr('class', 'small_multiples_datapoint')
-        .attr('id', function(d){return d.meta.name})
+        .attr('id', function(d){return d.name})
         .attr("cx", function (d) { return small_multiples_scale(-d.z); } )
         .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
         .attr("r", function(d) {
-            if(d.meta.selected || !highlights){
+            if(false && (d.meta.selected || !highlights)){
                 return d.radius/15;
             }else{
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) {return d.meta.color; } )
+        .attr("fill", function (d) {return '#555555'; } )// d.meta.color; } )
         .attr('opacity', 0.8);
 }
 
@@ -1195,21 +1195,21 @@ function plotPCA(to_plot) {
 
     to_plot.append("svg:circle")
         .attr('class', 'pca_datapoint')
-        .attr('id', function(d){return d.meta.name})
+        .attr('id', function(d){return d.name})
         .attr("cx", function (d) { return pca_scale_x(d.pc2); } )
         .attr("cy", function (d) { return pca_scale_y(d.pc3); } )
         .attr("r", function(d) {
-            if(d.meta.selected || !highlights){
+            if(false && (d.meta.selected || !highlights)){
                 return d.radius/10;
             }else{
                 return  d.radius/15;
             }
         })
-        .attr("fill", function (d) {return d.meta.color; } )
+        .attr("fill", function (d) {return '#555555'; } ) // d.meta.color; } )
         .attr('opacity', 0.8)
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
         .attr('data-toggle', 'tooltip')
-        .attr('title', function(d) {return d.meta.name})
+        .attr('title', function(d) {return d.name})
         .attr('data-trigger', 'hover')
         .attr('data-placement', 'left')
         .attr('data-html', 'true')
@@ -1258,7 +1258,7 @@ function plotLineageTree(cellnames, new_data_names){
             return null;
         }
     });
-    var circ1 = newnodes.selectAll('circle')
+    var circ1 = newnodes.selectAll('circle') 
         .attr('x', function(d){
             return treeXScale(this.parentNode.__data__.parent.x);
         })
@@ -1385,14 +1385,13 @@ function initializeGeneExpressionPlot(){
         .attr('y', '0')
         .attr('width', '100%')
         .attr('height', '100%')
-        .attr('fill', '#ffffff');
+        .attr('fill', '#555555');
 
     // Adds callback on click for tabbed interface
     $('.nav-tabs a').on('click', function (e) {
         e.preventDefault();
         $(this).tab('show');
     });
-
 }
 
 /**
@@ -1400,28 +1399,34 @@ function initializeGeneExpressionPlot(){
 * @param {integer} time_point - Index of the timepoint to transition to
 * @param {integer} duration - Duration of the smooth animation to transition datapoints in milliseconds
 */
-function plotData( time_point, duration ) {
+//function plotData( time_point, duration ) {
+function plotData( duration ){
     if (!this.csvdata){
      console.log("no rows to plot.");
      return;
     }
 
     //Get the data for this timepoint
-    var tp_idx = time_point % csvdata.length;
-    var timepoint_data = csvdata[tp_idx];
-    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
+//    var tp_idx = time_point % csvdata.length;
+//    var timepoint_data = csvdata[tp_idx];
+//    var datapoints = scene.selectAll(".datapoint").data( timepoint_data, function(d){return d.meta.name;});
+    timepoint_data = tpdata[cur_tpdata_idx]
+    var datapoints = scene.selectAll(".datapoint").data(timepoint_data, function(d){return d.name})
     datapoints.exit().remove();
 
     // Get small multiples data
-    var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xy';});
+//    var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xy';});
+    var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.name + '_xy';});
     small_multiples_datapoints_xy.exit().remove();
     plotXYSmallMultiple(small_multiples_datapoints_xy.enter());
 
-    var small_multiples_datapoints_xz = d3.select('#xz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xz';});
+//    var small_multiples_datapoints_xz = d3.select('#xz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xz';});
+    var small_multiples_datapoints_xz = d3.select('#xz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.name + '_xz';});
     small_multiples_datapoints_xz.exit().remove();
     plotXZSmallMultiple(small_multiples_datapoints_xz.enter());
 
-    var small_multiples_datapoints_yz = d3.select('#yz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_yz';});
+//    var small_multiples_datapoints_yz = d3.select('#yz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.meta.name + '_yz';});
+    var small_multiples_datapoints_yz = d3.select('#yz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.name + '_yz';});
     small_multiples_datapoints_yz.exit().remove();
     plotYZSmallMultiple(small_multiples_datapoints_yz.enter());
 
@@ -1429,16 +1434,18 @@ function plotData( time_point, duration ) {
     var new_data = plot3DView(datapoints.enter())
 
     //plot gene expression patterns
-    var pca_datapoints = d3.select('#pca_data_points').selectAll(".pca_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xz';});
+//    var pca_datapoints = d3.select('#pca_data_points').selectAll(".pca_datapoint").data( timepoint_data, function(d){return d.meta.name + '_xz';});
+    var pca_datapoints = d3.select('#pca_data_points').selectAll(".pca_datapoint").data( timepoint_data, function(d){return d.name + '_xz';});
     pca_datapoints.exit().remove();
     plotPCA(pca_datapoints.enter());
 
-    plotGeneExpression(timepoint_data);
+//    plotGeneExpression(timepoint_data);
 
     //use new_data to identify which nodes in the tree should be revealed
     var new_data_names = [];
     new_data.each(function(d){
-        new_data_names.push(d.meta.name);
+//        new_data_names.push(d.meta.name);
+        new_data_names.push(d.name)
     });
     
     //plot the lineage tree
@@ -1523,9 +1530,9 @@ function lineageComparator(a,b){
 * @param {text from file} csvdata_in - file text generated by a call to d3.text
 */
 //globals to allow parseCSV to work even if a time point is split across csvs
-var tp = 1,
-tpdata = [],
-tpnames = [];
+var tp = 1;
+var tpdata = [];
+var tpnames = [];
 function parseCSV(csvdata_in) {
     var rows = d3.csv.parseRows(csvdata_in);
     if(tp === 1){
@@ -1707,7 +1714,7 @@ function printGeneTable(){
 * Read in the csv file at the URL specified in the url variable, parse the rows
 * using parseCSV, and then iterate over the parsed csvdata objects, storing all
 * meta attributes in the cellmap object to avoid storing duplicate metadata
-*/
+
 function loadTimePoints(file_idx){
     var url = 'exprTable/ImageExpressionTable.lifespan.timesort.fixed.centered.binary.clustered.pca.expstr.' + file_idx + '.csv';
     console.log(url);
@@ -1723,6 +1730,7 @@ function loadTimePoints(file_idx){
         loadTimePoints(file_idx + 1);
     });
 }
+*/
 
 /****************************************************************
 INITIALIZATION AND CALLBACKS FOR VISUALIZATION
@@ -1789,16 +1797,24 @@ function hideControls() {
 }
 
 /**
-* TODO description
-* @callback - TODO is this a callback?
+* Calls plotData and updates the time point index
+* to the next time point. Runs when a user presses
+* 'play' on the development animation.
+* @callback - This is a callback for the setInterval 
+*             calls in playpausedev()
 */
 function development() {
     if (ready && x3d.node() && x3d.node().runtime ) {
-        timepoint++;
-        plotData(timepoint,1000);
-        document.getElementById('timerange').value = timepoint % csvdata.length;
+	if (cur_tpdata_idx == tpdata.length){
+	    cur_tpdata_idx = 1;
+	}else{
+            cur_tpdata_idx++;
+	}
+	console.log('TP Idx: ' + cur_tpdata_idx);
+        plotData(1000)
+        document.getElementById('timerange').value = cur_tpdata_idx;
     } else {
-        console.log('x3d not ready.')
+        console.log('x3d not ready.');
     }
 }
 
@@ -1807,8 +1823,11 @@ function development() {
 * @callback - is htis a callback?
 */
 function updatetime() {
-    timepoint = document.getElementById('timerange').value;
-    plotData(timepoint, 500);
+    timepoint = parseInt(document.getElementById('timerange').value, 10);
+    cur_tpdata_idx = timepoint;
+//    loadTimePoint(timepoint, true);
+    plotData(500);
+//    plotData(timepoint, 500);
 }
 
 /****************************************************************
@@ -2006,6 +2025,108 @@ function initializeLineageTree(root) {
 }
 
 /****************************************************************
+Try asynchronous loading of data on-demand
+****************************************************************/
+/*
+* Adds a sort of "Python-style" string formatting. 
+*
+* "{0} is dead, but {1} is alive! {0} {2}".format("ASP", "ASP.NET")
+* outputs
+* ASP is dead, but ASP.NET is alive! ASP {2}
+*
+* Thanks to Stack Overflow:
+* http://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
+*/
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) { 
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+}
+
+/*
+function loadTimePoints(file_idx){
+    var url = 'exprTable/ImageExpressionTable.lifespan.timesort.fixed.centered.binary.clustered.pca.expstr.' + file_idx + '.csv';
+    console.log(url);
+    d3.text(url, function(tpdata){
+        if(!tpdata){
+            ready = true;
+            d3.select('#timerange').attr('max', csvdata.length - 1);
+            //load cell type data
+            loadCellTypeMap();
+            return;
+        }
+        parseCSV(tpdata);
+        loadTimePoints(file_idx + 1);
+    });
+}
+*/
+
+//global time point index into tpdata
+var cur_tpdata_idx = 0
+var num_tps = 10
+var total_tps = 550
+var cgi_url='http://localhost:8080/cgi-bin/get_tp.py?rangelow={0}&rangehigh={1}';
+function loadTimePoint(timepoint_idx, plot){
+    var query = cgi_url.format(timepoint_idx, timepoint_idx + num_tps)
+    console.log(query);
+    $.getJSON(query,  function(result){
+	if(plot){
+	    tpdata = result;
+	    plotData(500);
+	} else {
+            tpdata = result.concat(tpdata);
+	}
+	console.log(tpdata.length);
+	console.log(result.length);
+	ready=true;
+	return;
+    });
+}
+
+function loadTimePointPromise(start_tp, loadnum){
+    return new Promise(function(resolve, reject) {
+	var query = cgi_url.format(start_tp, start_tp + loadnum)
+	$.getJSON(query, function(result){
+	    for (var i=0; i < result.length; i++){
+		tpdata.push(result[i]);
+	    }
+	    ready=true;
+   	    resolve('Loaded!');
+	});
+    });
+}
+
+function loadTimePoints(){
+    var loadlist = [];
+    var loadnum = 20;
+    for (var i=loadnum + 1; i < total_tps; i += loadnum){
+	loadlist.push(i);
+    }
+    //initialize promise sequence for loading time point location data
+    //and plot the initial data
+    var tpPromise = loadTimePointPromise(1, loadnum).then(function(){
+	plotData(500);
+	return Promise.resolve();
+    });
+    //finish compiling the sequence of time point promises
+    loadlist.forEach(function(next_tp){
+	//queue loading of time point data into a sequence
+	tpPromise = tpPromise.then(function() {
+	    return loadTimePointPromise(next_tp, loadnum);
+	});
+    });
+    tpPromise.then(function() {
+	d3.select('#timerange').attr('max', total_tps);
+    });
+}
+
+/****************************************************************
 Main Thread of execution
 ****************************************************************/
 function scatterPlot3d( parent ) {
@@ -2043,7 +2164,9 @@ function scatterPlot3d( parent ) {
 
 
     console.log("Reading in embryo positions.");
-    loadTimePoints(0);
+    loadCellTypeMap();
+    //    loadTimePoint(1, true);
+    loadTimePoints();
     console.log("Loading data");
     loadWormBaseIdMap();
 
