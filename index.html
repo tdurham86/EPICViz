@@ -26,6 +26,7 @@
     <script type="text/javascript" src="libraries/Color_mixer-master/color_mixer.js"></script>
     <script type="text/javascript" src="libraries/tablesorter-master/js/jquery.tablesorter.js"></script>
     <script type="text/javascript" src="libraries/tablesorter-master/js/jquery.tablesorter.widgets.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="js/fisheye.js"></script>
     <!--Add IntroJs js-->
     <script type="text/javascript" src="js/intro.js"></script>
@@ -134,30 +135,30 @@
 
     </div>
     <div id="divControls" class="divControls">
-        <div id="playback" class="control-section" data-intro="<b>Playback: </b>Development can be played back at various speeds."  data-step="1" data-position='right'>
-          <h4>Playback</h4>
-          <button id="playpause" >Play</button>
-          <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
-          <div id="speed" class="select-style" >
-            <select>
-              <option>slow</option>
-              <option>medium</option>
-              <option>fast</option>
-            </select>
-          </div>
+      <div id="playback" class="control-section" data-intro="<b>Playback: </b>Development can be played back at various speeds."  data-step="1" data-position='right'>
+        <h3>Playback</h3>
+        <button id="playpause" >Play</button>
+        <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="242">
+        <div id="speed" class="select-style" >
+          <select>
+            <option>slow</option>
+            <option>medium</option>
+            <option>fast</option>
+          </select>
         </div>
-        <div id="highlighting" class="control-section" data-intro="<b>Highlighting: </b>Highlight up to four groups of cells in different colors. Set operations like AND and OR are also supported for complex queries over multiple groups." data-step="2" data-position='right'>
-          <h4>Highlighting</h4>
-
-        </div>
-<!--
-        <div id="expression" class="control-section" data-intro="Placeholder."  data-step="3" data-position='right'>
-          <h4>Expression</h4>
-          ...Placeholder...
-        </div>
-        -->
+      </div>
+      <div id="divSelectForm" class="select-form-div" data-intro="<b>Highlighting: </b>Highlight up to four groups of cells in different colors. Set operations like AND, OR, and NOT are also supported when multiple terms are included in a selection for more expressive highlights." data-step="2" data-position='right'>
+	<h3>Highlighting</h3>
+	<form id="selectForm" class="select-form">
+	  <input type="hidden" name="selection" value="true" />
+	  <div id="lineagepickers" class="lineage-pickers">
+	  </div>
+	  <div id="picker-controls" class="picker-controls">
+            <input id="submitSelection" type="submit">
+	  </div>
+	</form>
+      </div>
     </div>
-
 <!-- About modal dialog  -->
 <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">

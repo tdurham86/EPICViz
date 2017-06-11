@@ -20,6 +20,8 @@ var highlights = false;
 //contains the data for each timepoint/cell
 var csvdata = [];
 
+var lineage = undefined;
+
 //contains data points for current gene expression pattern
 var exprdata = {};
 
@@ -104,24 +106,35 @@ Lineage Highlighting Functions
 * clicking the '+' button in the control panel, this template is copied and the
 * copy made visible and assigned a unique id.
 */
+/*
+          <div id="highlighting" class="control-section">
+            <h4>Anatomy</h4>
+          </div>
+          <div id="expression" class="control-section">
+            <h4>Gene Expression</h4>
+
+          </div>
+
+*/
 function makeLPDivTemplate(){
     var lpsubdiv = d3.select('div.lineage-pickers').append('div')
         .attr('class', 'lineage-picker-template')
         .attr('id', 'lineage-picker-template')
         .attr('style', 'display: none;');
 
+    lpsubdiv.append('h4')
+	.attr('id', 'hihead'+lpidx)
+	.html('Anatomy')
     //Construct a select box for picking cell lineages/cell types to highlight
     var id = 'selhi'+lpidx;
     var select = lpsubdiv.append('select')
         .attr('class', 'selhi')
         .attr('id', id)
         .attr('data-placeholder', 'Cell lineage/type...')
-        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()')
         .attr('multiple','multiple');
-       
 
     select.append('option').attr('value', '');
-    
+
     var optgroup = select.append('optgroup')
         .attr('label', 'Tissue Type');
 
@@ -171,33 +184,46 @@ function makeLPDivTemplate(){
         optgroup.append('option').attr('value', 'cn' + cellnames[i]).html(disp);
     }
    
-     //optgroup.append('option').attr('value', 'cn' + 'cellname').html('cellname');
+    //Make another section to highlight cells based on gene expression
+    lpsubdiv.append('h4')
+	.attr('id', 'exphead'+lpidx)
+	.html('Gene Expression');
+    //Construct a select box for picking genes to highlight
+    var id = 'exphi'+lpidx;
+    var select = lpsubdiv.append('select')
+        .attr('class', 'exphi')
+        .attr('id', id)
+        .attr('data-placeholder', 'Gene Name/Sequence ID...')
+        .attr('multiple','multiple');
+
     //Construct a select box for picking logic to allow users to customly pick highlghted dataset
+    lpsubdiv.append('h4')
+	.attr('id', 'loghead'+lpidx)
+	.html('Logic and Color Options');
     var id = 'loghi'+lpidx;
     var select = lpsubdiv.append('select')
         .attr('class', 'loghi')
         .attr('id', id)
         .attr('data-placeholder', 'Set Logic')
-        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot()');
     
     select.append('option').attr('value', '');
     outgroup = d3.select('#'+id).append('optgroup')
-    outgroup.append('option').attr('value','op' + 'Union').attr('selected', 'selected').html('Union');
-    outgroup.append('option').attr('value','op' + 'Intersection').html('Intersect');
+    outgroup.append('option').attr('value','union').attr('selected', 'selected').html('Union');
+    outgroup.append('option').attr('value','intersect').html('Intersect');
+    outgroup.append('option').attr('value', 'not').html('Not');
 
+    var id = 'hicolor'+lpidx;
     lpsubdiv.append('input')
         .attr('type', 'color')
-//        .attr('value', '#ff0000')
-//        .attr('defaultValue', '#ff0000')
         .attr('class', 'hicolor')
-        .attr('id', 'hicolor'+lpidx)
-        .attr('onchange', 'updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot();');
+        .attr('id', id);
     lpsubdiv.append('input')
         .attr('type', 'button')
         .attr('value', '-')
         .attr('class', 'removehi')
         .attr('id', 'removehi'+lpidx)
-        .attr('onclick', 'removeLPDiv(event, this); updateCellColors(); updateCellSize(); updateExprRectColors(); updatePlot();');
+        .attr('onclick', 'removeLPDiv(event, this);');
+
     lpidx++;
 }
 
@@ -242,21 +268,76 @@ function cloneLPDiv(){
         var lpdivclone = $('#lineage-picker-template').clone(true);
 
         lpdivclone.attr('id', 'lineage-picker'+lpidx)
-            .attr('class', 'lineage-picker')
+            .attr('class', 'control-section')
             .attr('style', 'display: block');
-        var childs = lpdivclone.children();
+        var childs = [];
+	lpdivclone.children().each(function(idx){
+	    childs.push(this);
+//	    if($(this).is('div')){
+//		$(this).children().each(function(idx2){
+//		    childs.push(this);
+//		});
+//	    }
+	});
+	console.log(childs.length);
         var id;
+	var id_type;
         for(var i = 0; i < childs.length; i++){
-            id = childs[i].id;
-            childs[i].id = id.substr(0, id.length - 1) + lpidx;
+            id = $(childs[i]).attr('id');
+	    id_type = id.substr(0, id.length - 1);
+            $(childs[i]).attr('id', id_type + lpidx);
+	    $(childs[i]).attr('name', lpidx + '.' + id_type);
         }
 
         lpdivclone.appendTo('.lineage-pickers');
         $('#selhi'+lpidx).chosen({search_contains:true});
-        
-        lpdivclone.appendTo('.lineage-pickers');
         $('#loghi'+lpidx).chosen({search_contains:true});
-        lpidx++;
+	$('#exphi'+lpidx).chosen({search_contains:true});
+
+	$('#exphi'+lpidx+'_chosen').find('input[type=text]:first').autocomplete({
+	    minLength: 2,
+	    source: function( request, response ) {
+		console.log($(this));
+		console.log($($(this)[0].element[0]).parents('.chosen-container:first').attr('id'));
+		var sel_id = $($(this)[0].element[0]).parents('.chosen-container:first').attr('id');
+		var sel_obj = $('#'+sel_id.split('_'));
+		var to_keep = $('#'+sel_id).find('li.search-choice');
+		var to_keep_genes = [];
+//		var to_rm = $('option.expropt');
+		var to_rm = sel_obj.find('option.expropt');
+		console.log(to_rm);
+		$.ajax({
+		    url: "http://localhost:8080/cgi-bin/get_genes.py?term="+encodeURIComponent(request.term),
+		    dataType: "json",
+		    beforeSend: function(){
+			console.log(to_rm.length);
+			to_rm.remove();
+			to_keep.each(function(idx){
+			    var gene_id = $(this).text();
+			    to_keep_genes.push(gene_id);
+			});
+		    }
+		}).done(function( data ) {
+		    to_keep_genes.forEach(function(gene_id){
+			console.log('KEEP: '+gene_id);
+			var toadd = '<option class="expropt" id="' + gene_id + '" value="' + gene_id + '" selected>' + gene_id + '</option>';
+			sel_obj.append(toadd);
+		    });
+		    $.map( data, function( item ) {
+			if(!to_keep_genes.includes(item)){
+			    console.log('autocomplete match: '+item);
+			    var toadd = '<option class="expropt" id="' + item + '" value="' + item + '">' + item + '</option>';
+			    console.log('NEW: '+toadd);
+			    sel_obj.append(toadd);
+			}
+		    });
+		    response();
+		    sel_obj.trigger("chosen:updated");
+		});
+	    }
+	});
+
+	lpidx++;
 
         //only allow up to 4 sets of lineage picker controls
         if($('#lineage-pickers').children().length === 4){
@@ -281,7 +362,7 @@ function showHideHighlights(showhide){
     //here, show means hide and hide means show
     var datapoints = scene.selectAll('.datapoint')
     if(showhide.substr(0,4) === 'Show'){
-        datapoints.filter(function(d){return d.meta.selected ? null : this;})
+        datapoints.filter(function(d){return lineage[d.name].selected ? null : this;})
             .selectAll('shape appearance material')
             .attr('transparency', '1');
     }else{
@@ -300,13 +381,13 @@ function initializeLineagePicker(){
         .append('div').attr('class', 'lineage-pickers');
     makeLPDivTemplate();
     cloneLPDiv();
-    d3.select('#highlighting').append('input')
+    d3.select('#picker-controls').insert('input', ':first-child')
         .attr('type', 'button')
         .attr('value', '+')
         .attr('class', 'add-highlight')
         .attr('id', 'add-lp')
         .attr('onclick', 'cloneLPDiv()');
-    d3.select('#highlighting').append('input')
+    d3.select('#picker-controls').insert('input', ':first-child')
         .attr('type', 'button')
         .attr('value', 'Hide Non-Highlighted')
         .attr('class', 'add-highlight')
@@ -461,16 +542,70 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
 * @callback - called whenever a lineage picker selection is changed
 */
 function updateCellColors(){
-    setCellColors();
+//    setCellColors();
     d3.selectAll('.dp_sphere appearance material')
-        .attr('diffuseColor', function(d){return d.meta.color;});
+        .attr('diffuseColor', function(d){return lineage[d.name].color;});
     d3.selectAll('.node-circle')
-        .attr('fill', function(d){return d.color;});
+        .attr('fill', function(d){return lineage[d.name].color;});
     d3.selectAll('.small_multiples_datapoint')
-        .attr('fill', function(d){return d.meta.color;});
+        .attr('fill', function(d){return lineage[d.name].color;});
     d3.selectAll('.pca_datapoint')
-        .attr('fill', function(d){return d.meta.color;});
+        .attr('fill', function(d){return lineage[d.name].color;});
 }
+
+/**
+* Function to update the visualization after a user submits a new selection
+* for highlighting in the visualization. This functionality will roughly
+* replace the setCellColors() function.
+*/
+function setSelection(){
+    //bind info from selection form to FormData object
+//    var form = $('#selectForm');
+    var form = document.querySelector("form");
+    var fd = new FormData(form);
+    //make XMLHTTPRequest to get selection info for each cell
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+	if (this.readyState == 4 && this.status == 200) {
+	    var selected = JSON.parse(xhr.responseText);
+	    //Deselect all cells
+	    Object.keys(lineage).forEach(function(key, index){
+		lineage[key].color = defaultColor;
+		lineage[key].selected = false;
+	    });
+	    highlights = false;
+/*	    Object.keys(selected).forEach(function(key, index){
+		lineage[key].selected = true;
+		if(selected[key].length > 1){
+		    lineage[key].color = Color_mixer.mix(selected[key]).toHexString();
+		}else{
+		    lineage[key].color = selected[key];
+		}
+	    };*/
+	    for (var i=0; i < selected.length; i++){
+		//each selected element is (cellname, color_list)
+		var sel = selected[i];
+		lineage[sel[0]].selected = true;
+		if(sel[1].length > 1){
+		    for(var x=0; x < sel[1].length; x++){
+			sel[1][x] = $.Color(sel[1][x]);
+		    }
+		    lineage[sel[0]].color = Color_mixer.mix(sel[1]).toHexString();
+		}else{
+		    lineage[sel[0]].color = sel[1][0];
+		}
+		highlights = true;
+	    }
+	    updateCellColors();
+	    updateCellSize();
+	    updatePlot();
+	}
+    };
+    // Set up our request
+    xhr.open("POST", "http://localhost:8080/cgi-bin/get_lineage.py", true);
+    // The data sent is what the user provided in the form
+    xhr.send(fd);
+};
 
 /**
 * Parses the highlght selections made in the lineage picker controls, and then
@@ -502,10 +637,8 @@ function setCellColors(){
                     selections.push(cellLineageStr(sel_val));
                 }else {
                     selections.push(celltypes[sel_val]);
-                }
-            
-        }
-        
+                }            
+            }
         }
         colors.push(picker_col[i].value);
     }
@@ -590,8 +723,8 @@ function updateCellSize(){
     var to_update = d3.selectAll('.datapoint')
         .filter(function(d){
             var scale = +$(this).attr('scale').split(',')[0];
-            if((d.meta.selected && scale === 5) || //small and should be big
-               (!d.meta.selected && scale > 5) || //big and should be small
+            if((lineage[d.name].selected && scale === 5) || //small and should be big
+               (!lineage[d.name].selected && scale > 5) || //big and should be small
                (!highlights && scale === 5)){      //reset any small to big
                 return this;
             }else{
@@ -604,8 +737,8 @@ function updateCellSize(){
     var to_update = d3.selectAll('.small_multiples_datapoint')
         .filter(function(d){
             var rad = +$(this).attr('r');
-            if((d.meta.selected && rad === (d.radius / 25)) ||
-               (!d.meta.selected && rad > (d.radius / 25)) ||
+            if((lineage[d.name].selected && rad === (d.radius / 25)) ||
+               (!lineage[d.name].selected && rad > (d.radius / 25)) ||
                (!highlights && rad === (d.radius / 25))){
                 return this;
             }else{
@@ -620,8 +753,8 @@ function updateCellSize(){
     var to_update = d3.selectAll('.pca_datapoint')
         .filter(function(d){
             var rad = +$(this).attr('r');
-            if((d.meta.selected && rad === (d.radius / 15)) ||
-               (!d.meta.selected && rad > (d.radius / 15)) ||
+            if((lineage[d.name].selected && rad === (d.radius / 15)) ||
+               (!lineage[d.name].selected && rad > (d.radius / 15)) ||
                (!highlights && rad === (d.radius / 15))){
                 return this;
             }else{
@@ -746,7 +879,7 @@ function loadCellTypeMap(){
 *             tree node.
 */
 function clickSelect(cellname){
-    cellmap[cellname].userselected = !cellmap[cellname].userselected;
+    lineage[cellname].userselected = !lineage[cellname].userselected;
     var selection = [cellname];
     userSelectPoints(selection);
 }
@@ -762,7 +895,7 @@ function userSelectPoints(selection){
         .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .selectAll('billboard').remove();
     var sdata = d3.selectAll('.datapoint')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 &&  d.meta.userselected ? this : null;});
+        .filter(function(d){return selection.indexOf(d.name) > -1 &&  lineage[d.name].userselected ? this : null;});
     var user_highlight = sdata.append('billboard').attr('axisOfRotation', '0 0 0').append('shape');
     var appearance = user_highlight.append('appearance');
     appearance.append('material')
@@ -782,7 +915,7 @@ function userSelectPoints(selection){
         .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .selectAll('.node-select').remove();
     var snode = d3.selectAll('.node')
-        .filter(function(d){return selection.indexOf(d.name) > -1 && d.userselected ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 && lineage[d.name].userselected ? this : null;})
         .append('circle')
         .attr('class', 'node-select')
         .attr("r", 8)
@@ -796,36 +929,36 @@ function userSelectPoints(selection){
 
     //small_multiples
     d3.selectAll('.small_multiples_datapoint')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .attr('stroke', 'none')
 
     var snode = d3.selectAll('.small_multiples_datapoint')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 && d.meta.userselected ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 && lineage[d.name].userselected ? this : null;})
         .attr('stroke', selectionColor)
         .attr('stroke-width', '2')
 
     // PCA
     d3.selectAll('.pca_datapoint')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .attr('stroke', 'none')
 
     var snode = d3.selectAll('.pca_datapoint')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 && d.meta.userselected ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 && lineage[d.name].userselected ? this : null;})
         .attr('stroke', selectionColor)
         .attr('stroke-width', '2')
 
     // PCA
     d3.selectAll('.exprPlot_data_point')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .attr('stroke', 'none')
 
 
     d3.selectAll('.exprPlot_data_point')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 ? this : null;})
         .selectAll('.expr-plot-node-select').remove();
 
     var snode = d3.selectAll('.exprPlot_data_point')
-//        .filter(function(d){return selection.indexOf(d.name) > -1 && d.meta.userselected ? this : null;})
+        .filter(function(d){return selection.indexOf(d.name) > -1 && lineage[d.name].userselected ? this : null;})
         .insert('rect', ':first-child')
         .attr('class', 'expr-plot-node-select')
         .attr('width', '100%')
@@ -975,14 +1108,14 @@ function plot3DView(to_plot){
         .attr('class', 'datapoint')
         .attr('id', function(d){return d.name})
         .attr('scale', function(d){
-            if(false && (d.meta.selected || !highlights)){
+            if(lineage[d.name].selected || !highlights){
                 var ptrad = d.radius * 0.5; 
                 return [ptrad, ptrad, ptrad];
             }else{
                 return [5, 5, 5];
             }
         })
-        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.meta.name);})(event, this);');
+        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.name);})(event, this);');
 
     var showhide = document.getElementById('showhide-highlight').value;
     var transp = 0;
@@ -994,14 +1127,14 @@ function plot3DView(to_plot){
         .attr('class', 'dp_sphere');
     new_data.append('appearance').append('material')
         .attr('transparency', function(d){
-            if(false && (d.meta.selected || !highlights)){
+            if(lineage[d.name].selected || !highlights){
                 return 0;
             }else{
                 return transp;
             }
         })
         .attr('diffuseColor', function(d){
-            return '#555555'; //d.meta.color;
+            return lineage[d.name].color;
         });
     new_data.append('sphere')
         // Add attributed for popover text
@@ -1020,7 +1153,7 @@ function plot3DView(to_plot){
     //make sure that these new/updated points have the correct user highlighting
     var new_data_names = [];
     new_data.select(function(d){new_data_names.push(d.name); return null;});
-//    userSelectPoints(new_data_names);
+    userSelectPoints(new_data_names);
 
     return new_data;
 }
@@ -1102,13 +1235,13 @@ function plotXYSmallMultiple(to_plot) {
         .attr("cx", function (d) { return small_multiples_scale(d.x); } )
         .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
         .attr("r", function(d) {
-            if(false && (d.meta.selected || !highlights)){
+            if(lineage[d.name].selected || !highlights){
                 return d.radius/15;
             }else{
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) { return '#555555'; } )// d.meta.color; } )
+        .attr("fill", function (d) { return lineage[d.name].color; } )
         .attr('opacity', 0.8);
 }
 
@@ -1123,13 +1256,13 @@ function plotXZSmallMultiple(to_plot) {
         .attr("cx", function (d) { return small_multiples_scale(d.z); } )
         .attr("cy", function (d) { return small_multiples_scale(d.x); } )
         .attr("r", function(d) {
-            if(false && (d.meta.selected || !highlights)){
+            if(lineage[d.name].selected || !highlights){
                 return d.radius/15;
             }else{
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) { return '#555555'; } )// d.meta.color; } )
+        .attr("fill", function (d) { return lineage[d.name].color; } )
         .attr('opacity', 0.8);
 }
 
@@ -1144,13 +1277,13 @@ function plotYZSmallMultiple(to_plot) {
         .attr("cx", function (d) { return small_multiples_scale(-d.z); } )
         .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
         .attr("r", function(d) {
-            if(false && (d.meta.selected || !highlights)){
+            if(lineage[d.name].selected || !highlights){
                 return d.radius/15;
             }else{
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) {return '#555555'; } )// d.meta.color; } )
+        .attr("fill", function (d) {return lineage[d.name].color; } )
         .attr('opacity', 0.8);
 }
 
@@ -1169,7 +1302,6 @@ function initializePCA() {
               .domain([-15, 15])
               .range([0, height]);
 
- 
     // Make the axes for the x-y chart
     var xyChart = d3.select('#pcaDiv')
     .append('svg:svg')
@@ -1199,13 +1331,13 @@ function plotPCA(to_plot) {
         .attr("cx", function (d) { return pca_scale_x(d.pc2); } )
         .attr("cy", function (d) { return pca_scale_y(d.pc3); } )
         .attr("r", function(d) {
-            if(false && (d.meta.selected || !highlights)){
+            if(lineage[d.name].selected || !highlights){
                 return d.radius/10;
             }else{
                 return  d.radius/15;
             }
         })
-        .attr("fill", function (d) {return '#555555'; } ) // d.meta.color; } )
+        .attr("fill", function (d) {return lineage[d.name].color; } )
         .attr('opacity', 0.8)
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
         .attr('data-toggle', 'tooltip')
@@ -1401,10 +1533,10 @@ function initializeGeneExpressionPlot(){
 */
 //function plotData( time_point, duration ) {
 function plotData( duration ){
-    if (!this.csvdata){
-     console.log("no rows to plot.");
-     return;
-    }
+//    if (!this.csvdata){
+//     console.log("no rows to plot.");
+//     return;
+//    }
 
     //Get the data for this timepoint
 //    var tp_idx = time_point % csvdata.length;
@@ -1649,7 +1781,7 @@ function calcGeneEnrichment(selcolor){
     var popsize = csvdata[timepoint % csvdata.length].length;
     var selrows = d3.selectAll('.exprPlot_data_point')
         .filter(function(d){
-            return d.meta.color === selcolor ? this : null;
+            return lineage[d.name].color === selcolor ? this : null;
         });
     var gene_name,
     gene_exp,
@@ -1737,7 +1869,7 @@ INITIALIZATION AND CALLBACKS FOR VISUALIZATION
 ****************************************************************/
 
 /**
-* Handles play and pause of development by starting and stopping playback, changing playback speed, and changing play button text.
+* Handles play and pause of development by starting and stopping playback, changing playbackspeed, and changing play button text.
 * @callback - callback function play/pause button
 */
 function playpausedev(){
@@ -2070,7 +2202,7 @@ function loadTimePoints(file_idx){
 //global time point index into tpdata
 var cur_tpdata_idx = 0
 var num_tps = 10
-var total_tps = 550
+var total_tps = 548
 var cgi_url='http://localhost:8080/cgi-bin/get_tp.py?rangelow={0}&rangehigh={1}';
 function loadTimePoint(timepoint_idx, plot){
     var query = cgi_url.format(timepoint_idx, timepoint_idx + num_tps)
@@ -2162,12 +2294,27 @@ function scatterPlot3d( parent ) {
         .attr( "position", [600, -200, 250])
         .attr('id', 'back_view')
 
+    //make sure that the selection form submit button works
+    $('#selectForm').on("submit",  function (event) {
+	event.preventDefault();
+	setSelection();
+    });
 
-    console.log("Reading in embryo positions.");
-    loadCellTypeMap();
-    //    loadTimePoint(1, true);
-    loadTimePoints();
     console.log("Loading data");
+    loadCellTypeMap();
+    //Load lineage data structure
+    var getlineageurl = 'http://localhost:8080/cgi-bin/get_lineage.py?color='+encodeURIComponent(defaultColor)
+    var getlineage = new Promise(function(resolve, reject){
+	$.getJSON(getlineageurl, function(result){
+	    if(result){
+		lineage = result;
+		resolve('Lineage loaded.');
+	    }else{
+		reject(Error('Something went wrong while loading lineage.'));
+	    }
+	});
+    })
+    getlineage.then(function(response){loadTimePoints()});
     loadWormBaseIdMap();
 
     d3.select('#hide-controls')

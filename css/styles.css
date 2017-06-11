@@ -131,14 +131,25 @@ x3d {
 .control-section {
   margin-bottom: 30px;
   margin-left: 5px;
+  background: #454545;
+  border-bottom: 1px solid #CCCCCC;
 }
 
 .control-section h1, h2, h3, h4, h5 {
-  border-bottom: 1px solid #CCCCCC;
-  padding-bottom: 10px;
   margin-left: 5px;
   margin-right: 10px;
-  font-size: 15px;
+  font-size: 12px;
+}
+
+h1, h2, h3{
+    border-bottom: 1px solid #CCCCCC;
+    padding-bottom: 10px;
+    font-size: 15px;
+}
+
+#divSelectForm, #selectForm {
+  background: #454545;
+  color: #CCCCCC;
 }
 
 #divControls {
@@ -153,7 +164,6 @@ x3d {
   color: #CCCCCC;
   display: inline-block;
   float: left;
-
 }
 
 #divPlot {
@@ -303,7 +313,7 @@ input[id=distortion_slider]{
 }
 
 /* Styling for buttons */
-#playpause, input[type="button"] {
+#playpause, input[type="button"], input[type="submit"] {
   background-color: #2394F5;
   -moz-border-radius:28px;
   -webkit-border-radius:28px;
@@ -365,7 +375,11 @@ input[type="text"].focus {
 
 /* Styling for color picker selector */
 .selhi {
-  width: 200px !important;
+  width: 300px !important;
+}
+
+.exphi {
+    width: 300px !important;
 }
 
 .loghi {
