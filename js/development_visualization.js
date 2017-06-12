@@ -536,6 +536,20 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
     }
 }
 
+function pickColor_and_setSelected(lin_obj){
+    var ret_color = defaultColor;
+    if(lin_obj.color_by_tp != false){
+	lin_obj.color_by_tp.forEach(function(item, index){
+	    if(item[0] <= tpdata[cur_tpdata_idx][0].tp){
+		lin_obj.selected = true;
+		lin_obj.color = item[1];
+		ret_color = lin_obj.color;
+	    }
+	});
+    }
+    return ret_color;
+}
+
 /**
 * Function to set cell colors in the 3D plot and lineage tree based on the
 * 'color' entry in each cells metadata in the cellmap
@@ -544,13 +558,13 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
 function updateCellColors(){
 //    setCellColors();
     d3.selectAll('.dp_sphere appearance material')
-        .attr('diffuseColor', function(d){return lineage[d.name].color;});
-    d3.selectAll('.node-circle')
-        .attr('fill', function(d){return lineage[d.name].color;});
+        .attr('diffuseColor', function(d){return pickColor_and_setSelected(lineage[d.name]);});
+//    d3.selectAll('.node-circle')
+    //        .attr('fill', function(d){return pickColor_and_setSelected(lineage[d.name]);});
     d3.selectAll('.small_multiples_datapoint')
-        .attr('fill', function(d){return lineage[d.name].color;});
+        .attr('fill', function(d){return pickColor_and_setSelected(lineage[d.name]);});
     d3.selectAll('.pca_datapoint')
-        .attr('fill', function(d){return lineage[d.name].color;});
+        .attr('fill', function(d){return pickColor_and_setSelected(lineage[d.name]);});
 }
 
 /**
@@ -571,6 +585,7 @@ function setSelection(){
 	    //Deselect all cells
 	    Object.keys(lineage).forEach(function(key, index){
 		lineage[key].color = defaultColor;
+		lineage[key].color_by_tp = false;
 		lineage[key].selected = false;
 	    });
 	    highlights = false;
@@ -583,17 +598,22 @@ function setSelection(){
 		}
 	    };*/
 	    for (var i=0; i < selected.length; i++){
-		//each selected element is (cellname, color_list)
+		//each selected element is (cellname, {tp:color list})
 		var sel = selected[i];
-		lineage[sel[0]].selected = true;
-		if(sel[1].length > 1){
-		    for(var x=0; x < sel[1].length; x++){
-			sel[1][x] = $.Color(sel[1][x]);
+		//		lineage[sel[0]].selected = true;
+		sel[1].forEach(function(tp_elt, tp_elt_idx){
+		    var tp_val = tp_elt[0];
+		    var colors = tp_elt[1];
+		    if(colors.length > 1){
+			colors.forEach(function(col, col_idx){
+			    colors[col_idx] = $.Color(col);
+			});
+			sel[1][tp_elt_idx] = [tp_val, Color_mixer.mix(colors).toHexString()];
+		    }else{
+			sel[1][tp_elt_idx] = [tp_val, colors[0]];
 		    }
-		    lineage[sel[0]].color = Color_mixer.mix(sel[1]).toHexString();
-		}else{
-		    lineage[sel[0]].color = sel[1][0];
-		}
+		});
+		lineage[sel[0]].color_by_tp = sel[1];
 		highlights = true;
 	    }
 	    updateCellColors();
@@ -861,8 +881,9 @@ function loadCellTypeMap(){
         initializePlot();
         initializePCA();
         initializeSmallMultiples();
+	initializeLineageTree2();
 //        initializeGeneExpressionPlot();
-        initializeLineageTree(cellmap.P0);
+//        initializeLineageTree(cellmap.P0);
 //        plotData(0, 5);
     });
 }
@@ -1134,7 +1155,7 @@ function plot3DView(to_plot){
             }
         })
         .attr('diffuseColor', function(d){
-            return lineage[d.name].color;
+            return pickColor_and_setSelected(lineage[d.name]);
         });
     new_data.append('sphere')
         // Add attributed for popover text
@@ -1145,11 +1166,12 @@ function plot3DView(to_plot){
         .attr('data-placement', 'bottom')
         .attr('data-html', 'true');
 
+
     // Add the popover behavior for cells
     $(document).ready(function(){
-        $('[data-toggle="popover"]').popover();   
+        $('sphere').popover();   
     });
-    
+   
     //make sure that these new/updated points have the correct user highlighting
     var new_data_names = [];
     new_data.select(function(d){new_data_names.push(d.name); return null;});
@@ -1241,7 +1263,7 @@ function plotXYSmallMultiple(to_plot) {
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) { return lineage[d.name].color; } )
+        .attr("fill", function (d) { return pickColor_and_setSelected(lineage[d.name]); } )
         .attr('opacity', 0.8);
 }
 
@@ -1262,7 +1284,7 @@ function plotXZSmallMultiple(to_plot) {
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) { return lineage[d.name].color; } )
+        .attr("fill", function (d) { return pickColor_and_setSelected(lineage[d.name]); } )
         .attr('opacity', 0.8);
 }
 
@@ -1283,7 +1305,7 @@ function plotYZSmallMultiple(to_plot) {
                 return  d.radius/25;
             }
         })
-        .attr("fill", function (d) {return lineage[d.name].color; } )
+        .attr("fill", function (d) {return pickColor_and_setSelected(lineage[d.name]); } )
         .attr('opacity', 0.8);
 }
 
@@ -1337,7 +1359,7 @@ function plotPCA(to_plot) {
                 return  d.radius/15;
             }
         })
-        .attr("fill", function (d) {return lineage[d.name].color; } )
+        .attr("fill", function (d) {return pickColor_and_setSelected(lineage[d.name]); } )
         .attr('opacity', 0.8)
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
         .attr('data-toggle', 'tooltip')
@@ -1580,9 +1602,9 @@ function plotData( duration ){
         new_data_names.push(d.name)
     });
     
-    //plot the lineage tree
-    var cellnames = timePointCellNames(timepoint_data);
-    var newnodes = plotLineageTree(cellnames, new_data_names);
+//    //plot the lineage tree
+//    var cellnames = timePointCellNames(timepoint_data);
+//    var newnodes = plotLineageTree(cellnames, new_data_names);
 
     //transition points
     var x = scales[0], y = scales[1], z = scales[2];
@@ -1609,12 +1631,12 @@ function plotData( duration ){
         .attr("cx", function(row) {return pca_scale_x(row.pc2);})
         .attr("cy", function(row) {return pca_scale_y(row.pc3);})
 
-    //transition tree nodes
-    var circ2 = newnodes.selectAll('circle').transition().ease(ease).duration(duration)
-        .attr('x', function(d){return d3.select(this).attr('x0');})
-        .attr('cx', function(d){return d3.select(this).attr('cx0');})
-        .attr('y', function(d){return d3.select(this).attr('y0');})
-        .attr('transform', function(d){ return 'translate('+0+','+d3.select(this).attr('y0')+')';});
+//    //transition tree nodes
+//    var circ2 = newnodes.selectAll('circle').transition().ease(ease).duration(duration)
+//        .attr('x', function(d){return d3.select(this).attr('x0');})
+//        .attr('cx', function(d){return d3.select(this).attr('cx0');})
+//        .attr('y', function(d){return d3.select(this).attr('y0');})
+//        .attr('transform', function(d){ return 'translate('+0+','+d3.select(this).attr('y0')+')';});
 }
 
 /****************************************************************
@@ -2157,6 +2179,188 @@ function initializeLineageTree(root) {
 }
 
 /****************************************************************
+* INITIALIZE NEW LINEAGE TREE
+*****************************************************************
+* Just plot the whole tree based on the lineage data structure
+*/
+var newtree_x_scale, newtree_y_scale, newtree_xAxis, newtree_yAxis;
+var zoom;
+var tree_container;
+function initializeLineageTree2(){
+    var tree_div = d3.select(".lineage_tree");
+    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+	width = $('#lineage_tree').width() - margin.left - margin.right,
+	height = $('#lineage_tree').height() - margin.top - margin.bottom;
+
+    newtree_x_scale = d3.scale.linear()
+        .domain([0, lineage['P0'].rgt])
+        .range([0, width]);
+
+    newtree_y_scale = d3.scale.linear()
+        .domain([0, 550])
+        .range([0, height]);
+
+/*
+    newtree_xAxis = d3.svg.axis()
+        .scale(newtree_x_scale)
+        .orient("bottom")
+        .tickSize(-height);
+
+    newtree_yAxis = d3.svg.axis()
+        .scale(newtree_y_scale)
+        .orient("left")
+        .ticks(5)
+        .tickSize(-width);
+*/
+
+    zoom = d3.behavior.zoom()
+        .x(newtree_x_scale)
+        .y(newtree_y_scale)
+        .scaleExtent([1, 10])
+        .center([width / 2, height / 2])
+        .size([width, height])
+        .on("zoom", zoomed);
+
+    // Set up the SVG element
+    var svg = tree_div
+	.append("svg")
+	.attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
+//	.attr('viewBox', '{0} {1} {2} {3}'.format(margin.left,
+//						  margin.top,
+//						  margin.left + width,
+//						  margin.top + height)) 
+
+    var svgg = svg
+	.append("g")
+	.attr('id', 'lineagetree2')
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+	.style('overflow', 'hidden')
+        .call(zoom);
+
+    svgg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+	.style('fill', 'none')
+	.style("pointer-events", "all");
+/*
+    svg.append("clipPath")
+	.attr('id', 'treeClip')
+	.append("rect")
+	.attr("x", margin.left)
+	.attr("y", margin.top)
+	.attr("width", width)
+	.attr("height", height);
+*/
+    tree_container = svgg.append('g')
+//	.style('clip-path', "url(#treeClip)");
+
+    drawLineageTree2();
+/*
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(newtree_xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(newtree_yAxis);    
+*/
+}
+
+function zoomed() {
+    tree_container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    d3.selectAll('.treeln_path').attr('stroke-width', 1/d3.event.scale);
+}
+
+/*
+function zoomed() {
+    var svg = d3.select('#lineagetree2');
+    svg.select(".x.axis").call(newtree_xAxis);
+    svg.select(".y.axis").call(newtree_yAxis);
+}
+*/
+
+function drawLineageTree2(){
+    //associate the cells with svg g elements
+    var lincells = Object.values(lineage);
+    var treedata = tree_container.selectAll('path')
+	.data(lincells, function(d){return d.cell_name;})
+	.enter();//.append('path')
+//	.attr('id', function(d){return d.cell_name + '_treecell';})
+//	.attr('class', 'treecell');
+/*        .attr("cx", function (d) { return newtree_x_scale((d.lft + d.rgt)/2); } )
+        .attr("cy", function (d) { return newtree_y_scale(d.birth); } )
+        .attr("r", function(d) {
+            return 3;
+        })
+        .attr("fill", function (d) { return d.color; } )
+        .attr('opacity', 0.8);
+*/
+
+    var path_fmt = 'M{0} {1} L{2} {3} V{4}'
+    treedata.append('path')
+	.attr('id', function(d){return d.cell_name + '_treeln_path';})
+	.attr('class', 'treeln_path')
+	.attr('d', function(d){
+	    if(d.cell_name == 'P0'){
+		return 'M{0} {1} V{2}'.format(newtree_x_scale((d.lft + d.rgt)/2),
+					      newtree_y_scale(d.birth),
+					      newtree_y_scale(d.death));
+	    }else{
+		var parent = lineage[d.parent_name];
+		return path_fmt.format(newtree_x_scale((parent.lft + parent.rgt)/2),
+				       newtree_y_scale(parent.death),
+				       newtree_x_scale((d.lft + d.rgt)/2),
+				       newtree_y_scale(d.birth),
+				       newtree_y_scale(d.death));
+	    }
+	})
+	.attr('stroke', function(d){return d.color;})
+	.attr('stroke-width', 1)
+	.attr('fill', 'none');
+/*
+    //draw horizontal connectors
+    treedata.filter(function(d){return d.cell_name == 'P0' ? false : true}).append('line')
+	.attr('id', function(d){return d.cell_name + '_treeln_connector';})
+	.attr('x1', function(d){
+	    var linobj = lineage[d.parent_name];
+	    return newtree_x_scale((linobj.lft + linobj.rgt)/2);
+	})
+	.attr('y1', function(d){
+	    return newtree_y_scale(d.birth - 1);
+	})
+	.attr('x2', function(d){
+	    return newtree_x_scale((d.lft + d.rgt)/2);
+	})
+	.attr('y2', function(d){
+	    return newtree_y_scale(d.birth);
+	})
+	.attr('stroke', function(d){return d.color;});
+
+    //draw vertical lines for cell lifespan
+    treedata.append('line')
+	.attr('id', function(d){return d.cell_name + '_treeln_lifespan';})
+	.attr('x1', function(d){
+	    return newtree_x_scale((d.lft + d.rgt)/2);
+	})
+	.attr('y1', function(d){
+	    return newtree_y_scale(d.birth);
+	})
+	.attr('x2', function(d){
+	    return newtree_x_scale((d.lft + d.rgt)/2);
+	})
+	.attr('y2', function(d){
+	    return newtree_y_scale(d.death);
+	})
+	.attr('stroke', function(d){return d.color;});
+*/
+
+//    //Make sure the zoom behavior is updated
+//    treedata.call(zoom);
+}
+
+/****************************************************************
 Try asynchronous loading of data on-demand
 ****************************************************************/
 /*
@@ -2228,6 +2432,7 @@ function loadTimePointPromise(start_tp, loadnum){
 	    for (var i=0; i < result.length; i++){
 		tpdata.push(result[i]);
 	    }
+//	    drawLineageTree2();
 	    ready=true;
    	    resolve('Loaded!');
 	});
@@ -2301,7 +2506,6 @@ function scatterPlot3d( parent ) {
     });
 
     console.log("Loading data");
-    loadCellTypeMap();
     //Load lineage data structure
     var getlineageurl = 'http://localhost:8080/cgi-bin/get_lineage.py?color='+encodeURIComponent(defaultColor)
     var getlineage = new Promise(function(resolve, reject){
@@ -2314,8 +2518,12 @@ function scatterPlot3d( parent ) {
 	    }
 	});
     })
-    getlineage.then(function(response){loadTimePoints()});
-    loadWormBaseIdMap();
+    //Then load everything else
+    getlineage.then(function(response){
+	loadCellTypeMap();
+	loadTimePoints();
+	loadWormBaseIdMap();
+    });
 
     d3.select('#hide-controls')
       .attr('onclick', 'hideControls()');
