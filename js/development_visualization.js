@@ -120,18 +120,15 @@ function makeLPDivTemplate(){
     var lpsubdiv = d3.select('div.lineage-pickers').append('div')
         .attr('class', 'lineage-picker-template')
         .attr('id', 'lineage-picker-template')
-        .attr('style', 'display: none;');
-
-    lpsubdiv.append('h4')
-	.attr('id', 'hihead'+lpidx)
-	.html('Anatomy')
+        .attr('style', 'display: none');
+    
     //Construct a select box for picking cell lineages/cell types to highlight
     var id = 'selhi'+lpidx;
     var select = lpsubdiv.append('select')
         .attr('class', 'selhi')
         .attr('id', id)
         .attr('data-placeholder', 'Cell lineage/type...')
-        .attr('multiple','multiple');
+        .attr('multiple','multiple')
 
     select.append('option').attr('value', '');
 
@@ -185,44 +182,54 @@ function makeLPDivTemplate(){
     }
    
     //Make another section to highlight cells based on gene expression
-    lpsubdiv.append('h4')
-	.attr('id', 'exphead'+lpidx)
-	.html('Gene Expression');
     //Construct a select box for picking genes to highlight
     var id = 'exphi'+lpidx;
     var select = lpsubdiv.append('select')
         .attr('class', 'exphi')
         .attr('id', id)
-        .attr('data-placeholder', 'Gene Name/Sequence ID...')
+        .attr('data-placeholder', 'Gene Name/ID...')
         .attr('multiple','multiple');
 
+    lpsubdiv.append('input')
+        .attr('type', 'button')
+        .attr('value', '−')
+        .attr('class', 'removehi')
+        .attr('id', 'removehi'+lpidx)
+        .attr('onclick', 'removeLPDiv(event, this);');
+
     //Construct a select box for picking logic to allow users to customly pick highlghted dataset
-    lpsubdiv.append('h4')
-	.attr('id', 'loghead'+lpidx)
-	.html('Logic and Color Options');
     var id = 'loghi'+lpidx;
-    var select = lpsubdiv.append('select')
+    lpsubdiv
+        .append('small')
+        .attr('class', 'picker-heading')
+        .attr('id', 'loghead'+lpidx)
+        .html('Logic: ');
+
+    var select = lpsubdiv
+        .append('select')
         .attr('class', 'loghi')
         .attr('id', id)
         .attr('data-placeholder', 'Set Logic')
     
     select.append('option').attr('value', '');
     outgroup = d3.select('#'+id).append('optgroup')
-    outgroup.append('option').attr('value','union').attr('selected', 'selected').html('Union');
-    outgroup.append('option').attr('value','intersect').html('Intersect');
-    outgroup.append('option').attr('value', 'not').html('Not');
+    outgroup.append('option').attr('value','union').attr('selected', 'selected').html('AND');
+    outgroup.append('option').attr('value','intersect').html('OR');
+    outgroup.append('option').attr('value', 'not').html('NOT');
 
     var id = 'hicolor'+lpidx;
+
+    lpsubdiv
+        .append('small')
+        .attr('class', 'picker-heading')
+        .attr('id', 'hihead'+lpidx)
+        .html('Color: ');
+
     lpsubdiv.append('input')
         .attr('type', 'color')
         .attr('class', 'hicolor')
         .attr('id', id);
-    lpsubdiv.append('input')
-        .attr('type', 'button')
-        .attr('value', '-')
-        .attr('class', 'removehi')
-        .attr('id', 'removehi'+lpidx)
-        .attr('onclick', 'removeLPDiv(event, this);');
+
 
     lpidx++;
 }
@@ -271,73 +278,73 @@ function cloneLPDiv(){
             .attr('class', 'control-section')
             .attr('style', 'display: block');
         var childs = [];
-	lpdivclone.children().each(function(idx){
-	    childs.push(this);
-//	    if($(this).is('div')){
-//		$(this).children().each(function(idx2){
-//		    childs.push(this);
-//		});
-//	    }
-	});
-	console.log(childs.length);
+    lpdivclone.children().each(function(idx){
+        childs.push(this);
+//      if($(this).is('div')){
+//      $(this).children().each(function(idx2){
+//          childs.push(this);
+//      });
+//      }
+    });
+    console.log(childs.length);
         var id;
-	var id_type;
+    var id_type;
         for(var i = 0; i < childs.length; i++){
             id = $(childs[i]).attr('id');
-	    id_type = id.substr(0, id.length - 1);
+        id_type = id.substr(0, id.length - 1);
             $(childs[i]).attr('id', id_type + lpidx);
-	    $(childs[i]).attr('name', lpidx + '.' + id_type);
+        $(childs[i]).attr('name', lpidx + '.' + id_type);
         }
 
         lpdivclone.appendTo('.lineage-pickers');
-        $('#selhi'+lpidx).chosen({search_contains:true});
-        $('#loghi'+lpidx).chosen({search_contains:true});
-	$('#exphi'+lpidx).chosen({search_contains:true});
+        $('#selhi'+lpidx).chosen({search_contains:true, width: "175px", display: "inline-block"});
+        $('#loghi'+lpidx).chosen({search_contains:true, width: "75px", display: "inline-block"});
+    $('#exphi'+lpidx).chosen({search_contains:true,  width: "175px", display: "inline-block"});
 
-	$('#exphi'+lpidx+'_chosen').find('input[type=text]:first').autocomplete({
-	    minLength: 2,
-	    source: function( request, response ) {
-		console.log($(this));
-		console.log($($(this)[0].element[0]).parents('.chosen-container:first').attr('id'));
-		var sel_id = $($(this)[0].element[0]).parents('.chosen-container:first').attr('id');
-		var sel_obj = $('#'+sel_id.split('_'));
-		var to_keep = $('#'+sel_id).find('li.search-choice');
-		var to_keep_genes = [];
-//		var to_rm = $('option.expropt');
-		var to_rm = sel_obj.find('option.expropt');
-		console.log(to_rm);
-		$.ajax({
-		    url: "http://localhost:8080/cgi-bin/get_genes.py?term="+encodeURIComponent(request.term),
-		    dataType: "json",
-		    beforeSend: function(){
-			console.log(to_rm.length);
-			to_rm.remove();
-			to_keep.each(function(idx){
-			    var gene_id = $(this).text();
-			    to_keep_genes.push(gene_id);
-			});
-		    }
-		}).done(function( data ) {
-		    to_keep_genes.forEach(function(gene_id){
-			console.log('KEEP: '+gene_id);
-			var toadd = '<option class="expropt" id="' + gene_id + '" value="' + gene_id + '" selected>' + gene_id + '</option>';
-			sel_obj.append(toadd);
-		    });
-		    $.map( data, function( item ) {
-			if(!to_keep_genes.includes(item)){
-			    console.log('autocomplete match: '+item);
-			    var toadd = '<option class="expropt" id="' + item + '" value="' + item + '">' + item + '</option>';
-			    console.log('NEW: '+toadd);
-			    sel_obj.append(toadd);
-			}
-		    });
-		    response();
-		    sel_obj.trigger("chosen:updated");
-		});
-	    }
-	});
+    $('#exphi'+lpidx+'_chosen').find('input[type=text]:first').autocomplete({
+        minLength: 2,
+        source: function( request, response ) {
+        console.log($(this));
+        console.log($($(this)[0].element[0]).parents('.chosen-container:first').attr('id'));
+        var sel_id = $($(this)[0].element[0]).parents('.chosen-container:first').attr('id');
+        var sel_obj = $('#'+sel_id.split('_'));
+        var to_keep = $('#'+sel_id).find('li.search-choice');
+        var to_keep_genes = [];
+//      var to_rm = $('option.expropt');
+        var to_rm = sel_obj.find('option.expropt');
+        console.log(to_rm);
+        $.ajax({
+            url: "http://localhost:8080/cgi-bin/get_genes.py?term="+encodeURIComponent(request.term),
+            dataType: "json",
+            beforeSend: function(){
+            console.log(to_rm.length);
+            to_rm.remove();
+            to_keep.each(function(idx){
+                var gene_id = $(this).text();
+                to_keep_genes.push(gene_id);
+            });
+            }
+        }).done(function( data ) {
+            to_keep_genes.forEach(function(gene_id){
+            console.log('KEEP: '+gene_id);
+            var toadd = '<option class="expropt" id="' + gene_id + '" value="' + gene_id + '" selected>' + gene_id + '</option>';
+            sel_obj.append(toadd);
+            });
+            $.map( data, function( item ) {
+            if(!to_keep_genes.includes(item)){
+                console.log('autocomplete match: '+item);
+                var toadd = '<option class="expropt" id="' + item + '" value="' + item + '">' + item + '</option>';
+                console.log('NEW: '+toadd);
+                sel_obj.append(toadd);
+            }
+            });
+            response();
+            sel_obj.trigger("chosen:updated");
+        });
+        }
+    });
 
-	lpidx++;
+    lpidx++;
 
         //only allow up to 4 sets of lineage picker controls
         if($('#lineage-pickers').children().length === 4){
@@ -381,18 +388,6 @@ function initializeLineagePicker(){
         .append('div').attr('class', 'lineage-pickers');
     makeLPDivTemplate();
     cloneLPDiv();
-    d3.select('#picker-controls').insert('input', ':first-child')
-        .attr('type', 'button')
-        .attr('value', '+')
-        .attr('class', 'add-highlight')
-        .attr('id', 'add-lp')
-        .attr('onclick', 'cloneLPDiv()');
-    d3.select('#picker-controls').insert('input', ':first-child')
-        .attr('type', 'button')
-        .attr('value', 'Hide Non-Highlighted')
-        .attr('class', 'add-highlight')
-        .attr('id', 'showhide-highlight')
-        .attr('onclick', '(function(e, obj) {obj.value = obj.value.substr(0,4) === "Hide" ? "Show Non-Highlighted" : "Hide Non-Highlighted"; showHideHighlights(obj.value);})(event, this)');
 }
 
 /**
@@ -539,13 +534,13 @@ function _cellLineageStrHelper(lineage_obj, cellname, prev_name){
 function pickColor_and_setSelected(lin_obj){
     var ret_color = defaultColor;
     if(lin_obj.color_by_tp != false){
-	lin_obj.color_by_tp.forEach(function(item, index){
-	    if(item[0] <= tpdata[cur_tpdata_idx][0].tp){
-		lin_obj.selected = true;
-		lin_obj.color = item[1];
-		ret_color = lin_obj.color;
-	    }
-	});
+    lin_obj.color_by_tp.forEach(function(item, index){
+        if(item[0] <= tpdata[cur_tpdata_idx][0].tp){
+        lin_obj.selected = true;
+        lin_obj.color = item[1];
+        ret_color = lin_obj.color;
+        }
+    });
     }
     return ret_color;
 }
@@ -580,46 +575,46 @@ function setSelection(){
     //make XMLHTTPRequest to get selection info for each cell
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
-	if (this.readyState == 4 && this.status == 200) {
-	    var selected = JSON.parse(xhr.responseText);
-	    //Deselect all cells
-	    Object.keys(lineage).forEach(function(key, index){
-		lineage[key].color = defaultColor;
-		lineage[key].color_by_tp = false;
-		lineage[key].selected = false;
-	    });
-	    highlights = false;
-/*	    Object.keys(selected).forEach(function(key, index){
-		lineage[key].selected = true;
-		if(selected[key].length > 1){
-		    lineage[key].color = Color_mixer.mix(selected[key]).toHexString();
-		}else{
-		    lineage[key].color = selected[key];
-		}
-	    };*/
-	    for (var i=0; i < selected.length; i++){
-		//each selected element is (cellname, {tp:color list})
-		var sel = selected[i];
-		//		lineage[sel[0]].selected = true;
-		sel[1].forEach(function(tp_elt, tp_elt_idx){
-		    var tp_val = tp_elt[0];
-		    var colors = tp_elt[1];
-		    if(colors.length > 1){
-			colors.forEach(function(col, col_idx){
-			    colors[col_idx] = $.Color(col);
-			});
-			sel[1][tp_elt_idx] = [tp_val, Color_mixer.mix(colors).toHexString()];
-		    }else{
-			sel[1][tp_elt_idx] = [tp_val, colors[0]];
-		    }
-		});
-		lineage[sel[0]].color_by_tp = sel[1];
-		highlights = true;
-	    }
-	    updateCellColors();
-	    updateCellSize();
-	    updatePlot();
-	}
+    if (this.readyState == 4 && this.status == 200) {
+        var selected = JSON.parse(xhr.responseText);
+        //Deselect all cells
+        Object.keys(lineage).forEach(function(key, index){
+        lineage[key].color = defaultColor;
+        lineage[key].color_by_tp = false;
+        lineage[key].selected = false;
+        });
+        highlights = false;
+/*      Object.keys(selected).forEach(function(key, index){
+        lineage[key].selected = true;
+        if(selected[key].length > 1){
+            lineage[key].color = Color_mixer.mix(selected[key]).toHexString();
+        }else{
+            lineage[key].color = selected[key];
+        }
+        };*/
+        for (var i=0; i < selected.length; i++){
+        //each selected element is (cellname, {tp:color list})
+        var sel = selected[i];
+        //      lineage[sel[0]].selected = true;
+        sel[1].forEach(function(tp_elt, tp_elt_idx){
+            var tp_val = tp_elt[0];
+            var colors = tp_elt[1];
+            if(colors.length > 1){
+            colors.forEach(function(col, col_idx){
+                colors[col_idx] = $.Color(col);
+            });
+            sel[1][tp_elt_idx] = [tp_val, Color_mixer.mix(colors).toHexString()];
+            }else{
+            sel[1][tp_elt_idx] = [tp_val, colors[0]];
+            }
+        });
+        lineage[sel[0]].color_by_tp = sel[1];
+        highlights = true;
+        }
+        updateCellColors();
+        updateCellSize();
+        updatePlot();
+    }
     };
     // Set up our request
     xhr.open("POST", "http://localhost:8080/cgi-bin/get_lineage.py", true);
@@ -793,7 +788,7 @@ function updateCellSize(){
 function updatePlot(){
     var ppbutton = document.getElementById('playpause');
     var playpause = false;
-    if(ppbutton.innerHTML === 'Pause'){
+    if(ppbutton.innerHTML === '▌▌'){
         playpause = true;
         playpausedev();
     }
@@ -881,7 +876,7 @@ function loadCellTypeMap(){
         initializePlot();
         initializePCA();
         initializeSmallMultiples();
-	initializeLineageTree2();
+    initializeLineageTree2();
 //        initializeGeneExpressionPlot();
 //        initializeLineageTree(cellmap.P0);
 //        plotData(0, 5);
@@ -1897,22 +1892,22 @@ INITIALIZATION AND CALLBACKS FOR VISUALIZATION
 function playpausedev(){
     var button = document.getElementById('playpause');
 
-    if(button.innerHTML === "Play"){
-    	if(speed === "slow"){
-        	playback_id = setInterval(development, 1000);
-        	button.innerHTML = "Pause";
-        	}
+    if(button.innerHTML === "▶"){
+        if(speed === "slow"){
+            playback_id = setInterval(development, 1000);
+            button.innerHTML = "▌▌";
+            }
         else if(speed === "medium"){
-        	playback_id = setInterval(development, 500);
-        	button.innerHTML = "Pause";
-        	}
+            playback_id = setInterval(development, 500);
+            button.innerHTML = "▌▌";
+            }
         else if(speed === "fast"){
-        	playback_id = setInterval(development, 250);
-        	button.innerHTML = "Pause";
-        	}
+            playback_id = setInterval(development, 250);
+            button.innerHTML = "▌▌";
+            }
     }else{
         clearInterval(playback_id);
-        button.innerHTML = "Play";
+        button.innerHTML = "▶";
     }
 }
 
@@ -1939,14 +1934,15 @@ function setViewpoint(viewPoint) {
 function hideControls() {
     if(! controls_hidden) {
         controls_hidden = true;
-        $('#divControls').animate({width: "0px"}, 500, function() {});
-        $('#hide-controls').attr('value', '>')
-        $('#divPlot').animate({margin: "0", width: "100%"}, 500, function() {});
+        $('#divControls').animate({left: "-415"}, 500, function() {});
+        $('#hide-controls').attr('value', '▶')
+        $('#divPlot').animate({"margin-left": "0", width: "100%"}, 500, function() {});
     } else {
         controls_hidden = false;
-        $('#divControls').animate({width: "415"}, 500, function() {});
-        $('#hide-controls').attr('value', '<')
-        $('#divPlot').animate({"margin-left": "415", "width": "-=415px"}, 500, function() {});
+        $('#divControls').animate({left: "5"}, 500, function() {});
+        $('#hide-controls').attr('value', '◀')
+        var width = $('#divPlot').width()
+        $('#divPlot').animate({"margin-left": "415", width: width - 415}, 500, function() {});
     }
 }
 
@@ -1959,12 +1955,12 @@ function hideControls() {
 */
 function development() {
     if (ready && x3d.node() && x3d.node().runtime ) {
-	if (cur_tpdata_idx == tpdata.length){
-	    cur_tpdata_idx = 1;
-	}else{
+    if (cur_tpdata_idx == tpdata.length){
+        cur_tpdata_idx = 1;
+    }else{
             cur_tpdata_idx++;
-	}
-	console.log('TP Idx: ' + cur_tpdata_idx);
+    }
+    console.log('TP Idx: ' + cur_tpdata_idx);
         plotData(1000)
         document.getElementById('timerange').value = cur_tpdata_idx;
     } else {
@@ -2189,8 +2185,8 @@ var tree_container;
 function initializeLineageTree2(){
     var tree_div = d3.select(".lineage_tree");
     var margin = {top: 10, right: 10, bottom: 10, left: 10},
-	width = $('#lineage_tree').width() - margin.left - margin.right,
-	height = $('#lineage_tree').height() - margin.top - margin.bottom;
+    width = $('#lineage_tree').width() - margin.left - margin.right,
+    height = $('#lineage_tree').height() - margin.top - margin.bottom;
 
     newtree_x_scale = d3.scale.linear()
         .domain([0, lineage['P0'].rgt])
@@ -2223,37 +2219,37 @@ function initializeLineageTree2(){
 
     // Set up the SVG element
     var svg = tree_div
-	.append("svg")
-	.attr("width", width + margin.left + margin.right)
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
-//	.attr('viewBox', '{0} {1} {2} {3}'.format(margin.left,
-//						  margin.top,
-//						  margin.left + width,
-//						  margin.top + height)) 
+//  .attr('viewBox', '{0} {1} {2} {3}'.format(margin.left,
+//                        margin.top,
+//                        margin.left + width,
+//                        margin.top + height)) 
 
     var svgg = svg
-	.append("g")
-	.attr('id', 'lineagetree2')
+    .append("g")
+    .attr('id', 'lineagetree2')
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-	.style('overflow', 'hidden')
+    .style('overflow', 'hidden')
         .call(zoom);
 
     svgg.append("rect")
         .attr("width", width)
         .attr("height", height)
-	.style('fill', 'none')
-	.style("pointer-events", "all");
+    .style('fill', 'none')
+    .style("pointer-events", "all");
 /*
     svg.append("clipPath")
-	.attr('id', 'treeClip')
-	.append("rect")
-	.attr("x", margin.left)
-	.attr("y", margin.top)
-	.attr("width", width)
-	.attr("height", height);
+    .attr('id', 'treeClip')
+    .append("rect")
+    .attr("x", margin.left)
+    .attr("y", margin.top)
+    .attr("width", width)
+    .attr("height", height);
 */
     tree_container = svgg.append('g')
-//	.style('clip-path', "url(#treeClip)");
+//  .style('clip-path', "url(#treeClip)");
 
     drawLineageTree2();
 /*
@@ -2285,10 +2281,10 @@ function drawLineageTree2(){
     //associate the cells with svg g elements
     var lincells = Object.values(lineage);
     var treedata = tree_container.selectAll('path')
-	.data(lincells, function(d){return d.cell_name;})
-	.enter();//.append('path')
-//	.attr('id', function(d){return d.cell_name + '_treecell';})
-//	.attr('class', 'treecell');
+    .data(lincells, function(d){return d.cell_name;})
+    .enter();//.append('path')
+//  .attr('id', function(d){return d.cell_name + '_treecell';})
+//  .attr('class', 'treecell');
 /*        .attr("cx", function (d) { return newtree_x_scale((d.lft + d.rgt)/2); } )
         .attr("cy", function (d) { return newtree_y_scale(d.birth); } )
         .attr("r", function(d) {
@@ -2300,60 +2296,60 @@ function drawLineageTree2(){
 
     var path_fmt = 'M{0} {1} L{2} {3} V{4}'
     treedata.append('path')
-	.attr('id', function(d){return d.cell_name + '_treeln_path';})
-	.attr('class', 'treeln_path')
-	.attr('d', function(d){
-	    if(d.cell_name == 'P0'){
-		return 'M{0} {1} V{2}'.format(newtree_x_scale((d.lft + d.rgt)/2),
-					      newtree_y_scale(d.birth),
-					      newtree_y_scale(d.death));
-	    }else{
-		var parent = lineage[d.parent_name];
-		return path_fmt.format(newtree_x_scale((parent.lft + parent.rgt)/2),
-				       newtree_y_scale(parent.death),
-				       newtree_x_scale((d.lft + d.rgt)/2),
-				       newtree_y_scale(d.birth),
-				       newtree_y_scale(d.death));
-	    }
-	})
-	.attr('stroke', function(d){return d.color;})
-	.attr('stroke-width', 1)
-	.attr('fill', 'none');
+    .attr('id', function(d){return d.cell_name + '_treeln_path';})
+    .attr('class', 'treeln_path')
+    .attr('d', function(d){
+        if(d.cell_name == 'P0'){
+        return 'M{0} {1} V{2}'.format(newtree_x_scale((d.lft + d.rgt)/2),
+                          newtree_y_scale(d.birth),
+                          newtree_y_scale(d.death));
+        }else{
+        var parent = lineage[d.parent_name];
+        return path_fmt.format(newtree_x_scale((parent.lft + parent.rgt)/2),
+                       newtree_y_scale(parent.death),
+                       newtree_x_scale((d.lft + d.rgt)/2),
+                       newtree_y_scale(d.birth),
+                       newtree_y_scale(d.death));
+        }
+    })
+    .attr('stroke', function(d){return d.color;})
+    .attr('stroke-width', 1)
+    .attr('fill', 'none');
 /*
     //draw horizontal connectors
     treedata.filter(function(d){return d.cell_name == 'P0' ? false : true}).append('line')
-	.attr('id', function(d){return d.cell_name + '_treeln_connector';})
-	.attr('x1', function(d){
-	    var linobj = lineage[d.parent_name];
-	    return newtree_x_scale((linobj.lft + linobj.rgt)/2);
-	})
-	.attr('y1', function(d){
-	    return newtree_y_scale(d.birth - 1);
-	})
-	.attr('x2', function(d){
-	    return newtree_x_scale((d.lft + d.rgt)/2);
-	})
-	.attr('y2', function(d){
-	    return newtree_y_scale(d.birth);
-	})
-	.attr('stroke', function(d){return d.color;});
+    .attr('id', function(d){return d.cell_name + '_treeln_connector';})
+    .attr('x1', function(d){
+        var linobj = lineage[d.parent_name];
+        return newtree_x_scale((linobj.lft + linobj.rgt)/2);
+    })
+    .attr('y1', function(d){
+        return newtree_y_scale(d.birth - 1);
+    })
+    .attr('x2', function(d){
+        return newtree_x_scale((d.lft + d.rgt)/2);
+    })
+    .attr('y2', function(d){
+        return newtree_y_scale(d.birth);
+    })
+    .attr('stroke', function(d){return d.color;});
 
     //draw vertical lines for cell lifespan
     treedata.append('line')
-	.attr('id', function(d){return d.cell_name + '_treeln_lifespan';})
-	.attr('x1', function(d){
-	    return newtree_x_scale((d.lft + d.rgt)/2);
-	})
-	.attr('y1', function(d){
-	    return newtree_y_scale(d.birth);
-	})
-	.attr('x2', function(d){
-	    return newtree_x_scale((d.lft + d.rgt)/2);
-	})
-	.attr('y2', function(d){
-	    return newtree_y_scale(d.death);
-	})
-	.attr('stroke', function(d){return d.color;});
+    .attr('id', function(d){return d.cell_name + '_treeln_lifespan';})
+    .attr('x1', function(d){
+        return newtree_x_scale((d.lft + d.rgt)/2);
+    })
+    .attr('y1', function(d){
+        return newtree_y_scale(d.birth);
+    })
+    .attr('x2', function(d){
+        return newtree_x_scale((d.lft + d.rgt)/2);
+    })
+    .attr('y2', function(d){
+        return newtree_y_scale(d.death);
+    })
+    .attr('stroke', function(d){return d.color;});
 */
 
 //    //Make sure the zoom behavior is updated
@@ -2412,30 +2408,30 @@ function loadTimePoint(timepoint_idx, plot){
     var query = cgi_url.format(timepoint_idx, timepoint_idx + num_tps)
     console.log(query);
     $.getJSON(query,  function(result){
-	if(plot){
-	    tpdata = result;
-	    plotData(500);
-	} else {
+    if(plot){
+        tpdata = result;
+        plotData(500);
+    } else {
             tpdata = result.concat(tpdata);
-	}
-	console.log(tpdata.length);
-	console.log(result.length);
-	ready=true;
-	return;
+    }
+    console.log(tpdata.length);
+    console.log(result.length);
+    ready=true;
+    return;
     });
 }
 
 function loadTimePointPromise(start_tp, loadnum){
     return new Promise(function(resolve, reject) {
-	var query = cgi_url.format(start_tp, start_tp + loadnum)
-	$.getJSON(query, function(result){
-	    for (var i=0; i < result.length; i++){
-		tpdata.push(result[i]);
-	    }
-//	    drawLineageTree2();
-	    ready=true;
-   	    resolve('Loaded!');
-	});
+    var query = cgi_url.format(start_tp, start_tp + loadnum)
+    $.getJSON(query, function(result){
+        for (var i=0; i < result.length; i++){
+        tpdata.push(result[i]);
+        }
+//      drawLineageTree2();
+        ready=true;
+        resolve('Loaded!');
+    });
     });
 }
 
@@ -2443,23 +2439,23 @@ function loadTimePoints(){
     var loadlist = [];
     var loadnum = 20;
     for (var i=loadnum + 1; i < total_tps; i += loadnum){
-	loadlist.push(i);
+    loadlist.push(i);
     }
     //initialize promise sequence for loading time point location data
     //and plot the initial data
     var tpPromise = loadTimePointPromise(1, loadnum).then(function(){
-	plotData(500);
-	return Promise.resolve();
+    plotData(500);
+    return Promise.resolve();
     });
     //finish compiling the sequence of time point promises
     loadlist.forEach(function(next_tp){
-	//queue loading of time point data into a sequence
-	tpPromise = tpPromise.then(function() {
-	    return loadTimePointPromise(next_tp, loadnum);
-	});
+    //queue loading of time point data into a sequence
+    tpPromise = tpPromise.then(function() {
+        return loadTimePointPromise(next_tp, loadnum);
+    });
     });
     tpPromise.then(function() {
-	d3.select('#timerange').attr('max', total_tps);
+    d3.select('#timerange').attr('max', total_tps);
     });
 }
 
@@ -2501,28 +2497,28 @@ function scatterPlot3d( parent ) {
 
     //make sure that the selection form submit button works
     $('#selectForm').on("submit",  function (event) {
-	event.preventDefault();
-	setSelection();
+    event.preventDefault();
+    setSelection();
     });
 
     console.log("Loading data");
     //Load lineage data structure
     var getlineageurl = 'http://localhost:8080/cgi-bin/get_lineage.py?color='+encodeURIComponent(defaultColor)
     var getlineage = new Promise(function(resolve, reject){
-	$.getJSON(getlineageurl, function(result){
-	    if(result){
-		lineage = result;
-		resolve('Lineage loaded.');
-	    }else{
-		reject(Error('Something went wrong while loading lineage.'));
-	    }
-	});
+    $.getJSON(getlineageurl, function(result){
+        if(result){
+        lineage = result;
+        resolve('Lineage loaded.');
+        }else{
+        reject(Error('Something went wrong while loading lineage.'));
+        }
+    });
     })
     //Then load everything else
     getlineage.then(function(response){
-	loadCellTypeMap();
-	loadTimePoints();
-	loadWormBaseIdMap();
+    loadCellTypeMap();
+    loadTimePoints();
+    loadWormBaseIdMap();
     });
 
     d3.select('#hide-controls')
