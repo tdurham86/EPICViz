@@ -49,7 +49,7 @@ body > .container-fluid {
   float: left;
   position: relative;
   left: 0px;
-  top: 1px;
+  top: 1.5px;
   height: 25px;
 
   color: #153057;
@@ -182,14 +182,21 @@ h1, h2, h3{
   top: 60px ;
   left: 5px;
   width:415px;
-  min-height: 100%;
   background: #FFF;
   color: #CCCCCC;
   display: inline-block;
   float: left;
+  
+  height: calc(100% - 60px);
+  overflow-y: scroll;
 
   border-right: 2px solid #153057;
   border-left: 2px solid #153057;
+}
+
+::-webkit-scrollbar {
+    width: 0px;  /* remove scrollbar space */
+    background: transparent;  /* optional: just make scrollbar invisible */
 }
 
 #divPlot {
@@ -309,6 +316,12 @@ input[type=range]::-moz-range-thumb {
 #reset-button {
   margin-bottom: 0px;
   display: inline;
+  width: 75px;
+}
+
+#tree-reset-button {
+  position: relative;
+  left: 10px;
   width: 75px;
 }
 
