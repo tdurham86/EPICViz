@@ -556,11 +556,8 @@ function pickColor_and_setSelected(lin_obj){
 * @callback - called whenever a lineage picker selection is changed
 */
 function updateCellColors(){
-//    setCellColors();
     d3.selectAll('.dp_sphere appearance material')
         .attr('diffuseColor', function(d){return pickColor_and_setSelected(lineage[d.name]);});
-//    d3.selectAll('.node-circle')
-    //        .attr('fill', function(d){return pickColor_and_setSelected(lineage[d.name]);});
     d3.selectAll('.small_multiples_datapoint')
         .attr('fill', function(d){return pickColor_and_setSelected(lineage[d.name]);});
     d3.selectAll('.pca_datapoint')
@@ -587,19 +584,17 @@ function setSelection(){
 		lineage[key].color = defaultColor;
 		lineage[key].color_by_tp = false;
 		lineage[key].selected = false;
+		lineage[key].priv_selected = false;
 	    });
 	    highlights = false;
-/*	    Object.keys(selected).forEach(function(key, index){
-		lineage[key].selected = true;
-		if(selected[key].length > 1){
-		    lineage[key].color = Color_mixer.mix(selected[key]).toHexString();
-		}else{
-		    lineage[key].color = selected[key];
-		}
-	    };*/
+	    var selected_flat = [];
 	    for (var i=0; i < selected.length; i++){
 		//each selected element is (cellname, {tp:color list})
 		var sel = selected[i];
+		if(lineage[sel[0]] === undefined){
+		    continue;
+		}
+		lineage[sel[0]].priv_selected = true;
 		//		lineage[sel[0]].selected = true;
 		sel[1].forEach(function(tp_elt, tp_elt_idx){
 		    var tp_val = tp_elt[0];
@@ -612,10 +607,41 @@ function setSelection(){
 		    }else{
 			sel[1][tp_elt_idx] = [tp_val, colors[0]];
 		    }
+		    selected_flat.push([sel[0], tp_val, sel[1][tp_elt_idx][1]]);
 		});
 		lineage[sel[0]].color_by_tp = sel[1];
 		highlights = true;
 	    }
+	    //update lineage tree with new selection
+	    var tree_paths = tree_container.selectAll('.highlight_treeln_path')
+		.data(selected_flat, function(d){return d[0] + '_' + d[1];});
+	    tree_paths.exit().remove();
+	    tree_paths.enter().append('path')
+		.attr('id', function(d){return d[0] + '_' + d[1] + 'highlight_treeln_path';})
+		.attr('class', 'highlight_treeln_path')
+		.attr('d', function(d){
+		    var dobj = lineage[d[0]];
+		    var parent = lineage[dobj.parent_name];
+		    if((d[0] != 'P0') && ((d[1] == 0) || (d[1] == dobj.birth))
+		       && parent.priv_selected === true){
+			var path_fmt = 'M{0} {1} L{2} {3} V{4}';
+			return path_fmt.format(newtree_x_scale_orig((parent.lft + parent.rgt)/2),
+					       newtree_y_scale_orig(parent.death),
+					       newtree_x_scale_orig((dobj.lft + dobj.rgt)/2),
+					       newtree_y_scale_orig(dobj.birth),
+					       newtree_y_scale_orig(dobj.death));
+		    }else{
+			var path_fmt = 'M{0} {1} V{2}';
+			return path_fmt.format(newtree_x_scale_orig((dobj.lft + dobj.rgt)/2),
+					       newtree_y_scale_orig(d[1] ? d[1] : dobj.birth),
+					       newtree_y_scale_orig(dobj.death));
+		    }
+		})
+		.attr('stroke', function(d){return d[2];})
+		.attr('stroke-width', 1)
+		.attr('fill', 'none');
+
+	    //update the rest of the viz
 	    updateCellColors();
 	    updateCellSize();
 	    updatePlot();
@@ -1631,6 +1657,11 @@ function plotData( duration ){
         .attr("cx", function(row) {return pca_scale_x(row.pc2);})
         .attr("cy", function(row) {return pca_scale_y(row.pc3);})
 
+    //update timepoint indicator on tree
+    var cur_tp = tpdata[cur_tpdata_idx][0].tp;
+    d3.select('#current_tp')
+	.attr('transform', 'translate(' + newtree_x_scale_orig(0) + ' ' + newtree_y_scale_orig(cur_tp) + ')');
+
 //    //transition tree nodes
 //    var circ2 = newnodes.selectAll('circle').transition().ease(ease).duration(duration)
 //        .attr('x', function(d){return d3.select(this).attr('x0');})
@@ -2183,7 +2214,8 @@ function initializeLineageTree(root) {
 *****************************************************************
 * Just plot the whole tree based on the lineage data structure
 */
-var newtree_x_scale, newtree_y_scale, newtree_xAxis, newtree_yAxis;
+var newtree_x_scale, newtree_y_scale
+var newtree_x_scale_orig, newtree_y_scale_orig
 var zoom;
 var tree_container;
 function initializeLineageTree2(){
@@ -2195,28 +2227,17 @@ function initializeLineageTree2(){
     newtree_x_scale = d3.scale.linear()
         .domain([0, lineage['P0'].rgt])
         .range([0, width]);
+    newtree_x_scale_orig = newtree_x_scale.copy();
 
     newtree_y_scale = d3.scale.linear()
         .domain([0, 550])
         .range([0, height]);
-
-/*
-    newtree_xAxis = d3.svg.axis()
-        .scale(newtree_x_scale)
-        .orient("bottom")
-        .tickSize(-height);
-
-    newtree_yAxis = d3.svg.axis()
-        .scale(newtree_y_scale)
-        .orient("left")
-        .ticks(5)
-        .tickSize(-width);
-*/
+    newtree_y_scale_orig = newtree_y_scale.copy();
 
     zoom = d3.behavior.zoom()
         .x(newtree_x_scale)
         .y(newtree_y_scale)
-        .scaleExtent([1, 10])
+        .scaleExtent([1, 15])
         .center([width / 2, height / 2])
         .size([width, height])
         .on("zoom", zoomed);
@@ -2226,10 +2247,6 @@ function initializeLineageTree2(){
 	.append("svg")
 	.attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
-//	.attr('viewBox', '{0} {1} {2} {3}'.format(margin.left,
-//						  margin.top,
-//						  margin.left + width,
-//						  margin.top + height)) 
 
     var svgg = svg
 	.append("g")
@@ -2243,60 +2260,61 @@ function initializeLineageTree2(){
         .attr("height", height)
 	.style('fill', 'none')
 	.style("pointer-events", "all");
-/*
-    svg.append("clipPath")
-	.attr('id', 'treeClip')
-	.append("rect")
-	.attr("x", margin.left)
-	.attr("y", margin.top)
-	.attr("width", width)
-	.attr("height", height);
-*/
+
     tree_container = svgg.append('g')
-//	.style('clip-path', "url(#treeClip)");
+
+    //add a horizontal line to indicate the current timepoint
+    tree_container.append('path')
+	.attr('id', 'current_tp')
+	.attr('d', 'M0 0 H' + width)
+	.attr('stroke', '#aaaaaa')
+	.attr('stroke-width', 2)
+	.attr('stroke-dasharray', "5,5");
 
     drawLineageTree2();
-/*
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(newtree_xAxis);
-
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(newtree_yAxis);    
-*/
 }
 
 function zoomed() {
     tree_container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    d3.selectAll('.treeln_path').attr('stroke-width', 1/d3.event.scale);
+    tree_container.select('#current_tp').attr('stroke-width', 2/d3.event.scale);
+    tree_container.selectAll('.treeln_path').attr('stroke-width', 1/d3.event.scale);
+    tree_container.selectAll('.highlight_treeln_path').attr('stroke-width', 1/d3.event.scale);
+    if(d3.event.scale > 5){
+	tree_container.selectAll('.tree_text1').attr("visibility", 'visible');
+	tree_container.selectAll('.tree_text2').attr("visibility", 'visible');
+	tree_container.selectAll('.tree_text3').attr("visibility", 'visible');
+    }else if(d3.event.scale > 3){
+	tree_container.selectAll('.tree_text1').attr("visibility", 'visible');
+	tree_container.selectAll('.tree_text2').attr("visibility", 'visible');
+	tree_container.selectAll('.tree_text3').attr("visibility", 'hidden');
+    }else if(d3.event.scale > 1){
+	tree_container.selectAll('.tree_text1').attr("visibility", 'visible');
+	tree_container.selectAll('.tree_text2').attr("visibility", 'hidden');
+	tree_container.selectAll('.tree_text3').attr("visibility", 'hidden');
+    }else{
+	tree_container.selectAll('.tree_text1').attr("visibility", 'hidden');	
+	tree_container.selectAll('.tree_text2').attr("visibility", 'hidden');
+	tree_container.selectAll('.tree_text3').attr("visibility", 'hidden');
+    }
 }
 
-/*
-function zoomed() {
-    var svg = d3.select('#lineagetree2');
-    svg.select(".x.axis").call(newtree_xAxis);
-    svg.select(".y.axis").call(newtree_yAxis);
+function resetTree(){
+    d3.transition().duration(750).tween("zoom", function() {
+	var ix = d3.interpolate(newtree_x_scale.domain(), [0, lineage['P0'].rgt]),
+	    iy = d3.interpolate(newtree_y_scale.domain(), [0, 550]);
+	return function(t) {
+	    zoom.x(newtree_x_scale.domain(ix(t))).y(newtree_y_scale.domain(iy(t)));
+	    zoom.event(tree_container);
+	};
+    });
 }
-*/
 
 function drawLineageTree2(){
     //associate the cells with svg g elements
     var lincells = Object.values(lineage);
-    var treedata = tree_container.selectAll('path')
+    var treedata = tree_container.selectAll('.treeln_path')
 	.data(lincells, function(d){return d.cell_name;})
-	.enter();//.append('path')
-//	.attr('id', function(d){return d.cell_name + '_treecell';})
-//	.attr('class', 'treecell');
-/*        .attr("cx", function (d) { return newtree_x_scale((d.lft + d.rgt)/2); } )
-        .attr("cy", function (d) { return newtree_y_scale(d.birth); } )
-        .attr("r", function(d) {
-            return 3;
-        })
-        .attr("fill", function (d) { return d.color; } )
-        .attr('opacity', 0.8);
-*/
+	.enter();
 
     var path_fmt = 'M{0} {1} L{2} {3} V{4}'
     treedata.append('path')
@@ -2319,45 +2337,54 @@ function drawLineageTree2(){
 	.attr('stroke', function(d){return d.color;})
 	.attr('stroke-width', 1)
 	.attr('fill', 'none');
-/*
-    //draw horizontal connectors
-    treedata.filter(function(d){return d.cell_name == 'P0' ? false : true}).append('line')
-	.attr('id', function(d){return d.cell_name + '_treeln_connector';})
-	.attr('x1', function(d){
-	    var linobj = lineage[d.parent_name];
-	    return newtree_x_scale((linobj.lft + linobj.rgt)/2);
-	})
-	.attr('y1', function(d){
-	    return newtree_y_scale(d.birth - 1);
-	})
-	.attr('x2', function(d){
-	    return newtree_x_scale((d.lft + d.rgt)/2);
-	})
-	.attr('y2', function(d){
-	    return newtree_y_scale(d.birth);
-	})
-	.attr('stroke', function(d){return d.color;});
 
-    //draw vertical lines for cell lifespan
-    treedata.append('line')
-	.attr('id', function(d){return d.cell_name + '_treeln_lifespan';})
-	.attr('x1', function(d){
-	    return newtree_x_scale((d.lft + d.rgt)/2);
+    // Add text labels to each node
+    var thresholds = [lineage['Eal'].death, lineage['ABalpappp'].death];
+    var text = tree_container.selectAll('text')
+	.data(lincells, function(d){return d.cell_name;}).enter()
+	.append('text')
+	.attr('class', function(d){
+	    if(d.birth < thresholds[0]){
+		return 'tree_text1';
+	    }else if(d.birth < thresholds[1]){
+		return 'tree_text2';
+	    }else{
+		return 'tree_text3';
+	    }
 	})
-	.attr('y1', function(d){
-	    return newtree_y_scale(d.birth);
+	.text(function(d) {return d.cell_name})
+	.attr('x', function(d) {return newtree_x_scale((d.lft + d.rgt)/2);})
+	.attr('y', function(d) {return newtree_y_scale(d.birth);})
+	.attr('text-anchor', 'end')
+	.attr('alignment-baseline', function(d) {
+	    if( (d.cell_name == 'P0') ||
+		((d.lft - lineage[d.parent_name].lft) < (lineage[d.parent_name].rgt - d.rgt)) ){
+		return 'after-edge';
+	    }else{
+		return 'before-edge';
+	    }
 	})
-	.attr('x2', function(d){
-	    return newtree_x_scale((d.lft + d.rgt)/2);
+	.attr('font-size', function(d){
+	    if(d.birth < thresholds[0]){
+		return 4;
+	    }else if(d.birth < thresholds[1]){
+		return 2;
+	    }else{
+		return 1;
+	    }
 	})
-	.attr('y2', function(d){
-	    return newtree_y_scale(d.death);
-	})
-	.attr('stroke', function(d){return d.color;});
-*/
-
-//    //Make sure the zoom behavior is updated
-//    treedata.call(zoom);
+	.attr('transform', function(d) {
+	    var ycorrect;
+	    if(d.birth < thresholds[0]){
+		ycorrect = 0.5;
+	    }else if(d.birth < thresholds[1]){
+		ycorrect = 0.2
+	    }else{
+		ycorrect = 0.2
+	    }
+	    return 'rotate(-90 {0} {1})'.format(newtree_x_scale((d.lft + d.rgt)/2),
+						newtree_y_scale(d.birth) + ycorrect);})
+	.attr('visibility', 'hidden');
 }
 
 /****************************************************************
@@ -2530,6 +2557,9 @@ function scatterPlot3d( parent ) {
 
     d3.select('#reset-button')
       .attr('onclick', 'resetView()');
+
+    d3.select('#tree-reset-button')
+	.attr('onclick', 'resetTree()');
 
     // Add play button for time points
     d3.select('#playpause')
