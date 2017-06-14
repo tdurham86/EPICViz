@@ -79,7 +79,8 @@ var axisKeys = ["x", "y", "z"];
 var load_idx = 0;
 
 // Scale for small multiples plots
-var small_multiples_scale = null;
+var small_multiples_x_scale = null;
+var small_multiples_y_scale = null;
 
 // Scale for PCA plot
 var pca_scale_x = null;
@@ -1216,41 +1217,46 @@ function initializeSmallMultiples() {
     var width = $('#small_multiples').width(),
     height = Math.floor($('#small_multiples').height()/3);
 
-    small_multiples_scale = d3.scale.linear()
-              .domain([-300, 300])
-              .range([0, width]);
-
+    small_multiples_x_scale = d3.scale.linear()
+        .domain([-300, 300])
+        .range([0, width]);
+    small_multiples_y_scale = d3.scale.linear()
+	.domain([-300, 300])
+	.range([0, height]);
  
     // Make the axes for the x-y chart
     var xyChart = d3.select('#small_multiples')
-    .append('svg:svg')
-      .attr("viewBox", "0 0 " + width + " " + height)
-      .attr("preserveAspectRatio", "xMidYMid")
-      .attr('class', 'small_multiples_chart')
-      .attr('id', 'xyChart')
-      .attr('onclick', 'setViewpoint("top_view")')
+	.append('svg:svg')
+	.attr('width', '100%')
+	.attr('height', '33%')
+//      .attr("viewBox", "0 0 " + width + " " + height)
+//      .attr("preserveAspectRatio", "xMidYMid")
+	.attr('class', 'small_multiples_chart')
+	.attr('id', 'xyChart')
+	.attr('onclick', 'setViewpoint("top_view")')
 
-    var main = xyChart.append('g')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('class', 'main')   
-
-    var g = main.append("svg:g")
+//    var main = xyChart.append('g')
+//	.attr('width', width)
+//	.attr('height', height)
+//	.attr('class', 'main')   
+    
+    var g = xyChart.append("svg:g")
         .attr('id', 'xy_data_points');
-
 
     // Make the axes for the x-z chart
     var xzChart = d3.select('#small_multiples')
-    .append('svg:svg')
-    .attr("viewBox", "0 0 " + width + " " + height)
-    .attr("preserveAspectRatio", "xMidYMid")
-    .attr('class', 'small_multiples_chart')
-    .attr('id', 'xzChart')
-    .attr('onclick', 'setViewpoint("side_view")')
+	.append('svg:svg')
+//    .attr("viewBox", "0 0 " + width + " " + height)
+    //    .attr("preserveAspectRatio", "xMidYMid")
+	.attr('width', '100%')
+	.attr('height', '33%')
+	.attr('class', 'small_multiples_chart')
+	.attr('id', 'xzChart')
+	.attr('onclick', 'setViewpoint("side_view")')
 
     var main = xzChart.append('g')
-        .attr('width', width)
-        .attr('height', height)
+//        .attr('width', width)
+//        .attr('height', height)
         .attr('class', 'main')   
 
     var g = main.append("svg:g")
@@ -1258,21 +1264,22 @@ function initializeSmallMultiples() {
 
     // Make the axes for the x-z chart
     var yzChart = d3.select('#small_multiples')
-    .append('svg:svg')
-    .attr("viewBox", "0 0 " + width + " " + height)
-    .attr("preserveAspectRatio", "xMidYMid")
-    .attr('class', 'small_multiples_chart')
-    .attr('id', 'yzChart')
-    .attr('onclick', 'setViewpoint("back_view")')
+	.append('svg:svg')
+	.attr('width', '100%')
+	.attr('height', '33%')
+//    .attr("viewBox", "0 0 " + width + " " + height)
+//    .attr("preserveAspectRatio", "xMidYMid")
+	.attr('class', 'small_multiples_chart')
+	.attr('id', 'yzChart')
+	.attr('onclick', 'setViewpoint("back_view")')
 
     var main = yzChart.append('g')
-        .attr('width', width)
-        .attr('height', height)
+//        .attr('width', width)
+//        .attr('height', height)
         .attr('class', 'main')   
 
     var g = main.append("svg:g")
         .attr('id', 'yz_data_points');
-
 }
 
 /**
@@ -1281,10 +1288,10 @@ function initializeSmallMultiples() {
 */
 function plotXYSmallMultiple(to_plot) { 
     to_plot.append("svg:circle")
-        .attr('class', 'small_multiples_datapoint')
+        .attr('class', 'small_multiples_datapoint_xy')
         .attr('id', function(d){return d.name})
-        .attr("cx", function (d) { return small_multiples_scale(d.x); } )
-        .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
+        .attr("cx", function (d) { return small_multiples_x_scale(d.x); } )
+        .attr("cy", function (d) { return small_multiples_y_scale(-d.y); } )
         .attr("r", function(d) {
             if(lineage[d.name].selected || !highlights){
                 return d.radius/15;
@@ -1302,10 +1309,10 @@ function plotXYSmallMultiple(to_plot) {
 */
 function plotXZSmallMultiple(to_plot) { 
     to_plot.append("svg:circle")
-        .attr('class', 'small_multiples_datapoint')
+        .attr('class', 'small_multiples_datapoint_xz')
         .attr('id', function(d){return d.name})
-        .attr("cx", function (d) { return small_multiples_scale(d.z); } )
-        .attr("cy", function (d) { return small_multiples_scale(d.x); } )
+        .attr("cx", function (d) { return small_multiples_x_scale(-d.z); } )
+        .attr("cy", function (d) { return small_multiples_y_scale(d.x); } )
         .attr("r", function(d) {
             if(lineage[d.name].selected || !highlights){
                 return d.radius/15;
@@ -1321,12 +1328,12 @@ function plotXZSmallMultiple(to_plot) {
 * Plots points on the YZ small multiple axis. initializeSmallMultiples must be called first.
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 */
-function plotYZSmallMultiple(to_plot) { 
+function plotYZSmallMultiple(to_plot){
     to_plot.append("svg:circle")
-        .attr('class', 'small_multiples_datapoint')
+        .attr('class', 'small_multiples_datapoint_yz')
         .attr('id', function(d){return d.name})
-        .attr("cx", function (d) { return small_multiples_scale(-d.z); } )
-        .attr("cy", function (d) { return small_multiples_scale(-d.y); } )
+        .attr("cx", function (d) { return small_multiples_x_scale(-d.z); } )
+        .attr("cy", function (d) { return small_multiples_y_scale(-d.y); } )
         .attr("r", function(d) {
             if(lineage[d.name].selected || !highlights){
                 return d.radius/15;
@@ -1342,33 +1349,40 @@ function plotYZSmallMultiple(to_plot) {
 * Initializes axes for PCA plot, appending to #pcaDiv div element.
 */
 function initializePCA() {
-    var width = $('#expressionPlotTabs').width(),
-        height = $('#expressionPlotTabs').height();
+    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+	width = $('#pcaDiv').width() - margin.left - margin.right,
+        height = $('#pcaDiv').height() - margin.top - margin.bottom;
 
     pca_scale_x = d3.scale.linear()
-              .domain([-30, 10])
-              .range([0, width]);
+        .domain([-30, 10])
+        .range([0, width]);
 
     pca_scale_y = d3.scale.linear()
-              .domain([-15, 15])
-              .range([0, height]);
+        .domain([-15, 15])
+        .range([0, height]);
 
     // Make the axes for the x-y chart
     var xyChart = d3.select('#pcaDiv')
-    .append('svg:svg')
-      .attr("viewBox", "0 0 " + width + " " + height)
-      .attr("preserveAspectRatio", "xMidYMid")
-      .attr('id', 'pcaChart')
+	.append('svg')
+//	.attr('width', '100%')
+//	.attr('height', '100%')
+	.attr('width', width + margin.left + margin.right)
+	.attr('height', height + margin.top + margin.bottom)
+//	.attr("viewBox", "0 0 " + width + " " + height)
+	.attr('id', 'pcaChart')
 
     var main = xyChart.append('g')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('class', 'main')   
+//	.attr('width', '100%')
+//	.attr('height', '100%')
+//	.attr('class', 'main');
+	.attr('id', 'pca_data_points')
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-    var g = main.append("svg:g")
+/*
+    var g = main.append("g")
         .attr('id', 'pca_data_points');
+*/
 }
-
 
 /**
 * Plots points on the PCA plot. intializePCA must be called first.
@@ -1376,7 +1390,7 @@ function initializePCA() {
 */
 function plotPCA(to_plot) { 
 
-    to_plot.append("svg:circle")
+    to_plot.append("circle")
         .attr('class', 'pca_datapoint')
         .attr('id', function(d){return d.name})
         .attr("cx", function (d) { return pca_scale_x(d.pc2); } )
@@ -1404,179 +1418,6 @@ function plotPCA(to_plot) {
     });
 }
 
-
-/**
-* Updates visible nodes on the lineage tree to show only specified cells by name.
-* @param {list} cellnames - list of cell names (strings) for cells to show in 
-*                           the lineage tree (all visible cells)
-* @param {list} new_data_names - list of names of cells that should be newly 
-*                                revealed on the lineage tree
-*/
-function plotLineageTree(cellnames, new_data_names){
-    var allnodes = d3.selectAll('.node');
-    allnodes.selectAll('.node-circle').attr('style', 'visibility:hidden;');
-    var visiblenodes = allnodes.filter(function(d){
-        if(d.name === 'E' || d.name === 'MS'){
-            if(cellnames.indexOf('.'+d.name+'.') > -1){
-                return this;
-            }else{
-                return null;
-            }
-        }else{
-            if(cellnames.indexOf(d.name) > -1){
-                return this;
-            }else{
-                return null;
-            }
-        }
-    });
-    visiblenodes.selectAll('.node-circle')
-        .attr('style', 'visibility:visible')
-        .attr('fill', function(d){return d.color;});
-
-    var newnodes = visiblenodes.filter(function(d){
-        if(new_data_names.indexOf(d.name) > -1){
-            return this;
-        }else{
-            return null;
-        }
-    });
-    var circ1 = newnodes.selectAll('circle') 
-        .attr('x', function(d){
-            return treeXScale(this.parentNode.__data__.parent.x);
-        })
-        .attr('cx', function(d){
-            return treeXScale(this.parentNode.__data__.parent.x);
-        })
-        .attr('y', function(d){
-            return this.parentNode.__data__.parent.y;
-        })
-        .attr('transform', function(d){ return 'translate('+0+','+this.parentNode.__data__.parent.y + ')';});
-    return newnodes;
-}
-
-/**
-* Plots the gene expression pattern for the cells passed in as datapoints. Each 
-* element of the timepoint_data gets bound to an svg element that becomes a 
-* column in the expression plot. The function then iterates over all of the 
-* .exprPlot_data_point svgs, gets the expressed gene coordinates from the 
-* corresponding data.expr property, and binds the expressed genes (actually 
-* indices into gene_names for the entries corresponding to the names of the 
-* expressed genes) to rect elements, sizing and coloring appropriately.
-* @param {csvdata element} timepoint_data - data for the current time point
-*/
-function plotGeneExpression(timepoint_data){
-    var changed = false;
-    var expr_points = d3.select('#exprPlot').selectAll('.exprPlot_data_point')
-    .data(timepoint_data, function (d){
-        return d.meta.name + '_expr';
-    });
-    var old_rows = expr_points.exit();
-    if(!old_rows.empty()){
-        changed = true;
-    }
-    old_rows.remove();
-    var new_rows = expr_points.enter().append('svg')
-        .attr('class', 'exprPlot_data_point')
-        .attr('id', function (d){
-            return d.meta.name + '_expr';
-        })
-        .attr('y', 0)
-        .attr('height', expr_gene_scale.rangeExtent()[1]);
-    if(!new_rows.empty()){
-        changed = true;
-    }
-    expr_points.each(function(d){
-        var expressed = d3.select(this).selectAll('.exprPlot_data_point_rect')
-            .data(d.expr, function(e){return e;});
-        expressed.exit().remove();
-        expressed.enter().append('rect')
-            .attr('class', function(e){return 'exprPlot_data_point_rect _' + e;})
-            .attr('id', function(e){return d.meta.name + '_' + gene_names[e];})
-            .attr('y', function(e){return expr_gene_scale(gene_names[e]);})
-            .attr('height', expr_gene_scale.rangeBand())
-            .attr('x', '0')
-            .attr('width', '100%')
-            .attr('fill', d.meta.color)
-            .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');");
-//            .attr('data-toggle', 'tooltip')
-//            .attr('title', function(d) {return '<b>Cell:</b> ' + this.id.split('_')[0] + '<br />' + '<b>Gene:</b> ' + this.id.split('_')[1] })
-//            .attr('data-trigger', 'hover')
-//            .attr('data-placement', 'bottom')
-//            .attr('data-html', 'true')
-//            .attr('container', 'body')
-//            .attr('data-container', 'body')
-        });
-    if(changed){
-        updateExprRowSize();
-    }
-
-        // Add the popover behavior for cells
-//    $(document).ready(function(){
-//        $('.exprPlot_data_point_rect').tooltip();   
-//    });
-}
-
-/**
-* Get all expression plot data points (columns representing cells in the 
-* current time point), and adjust their width so that all columns have the same
-* width.
-*/
-function updateExprRowSize(){
-    var tpcells = namemap[timepoint % namemap.length];
-    expr_cell_scale.domain(tpcells);
-    d3.selectAll('.exprPlot_data_point')
-        .attr('x', function(d){
-            return expr_cell_scale(d.meta.name);
-        })
-        .attr('width', expr_cell_scale.rangeBand());
-}
-
-/**
-* Get all rectangles representing expressed genes in the expression plot and 
-* set them to the color of the corresponding cell as defined in the cellmap 
-* data structure.
-*/
-function updateExprRectColors(){
-    d3.select('#exprPlot').selectAll('.exprPlot_data_point_rect')
-        .attr('fill', function(){
-            return this.parentNode.__data__.meta.color;
-            });
-}
-
-/* Initialize the gene expression plot by setting up the containing div and 
-* svg group elements, and initializing the range of the scales.
-*/
-var expr_gene_scale = d3.scale.ordinal(),
-expr_cell_scale = d3.scale.ordinal();
-function initializeGeneExpressionPlot(){
-    var width = $('#expressionPlotTabs').width(),
-        height = $('#expressionPlotTabs').height();
-    
-    expr_gene_scale.domain(gene_names);
-    expr_gene_scale.rangeBands([0, height]);
-    expr_cell_scale.rangeBands([0, width]);
-
-    var exprPlot = d3.select('#exprDiv')
-        .append('svg:svg')
-        .attr("viewBox", "0 0 " + width + " " + height)
-        .attr("preserveAspectRatio", "xMidYMid")
-        .attr('class', 'exprPlot')
-        .attr('id', 'exprPlot')
-        .append('rect')
-        .attr('x', '0')
-        .attr('y', '0')
-        .attr('width', '100%')
-        .attr('height', '100%')
-        .attr('fill', '#555555');
-
-    // Adds callback on click for tabbed interface
-    $('.nav-tabs a').on('click', function (e) {
-        e.preventDefault();
-        $(this).tab('show');
-    });
-}
-
 /**
 * Wrapper function that transitions all plots to a specified timepoint. Determines new data to plot and then passes along to individual plotting functions to update.
 * @param {integer} time_point - Index of the timepoint to transition to
@@ -1590,11 +1431,11 @@ function plotData( duration ){
     //Get all cell elements, and remove any that are no longer needed
     var datapoints = scene.selectAll(".datapoint").data(timepoint_data, function(d){return d.name})
     datapoints.exit().remove();
-    var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.name + '_xy';});
+    var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint_xy").data( timepoint_data, function(d){return d.name + '_xy';});
     small_multiples_datapoints_xy.exit().remove();
-    var small_multiples_datapoints_xz = d3.select('#xz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.name + '_xz';});
+    var small_multiples_datapoints_xz = d3.select('#xz_data_points').selectAll(".small_multiples_datapoint_xz").data( timepoint_data, function(d){return d.name + '_xz';});
     small_multiples_datapoints_xz.exit().remove();
-    var small_multiples_datapoints_yz = d3.select('#yz_data_points').selectAll(".small_multiples_datapoint").data( timepoint_data, function(d){return d.name + '_yz';});
+    var small_multiples_datapoints_yz = d3.select('#yz_data_points').selectAll(".small_multiples_datapoint_yz").data( timepoint_data, function(d){return d.name + '_yz';});
     small_multiples_datapoints_yz.exit().remove();
     var pca_datapoints = d3.select('#pca_data_points').selectAll(".pca_datapoint").data( timepoint_data, function(d){return d.name + '_xz';});
     pca_datapoints.exit().remove();
@@ -1619,16 +1460,16 @@ function plotData( duration ){
 
     // Transition small multiples points
     small_multiples_datapoints_xy.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return small_multiples_scale(row.x);})
-        .attr("cy", function(row) {return small_multiples_scale(-row.y);})
+        .attr("cx", function(row) {return small_multiples_x_scale(row.x);})
+        .attr("cy", function(row) {return small_multiples_y_scale(-row.y);})
 
     small_multiples_datapoints_xz.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return small_multiples_scale(row.z);})
-        .attr("cy", function(row) {return small_multiples_scale(row.x);})
+        .attr("cx", function(row) {return small_multiples_x_scale(-row.z);})
+        .attr("cy", function(row) {return small_multiples_y_scale(row.x);})
 
     small_multiples_datapoints_yz.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return small_multiples_scale(-row.z);})
-        .attr("cy", function(row) {return small_multiples_scale(-row.y);})
+        .attr("cx", function(row) {return small_multiples_x_scale(-row.z);})
+        .attr("cy", function(row) {return small_multiples_y_scale(-row.y);})
 
     // transition pca points
     pca_datapoints.transition().ease(ease).duration(duration)
@@ -1887,28 +1728,6 @@ function printGeneTable(){
     $('#gene_report').trigger("sorton", [sorting]);
 }
 
-/**
-* Read in the csv file at the URL specified in the url variable, parse the rows
-* using parseCSV, and then iterate over the parsed csvdata objects, storing all
-* meta attributes in the cellmap object to avoid storing duplicate metadata
-
-function loadTimePoints(file_idx){
-    var url = 'exprTable/ImageExpressionTable.lifespan.timesort.fixed.centered.binary.clustered.pca.expstr.' + file_idx + '.csv';
-    console.log(url);
-    d3.text(url, function(tpdata){
-        if(!tpdata){
-            ready = true;
-            d3.select('#timerange').attr('max', csvdata.length - 1);
-            //load cell type data
-            loadCellTypeMap();
-            return;
-        }
-        parseCSV(tpdata);
-        loadTimePoints(file_idx + 1);
-    });
-}
-*/
-
 /****************************************************************
 INITIALIZATION AND CALLBACKS FOR VISUALIZATION
 ****************************************************************/
@@ -1964,13 +1783,13 @@ function hideControls() {
         controls_hidden = true;
         $('#divControls').animate({left: "-415"}, 500, function() {});
         $('#hide-controls').attr('value', '▶')
-        $('#divPlot').animate({"margin-left": "0", width: "100%"}, 500, function() {});
+        $('#divPlot').animate({"margin-left": "0", width: "100%"}, 500, function() {resize();});
     } else {
         controls_hidden = false;
         $('#divControls').animate({left: "5"}, 500, function() {});
         $('#hide-controls').attr('value', '◀')
         var width = $('#divPlot').width()
-        $('#divPlot').animate({"margin-left": "415", width: width - 415}, 500, function() {});
+        $('#divPlot').animate({"margin-left": "415", width: width - 415}, 500, function() {resize()});
     }
 }
 
@@ -2041,165 +1860,72 @@ function scale_radius(circle, maxCircleRadius, minCircleRadius) {
     });
   }
 
-/**
-* Sets up the cell lineage tree and associated distortion slider. 
-* @param {TODO type} root - root node of the lineage tree to be plotted
-* @callback - called to set radius when distortion slider moves and on initial setup.
+d3.select(window).on('resize', resize);
+
+function resize(){
+    resizeSmallMultiples();
+    resizePCAPlot();
+    resizeLineageTree();
+}
+
+function resizeSmallMultiples(){
+    var width = $('#small_multiples').width(),
+    height = Math.floor($('#small_multiples').height()/3);
+
+    small_multiples_x_scale.range([0, width]);
+    small_multiples_y_scale.range([0, height]);
+
+    d3.selectAll('.small_multiples_datapoint_xy')
+        .attr("cx", function (d) { return small_multiples_x_scale(d.x); } )
+        .attr("cy", function (d) { return small_multiples_y_scale(-d.y); } )
+
+    d3.selectAll('.small_multiples_datapoint_xz')
+        .attr("cx", function (d) { return small_multiples_x_scale(-d.z); } )
+        .attr("cy", function (d) { return small_multiples_y_scale(d.x); } )
+
+    d3.selectAll('.small_multiples_datapoint_yz')
+        .attr("cx", function (d) { return small_multiples_x_scale(-d.z); } )
+        .attr("cy", function (d) { return small_multiples_y_scale(-d.y); } )
+}
+
+function resizePCAPlot(){
+    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+	width = $('#pcaDiv').width() - margin.left - margin.right,
+        height = $('#pcaDiv').height() - margin.top - margin.bottom;
+
+    pca_scale_x.range([0, width]);
+    pca_scale_y.range([0, height]);
+
+    //set dimensions of the PCA SVG
+    d3.select('#pcaChart')
+	.attr('width', width + margin.left + margin.right)
+	.attr('height', height + margin.top + margin.bottom);
+    
+    d3.selectAll('.pca_datapoint')
+        .attr("cx", function (d) { return pca_scale_x(d.pc2); } )
+        .attr("cy", function (d) { return pca_scale_y(d.pc3); } );
+}
+
+function resizeLineageTree(){
+    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+	width = $('#lineage_tree').width() - margin.left - margin.right,
+	height = $('#lineage_tree').height() - margin.top - margin.bottom;
+
+    newtree_x_scale.range([0, width]);
+    newtree_y_scale.range([0, height]);
+
+/*Need these to stay the same because the paths we already
+drew need to stay so we don't have to re-render the entire 
+tree on each resize event.
+    newtree_x_scale_orig.range([0, width]);
+    newtree_y_scale_orig.range([0, height]);
 */
-function initializeLineageTree(root) {
-
-  var margin = {top: 10, right: 10, bottom: 10, left: 10},
-  height = 700 - margin.top - margin.bottom;
-
-  var tree_div = d3.select(".lineage_tree")
-
-  /****************************************************************
-  Set up distortion scale and associate slider
-  ****************************************************************/
-  var xScale = d3.fisheye.scale(d3.scale.linear)
-    .domain([0, 340])
-    .range([0, width])
-    .distortion(45)
-    .power(1)
-    .focus(0)
-  treeXScale = xScale;
-
-  var distortion_slider = tree_div
-    .append('input')
-      .attr('type', 'range')
-      .attr('id', 'distortion_slider')
-      .attr('defaultValue', 0)
-      .attr('min', 0)
-      .attr('max', width)
-      .attr('step', 1)
-      .attr('value', 0)
-
-  distortion_slider.on("input", function() {
-    setting = this.value
-    xScale.focus(setting);
-    node.call(position_node);
-    link.call(position_links);
-    text.call(position_text);
-    node.call(scale_radius, 8, 2.5);
-    var selectednodes = d3.selectAll('.node-select')
-        .call(position_node)
-        .call(scale_radius, 6, 0.5);
-  });
-
-  /****************************************************************
-  Initial sizing of the lineage tree
-  ****************************************************************/
-  // Set up the SVG element
-  var svg = tree_div
-    .append("svg")
-      .attr("viewBox", "0 0 " + width + " " + height)
-      .attr("preserveAspectRatio", "xMidYMid")
-      .append("g")
-
-  // Add callback to maintain aspect ratio on window resize
-  var aspect = width / height,
-    chart = $("lineage_tree").select('svg');
-
-  $(window).on("resize", function() {
-      var targetWidth = chart.parent().width();
-      chart.attr("width", targetWidth);
-      chart.attr("height", targetWidth / aspect);
-  });
-
-  /****************************************************************
-  Generate Tree Layout
-  ****************************************************************/   
-  var tree = d3.layout.tree()
-      .size([height/2, width])
-      .sort(function(a, b) { return lineageComparator(a.name, b.name); });
-
-  var diagonal = d3.svg.diagonal()
-      .projection(function(d) { return [xScale(d.x), d.y]; });
-
-  // Compute the tree layout.
-  var nodes = tree.nodes(root),
-      links = tree.links(nodes);
-
-  // Normalize for fixed-depth.
-  nodes.forEach(function(d) { d.y = d.depth * 50 + 10;});
-
-  /****************************************************************
-  Add graphics to nodes and links in tree layout
-  ****************************************************************/
-  // Enter the nodes.
-  var i = 0;
-  var node = svg.append("g")
-    .attr("class", "nodes")
-    .selectAll(".node")
-      .data(nodes, function(d) { return d.id || (d.id = ++i); })
-        .enter().append("g")
-        .attr("class", "node")
-//        .attr('onclick', 'clickSelect(this.__data__.name); updatePlot();')
-        .attr('onclick', '(function(e, obj) {clickSelect(obj.__data__.name);})(event, this)')
-        .append('circle')
-          .attr('class', 'node-circle')
-          .attr("r", 10)
-          .attr("fill", "steelblue")
-          .attr("transform", function(d) { 
-            return "translate(" + 0 + "," + d.y + ")"; }) // 0 is required for x to make edges match up with nodes
-          .call(position_node)
-          .call(scale_radius, 8, 2.5)
-
-  // Add text labels to each node
-  var text = svg.selectAll(".node").append('text')
-    .attr('class', 'text')
-    .text(function(d) {return d.name})
-    .call(position_text)
-
-  // Add links between node
-  var link = svg.selectAll("path.link")
-    .data(links)
-    .enter().insert("path", "g")
-      .attr("class", "link")
-      .attr("d", diagonal)
-      .call(position_links)
-
-  /****************************************************************
-  Functions for positioning and scaling elements accounting for distortion and position within window
-  ****************************************************************/
-
-  /**
-  * Sets the position of text within the distorted lineage tree view.
-  * @callback - called to set text position when distortion slider moves and on initial setup.
-  */
-  function position_text(text) {
-    text 
-      .attr("cx", function(d) {return xScale(d.x);})
-      .attr("x", function(d) {return xScale(d.x);})
-      .attr("y", function(d) {return d.y;})
-
-      // Scale opacity with position
-      .style("opacity", function(d) {
-        var currentPosition = xScale(d.x)
-
-        minOpacity = 0
-        maxOpacity = 1
-
-        if (d.depth <= 2) { 
-          return maxOpacity
-        } else {
-          return Math.max(-4.5/Math.pow(width, 2) * Math.pow(currentPosition, 2) + 4.5/ width * currentPosition - 0.05, minOpacity)
-        } 
-      })
-
-      .attr("transform", function(d) {return "translate(-5, 15)rotate(90" + "," + xScale(d.x) + "," + d.y + ")"})
-  }
-
-  /**
-  * Sets the position of links (edges) within the distorted lineage tree view.
-  * @callback - called to set link positions when distortion slider moves and on initial setup.
-  */
-  function position_links(link) {
-    diagonal.projection(function(d) {return [xScale(d.x), d.y]; }) 
-    link.attr("d", diagonal);
-  }
-
-  return;
+    d3.select('#tree_svg')
+	.attr('width', width + margin.left + margin.right)
+	.attr('height', height + margin.top + margin.bottom);
+    d3.select('#tree_rect')
+	.attr('width', width)
+	.attr('height', height);
 }
 
 /****************************************************************
@@ -2230,28 +1956,31 @@ function initializeLineageTree2(){
     zoom = d3.behavior.zoom()
         .x(newtree_x_scale)
         .y(newtree_y_scale)
-        .scaleExtent([1, 15])
+        .scaleExtent([0.5, 15])
         .center([width / 2, height / 2])
         .size([width, height])
         .on("zoom", zoomed);
 
     // Set up the SVG element
     var svg = tree_div
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
+	.append("svg")
+	.attr('id', 'tree_svg')
+//	.attr('width', '100%')
+//	.attr('height', '100%');
+	.attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
 
     var svgg = svg
-    .append("g")
-    .attr('id', 'lineagetree2')
+	.append("g")
+	.attr('id', 'lineagetree2')
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-    .style('overflow', 'hidden')
+	.style('overflow', 'hidden')
         .call(zoom);
 
     svgg.append("rect")
+	.attr('id', 'tree_rect')
         .attr("width", width)
         .attr("height", height)
-
 	.style('fill', 'none')
 	.style("pointer-events", "all");
 
@@ -2294,8 +2023,12 @@ function zoomed() {
 
 function resetTree(){
     d3.transition().duration(750).tween("zoom", function() {
-	var ix = d3.interpolate(newtree_x_scale.domain(), [0, lineage['P0'].rgt]),
-	    iy = d3.interpolate(newtree_y_scale.domain(), [0, 550]);
+	var c_x_ax = $('.lineage_tree').width()/2,
+	    c_y_ax = $('.lineage_tree').height()/2,
+	    c_x_tr = lineage['P0'].rgt/2,
+	    c_y_tr = 550/2;
+	var ix = d3.interpolate(newtree_x_scale.domain(), [c_x_ax - c_x_tr, c_x_ax + c_x_tr]),
+	    iy = d3.interpolate(newtree_y_scale.domain(), [c_y_ax - c_y_tr, c_y_ax + c_y_tr]);
 	return function(t) {
 	    zoom.x(newtree_x_scale.domain(ix(t))).y(newtree_y_scale.domain(iy(t)));
 	    zoom.event(tree_container);
@@ -2449,15 +2182,15 @@ function loadTimePoint(timepoint_idx, plot){
 
 function loadTimePointPromise(start_tp, loadnum){
     return new Promise(function(resolve, reject) {
-    var query = cgi_url.format(start_tp, start_tp + loadnum)
-    $.getJSON(query, function(result){
-        for (var i=0; i < result.length; i++){
-        tpdata.push(result[i]);
-        }
-//      drawLineageTree2();
-        ready=true;
-        resolve('Loaded!');
-    });
+	var query = cgi_url.format(start_tp, start_tp + loadnum)
+	$.getJSON(query, function(result){
+            for (var i=0; i < result.length; i++){
+		tpdata.push(result[i]);
+            }
+            d3.select('#timerange').attr('max', tpdata.length - 1);
+            ready=true;
+            resolve('Loaded!');
+	});
     });
 }
 
@@ -2488,6 +2221,28 @@ function loadTimePoints(){
 /****************************************************************
 Main Thread of execution
 ****************************************************************/
+/* NOTE: This function was an experiment to try to understand
+x3dom viewpoint orientation. Will be deleted.
+// viewpoint changed
+function viewFunc(evt)
+{
+    // show viewpoint values
+    if (evt)
+    {
+	var pos = evt.position;
+	var rot = evt.orientation;
+	var mat = evt.matrix;
+
+	var camPos = pos.x.toFixed(4)+' '+pos.y.toFixed(4)+' '+pos.z.toFixed(4);
+	var camRot = rot[0].x.toFixed(4)+' '+rot[0].y.toFixed(4)+' '+rot[0].z.toFixed(4)+' '+rot[1].toFixed(4);
+
+	console.log('position=' + camPos);
+	console.log('orientation=' + camRot);
+//	document.getElementById("viewMat").innerHTML = "&ltViewpoint position='" +
+//	    camPos + "' orientation='" + camRot + "'&gt";
+    }
+}
+*/
 function scatterPlot3d( parent ) {
     x3d = d3.select('x3d')
     scene = x3d.append("scene")
@@ -2520,7 +2275,46 @@ function scatterPlot3d( parent ) {
         .attr( "orientation", [0, 1.5, 0, 3.14/2])
         .attr( "position", [600, -200, 250])
         .attr('id', 'back_view')
+/*
+    scene.append("orthoviewpoint")
+        .attr( "centerOfRotation", [0, 0, 0])
+        .attr( "fieldOfView", [-500, -500, 500, 500])
+        .attr( "orientation", [-0.5, 1, 0.2, 1.12*Math.PI/4])
+        .attr( "position", [600, 300, 600])
+        .attr('id', 'isometric_view');
 
+    scene.append("orthoviewpoint")
+        .attr( "centerOfRotation", [0, 0, 0])
+        .attr( "fieldOfView", [-500, -500, 500, 500])
+        .attr( "orientation", [0, 0, 0, 0])
+        .attr( "position", [0, 0, 800])
+        .attr('id', 'side_view');
+
+    scene.append("orthoviewpoint")
+        .attr( "centerOfRotation", [0, 0, 0])
+        .attr( "fieldOfView", [-500, -500, 500, 500])
+        .attr( "orientation", [0, -1.5, 0, 3.14/2])
+        .attr( "position", [0, 800, 0])
+        .attr('id', 'top_view');
+
+    scene.append("orthoviewpoint")
+        .attr( "centerOfRotation", [0, 0, 0])
+        .attr( "fieldOfView", [-500, -500, 500, 500])
+        .attr( "orientation", [0, 1.5, 0, 3.14/2])
+        .attr( "position", [800, 0, 0])
+        .attr('id', 'back_view');
+*/
+/* THIS IS CODE I WAS EXPERIMENTING WITH FOR 
+FIGURING OUT VIEWPOINT ORIENTATION. WILL DELETE LATER.
+    scene.append('viewpoint')
+	.attr('position', [600, 300, 600])
+	.attr('orientation', [-0.5, 1, 0.2, 1.12*Math.PI/4])
+	.attr('zNear', 0.01)
+	.attr('zFar', 10000)
+	.attr('id', 'aView');
+    
+    document.getElementById('aView').addEventListener('viewpointChanged', viewFunc, false);
+*/
     //make sure that the selection form submit button works
     $('#selectForm').on("submit",  function (event) {
     event.preventDefault();
@@ -2548,7 +2342,7 @@ function scatterPlot3d( parent ) {
     });
 
     d3.select('#hide-controls')
-      .attr('onclick', 'hideControls()');
+      .attr('onclick', 'hideControls();');
 
     d3.select('#reset-button')
       .attr('onclick', 'resetView()');
