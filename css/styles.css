@@ -17,8 +17,8 @@ body > .container-fluid {
 }
 
 .navbar {
-    background: #fff;
-    color: #777;
+    background: #153057;
+    color: #FFF;
     box-shadow: 0 1px 2px 1px rgba(179, 179, 179, 0.6);
     width: 100%;
 }
@@ -29,7 +29,7 @@ body > .container-fluid {
 }
 
 .navbar-inverse .navbar-nav>li>a {
-  color: #777;
+  color: #FFF;
 }
 
 .navbar-fixed-top {
@@ -140,9 +140,7 @@ x3d {
 
 }
 
-.control-section {
-  background: #FFF;
-}
+
 
 .control-section h1, h2, h3, h4, h5 {
   margin-right: 10px;
@@ -173,8 +171,7 @@ h1, h2, h3{
 }
 
 #divSelectForm, #selectForm {
-  background: #FFF;
-  color: #CCCCCC;
+  color: #555;
 }
 
 #divControls {
@@ -182,7 +179,7 @@ h1, h2, h3{
   top: 60px ;
   left: 5px;
   width:415px;
-  background: #FFF;
+  background-color: #FAFAFA;
   color: #CCCCCC;
   display: inline-block;
   float: left;
@@ -321,7 +318,8 @@ input[type=range]::-moz-range-thumb {
 
 #tree-reset-button {
   position: relative;
-  left: 10px;
+  left: 20px;
+  top: 10px;
   width: 75px;
 }
 
@@ -395,6 +393,7 @@ input[type="text"] {
   border-radius: 6px;
   border: 2px solid white;
   margin-right: 10px;
+  color: #555;
 }
 
 input[type="text"]:focus,
@@ -430,9 +429,8 @@ input[type="color"]:focus {
   border-bottom: 2px solid #153057;
 }
 
-.picker-controls {
-  margin-top: 20px;
-  padding: 10px;
+.select-form {
+  background-color: #FAFAFA;
 }
 
 /* Styling for playback speed buttons */
