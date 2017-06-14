@@ -435,9 +435,12 @@ input[type="color"]:focus {
 }
 
 .picker-controls {
-  background-color: #FAFAFA;
   padding: 10px;
   margin-top: 20px;
+}
+
+.select-form {
+  background-color: #FAFAFA;
 }
 
 /* Styling for playback speed buttons */
