@@ -5,6 +5,9 @@ html, body, form {
     outline: none;
     color: #777;
     height: 100%;
+}
+
+html, body {
     overflow: hidden;
 }
 

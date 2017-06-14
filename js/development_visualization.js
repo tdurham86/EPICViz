@@ -129,6 +129,7 @@ function makeLPDivTemplate(){
         .attr('id', id)
         .attr('data-placeholder', 'Cell lineage/type...')
         .attr('multiple','multiple')
+    	.style('overflow', 'scroll');
 
     select.append('option').attr('value', '');
 
@@ -188,7 +189,8 @@ function makeLPDivTemplate(){
         .attr('class', 'exphi')
         .attr('id', id)
         .attr('data-placeholder', 'Gene Name/ID...')
-        .attr('multiple','multiple');
+        .attr('multiple','multiple')
+    	.style('overflow', 'scroll');
 
     lpsubdiv.append('input')
         .attr('type', 'button')
@@ -210,11 +212,12 @@ function makeLPDivTemplate(){
         .attr('class', 'loghi')
         .attr('id', id)
         .attr('data-placeholder', 'Set Logic')
-    
+	.style('overflow', 'visible');
+
     select.append('option').attr('value', '');
     outgroup = d3.select('#'+id).append('optgroup')
-    outgroup.append('option').attr('value','union').attr('selected', 'selected').html('AND');
-    outgroup.append('option').attr('value','intersect').html('OR');
+    outgroup.append('option').attr('value','union').attr('selected', 'selected').html('OR');
+    outgroup.append('option').attr('value','intersect').html('AND');
     outgroup.append('option').attr('value', 'not').html('NOT');
 
     var id = 'hicolor'+lpidx;
@@ -229,7 +232,6 @@ function makeLPDivTemplate(){
         .attr('type', 'color')
         .attr('class', 'hicolor')
         .attr('id', id);
-
 
     lpidx++;
 }
@@ -908,7 +910,7 @@ function loadCellTypeMap(){
         initializePlot();
         initializePCA();
         initializeSmallMultiples();
-    initializeLineageTree2();
+	initializeLineageTree2();
 //        initializeGeneExpressionPlot();
 //        initializeLineageTree(cellmap.P0);
 //        plotData(0, 5);
@@ -1835,6 +1837,27 @@ function calcGeneEnrichment(selcolor){
         wormbase_map[gene_name].pval = pval;
     }
     printGeneTable();
+}
+
+function calcGeneEnrichment(selcolor){
+    var cur_tp = tpdata[cur_tpdata_idx]
+    var query = 'http://localhost:8080/cgi-bin/get_genes.py?timepoint=' + cur_tp[0].tp;
+    cur_tp.forEach(function(item, index){
+	if(lineage[item.name].selected == true && lineage[item.name].color == selcolor){
+	    query += '&selected_cells='+item.name;
+	}
+    });
+    console.log(query);
+
+    $.getJSON(query, function(result){
+	result.forEach(function(item, idx){
+            var gene_name = !(item[0] in wormbase_map) ? item[0].replace('.', '-') : item[0];
+	    wormbase_map[gene_name].frac_exp = item[1];
+	    wormbase_map[gene_name].frac_exp_sel = item[2];
+	    wormbase_map[gene_name].pval = item[3];
+        });
+	printGeneTable();
+    });
 }
 
 /**
