@@ -307,43 +307,45 @@ function cloneLPDiv(){
     $('#exphi'+lpidx+'_chosen').find('input[type=text]:first').autocomplete({
         minLength: 2,
         source: function( request, response ) {
-        console.log($(this));
-        console.log($($(this)[0].element[0]).parents('.chosen-container:first').attr('id'));
-        var sel_id = $($(this)[0].element[0]).parents('.chosen-container:first').attr('id');
-        var sel_obj = $('#'+sel_id.split('_'));
-        var to_keep = $('#'+sel_id).find('li.search-choice');
-        var to_keep_genes = [];
-//      var to_rm = $('option.expropt');
-        var to_rm = sel_obj.find('option.expropt');
-        console.log(to_rm);
-        $.ajax({
-            url: "http://localhost:8080/cgi-bin/get_genes.py?term="+encodeURIComponent(request.term),
-            dataType: "json",
-            beforeSend: function(){
-            console.log(to_rm.length);
-            to_rm.remove();
-            to_keep.each(function(idx){
-                var gene_id = $(this).text();
-                to_keep_genes.push(gene_id);
+	    $('ul.chosen-results').append('<li class="active-result text-center" id="autocomp_spinner"><img src=img/ajax-loader.gif></li>');
+            console.log($(this));
+            console.log($($(this)[0].element[0]).parents('.chosen-container:first').attr('id'));
+            var sel_id = $($(this)[0].element[0]).parents('.chosen-container:first').attr('id');
+            var sel_obj = $('#'+sel_id.split('_'));
+            var to_keep = $('#'+sel_id).find('li.search-choice');
+            var to_keep_genes = [];
+	    //      var to_rm = $('option.expropt');
+            var to_rm = sel_obj.find('option.expropt');
+            console.log(to_rm);
+            $.ajax({
+		url: url_base + "/cgi-bin/get_genes.py?term="+encodeURIComponent(request.term),
+		dataType: "json",
+		beforeSend: function(){
+		    console.log(to_rm.length);
+		    to_rm.remove();
+		    to_keep.each(function(idx){
+			var gene_id = $(this).text();
+			to_keep_genes.push(gene_id);
+		    });
+		}
+            }).done(function( data ) {
+		$('#autocomp_spinner').remove();
+		to_keep_genes.forEach(function(gene_id){
+		    console.log('KEEP: '+gene_id);
+		    var toadd = '<option class="expropt" id="' + gene_id + '" value="' + gene_id + '" selected>' + gene_id + '</option>';
+		    sel_obj.append(toadd);
+		});
+		$.map( data, function( item ) {
+		    if(!to_keep_genes.includes(item)){
+			console.log('autocomplete match: '+item);
+			var toadd = '<option class="expropt" id="' + item + '" value="' + item + '">' + item + '</option>';
+			console.log('NEW: '+toadd);
+			sel_obj.append(toadd);
+		    }
+		});
+		response();
+		sel_obj.trigger("chosen:updated");
             });
-            }
-        }).done(function( data ) {
-            to_keep_genes.forEach(function(gene_id){
-            console.log('KEEP: '+gene_id);
-            var toadd = '<option class="expropt" id="' + gene_id + '" value="' + gene_id + '" selected>' + gene_id + '</option>';
-            sel_obj.append(toadd);
-            });
-            $.map( data, function( item ) {
-            if(!to_keep_genes.includes(item)){
-                console.log('autocomplete match: '+item);
-                var toadd = '<option class="expropt" id="' + item + '" value="' + item + '">' + item + '</option>';
-                console.log('NEW: '+toadd);
-                sel_obj.append(toadd);
-            }
-            });
-            response();
-            sel_obj.trigger("chosen:updated");
-        });
         }
     });
 
@@ -558,7 +560,11 @@ function pickColor_and_setSelected(){
 function updateCellColors(){
     d3.selectAll('.dp_sphere appearance material')
         .attr('diffuseColor', function(d){return lineage[d.name].color;});
-    d3.selectAll('.small_multiples_datapoint')
+    d3.selectAll('.small_multiples_datapoint_xy')
+        .attr('fill', function(d){return lineage[d.name].color;});
+    d3.selectAll('.small_multiples_datapoint_yz')
+        .attr('fill', function(d){return lineage[d.name].color;});
+    d3.selectAll('.small_multiples_datapoint_xz')
         .attr('fill', function(d){return lineage[d.name].color;});
     d3.selectAll('.pca_datapoint')
         .attr('fill', function(d){return lineage[d.name].color;});
@@ -570,14 +576,18 @@ function updateCellColors(){
 * replace the setCellColors() function.
 */
 function setSelection(){
+    //disable the submit button
+    $('#submitSelection').prop('disabled', true)
+	.css('background-color', '#D3D3D3')
+	.css('border-color', '#D3D3D3');
+    //use jQuery BlockUI Plugin to put loading spinner over plots
+    $('#divPlot').block({message: '<div id="loading_spinner"></div>'});
     //bind info from selection form to FormData object
-//    var form = $('#selectForm');
     var form = document.querySelector("form");
     var fd = new FormData(form);
     //make XMLHTTPRequest to get selection info for each cell
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
-
 	if (this.readyState == 4 && this.status == 200) {
 	    var selected = JSON.parse(xhr.responseText);
 	    //Deselect all cells
@@ -648,11 +658,14 @@ function setSelection(){
 	    updateCellColors();
 	    updateCellSize();
 	    updatePlot();
+	    //unblock the plots
+	    $('#divPlot').unblock();
+	    //re-enable the submit button
+	    $('#submitSelection').prop('disabled', false).removeAttr('style');
 	}
-
     };
     // Set up our request
-    xhr.open("POST", "http://localhost:8080/cgi-bin/get_lineage.py", true);
+    xhr.open("POST", url_base+"/cgi-bin/get_lineage.py", true);
     // The data sent is what the user provided in the form
     xhr.send(fd);
 };
@@ -1229,16 +1242,12 @@ function initializeSmallMultiples() {
 	.append('svg:svg')
 	.attr('width', '100%')
 	.attr('height', '33%')
-//      .attr("viewBox", "0 0 " + width + " " + height)
-//      .attr("preserveAspectRatio", "xMidYMid")
 	.attr('class', 'small_multiples_chart')
 	.attr('id', 'xyChart')
-	.attr('onclick', 'setViewpoint("top_view")')
+	.attr('onclick', 'setViewpoint("side_view")')
 
-//    var main = xyChart.append('g')
-//	.attr('width', width)
-//	.attr('height', height)
-//	.attr('class', 'main')   
+    var main = xyChart.append('g')
+	.attr('class', 'main')   
     
     var g = xyChart.append("svg:g")
         .attr('id', 'xy_data_points');
@@ -1246,17 +1255,13 @@ function initializeSmallMultiples() {
     // Make the axes for the x-z chart
     var xzChart = d3.select('#small_multiples')
 	.append('svg:svg')
-//    .attr("viewBox", "0 0 " + width + " " + height)
-    //    .attr("preserveAspectRatio", "xMidYMid")
 	.attr('width', '100%')
 	.attr('height', '33%')
 	.attr('class', 'small_multiples_chart')
 	.attr('id', 'xzChart')
-	.attr('onclick', 'setViewpoint("side_view")')
+	.attr('onclick', 'setViewpoint("top_view")')
 
     var main = xzChart.append('g')
-//        .attr('width', width)
-//        .attr('height', height)
         .attr('class', 'main')   
 
     var g = main.append("svg:g")
@@ -1267,15 +1272,11 @@ function initializeSmallMultiples() {
 	.append('svg:svg')
 	.attr('width', '100%')
 	.attr('height', '33%')
-//    .attr("viewBox", "0 0 " + width + " " + height)
-//    .attr("preserveAspectRatio", "xMidYMid")
 	.attr('class', 'small_multiples_chart')
 	.attr('id', 'yzChart')
 	.attr('onclick', 'setViewpoint("back_view")')
 
     var main = yzChart.append('g')
-//        .attr('width', width)
-//        .attr('height', height)
         .attr('class', 'main')   
 
     var g = main.append("svg:g")
@@ -1364,17 +1365,11 @@ function initializePCA() {
     // Make the axes for the x-y chart
     var xyChart = d3.select('#pcaDiv')
 	.append('svg')
-//	.attr('width', '100%')
-//	.attr('height', '100%')
 	.attr('width', width + margin.left + margin.right)
 	.attr('height', height + margin.top + margin.bottom)
-//	.attr("viewBox", "0 0 " + width + " " + height)
 	.attr('id', 'pcaChart')
 
     var main = xyChart.append('g')
-//	.attr('width', '100%')
-//	.attr('height', '100%')
-//	.attr('class', 'main');
 	.attr('id', 'pca_data_points')
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
@@ -1682,7 +1677,7 @@ function calcGeneEnrichment(selcolor){
 
 function calcGeneEnrichment(selcolor){
     var cur_tp = tpdata[cur_tpdata_idx]
-    var query = 'http://localhost:8080/cgi-bin/get_genes.py?timepoint=' + cur_tp[0].tp;
+    var query = url_base+'/cgi-bin/get_genes.py?timepoint=' + cur_tp[0].tp;
     cur_tp.forEach(function(item, index){
 	if(lineage[item.name].selected == true && lineage[item.name].color == selcolor){
 	    query += '&selected_cells='+item.name;
@@ -1965,8 +1960,6 @@ function initializeLineageTree2(){
     var svg = tree_div
 	.append("svg")
 	.attr('id', 'tree_svg')
-//	.attr('width', '100%')
-//	.attr('height', '100%');
 	.attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
 
@@ -2162,7 +2155,9 @@ function loadTimePoints(file_idx){
 var cur_tpdata_idx = 0
 var num_tps = 10
 var total_tps = 548
-var cgi_url='http://localhost:8080/cgi-bin/get_tp.py?rangelow={0}&rangehigh={1}';
+var url_base = '{0}//{1}'.format(window.location.protocol, window.location.hostname);
+console.log('url_base: '+url_base);
+var cgi_url = url_base + '/cgi-bin/get_tp.py?rangelow={0}&rangehigh={1}';
 function loadTimePoint(timepoint_idx, plot){
     var query = cgi_url.format(timepoint_idx, timepoint_idx + num_tps)
     console.log(query);
@@ -2203,8 +2198,11 @@ function loadTimePoints(){
     //initialize promise sequence for loading time point location data
     //and plot the initial data
     var tpPromise = loadTimePointPromise(1, loadnum).then(function(){
-    plotData(500);
-    return Promise.resolve();
+	plotData(500);
+	//take away the spinner now that everything is initialized and
+	//there is some data to look at
+	$('body').unblock();
+	return Promise.resolve();
     });
     //finish compiling the sequence of time point promises
     loadlist.forEach(function(next_tp){
@@ -2221,61 +2219,23 @@ function loadTimePoints(){
 /****************************************************************
 Main Thread of execution
 ****************************************************************/
-/* NOTE: This function was an experiment to try to understand
-x3dom viewpoint orientation. Will be deleted.
-// viewpoint changed
-function viewFunc(evt)
-{
-    // show viewpoint values
-    if (evt)
-    {
-	var pos = evt.position;
-	var rot = evt.orientation;
-	var mat = evt.matrix;
-
-	var camPos = pos.x.toFixed(4)+' '+pos.y.toFixed(4)+' '+pos.z.toFixed(4);
-	var camRot = rot[0].x.toFixed(4)+' '+rot[0].y.toFixed(4)+' '+rot[0].z.toFixed(4)+' '+rot[1].toFixed(4);
-
-	console.log('position=' + camPos);
-	console.log('orientation=' + camRot);
-//	document.getElementById("viewMat").innerHTML = "&ltViewpoint position='" +
-//	    camPos + "' orientation='" + camRot + "'&gt";
-    }
-}
-*/
 function scatterPlot3d( parent ) {
+    //make loading spinner on whole page
+    $.blockUI.defaults.css = {};
+    $('body').block({message: '<div id="loading_spinner"></div>'});
     x3d = d3.select('x3d')
     scene = x3d.append("scene")
 
-    // Define the four different viewpoints (ISO and each of the small multiples)
-    scene.append("orthoviewpoint")
-        .attr( "centerOfRotation", [0, 0, 0])
-        .attr( "fieldOfView", [-300, -300, 800, 800])
-        .attr( "orientation", [-0.5, 1, 0.2, 1.12*Math.PI/4])
-        .attr( "position", [600, 150, 800])
-        .attr('id', 'isometric_view')
-
-    scene.append("orthoviewpoint")
-        .attr( "centerOfRotation", [0, 0, 0])
-        .attr( "fieldOfView", [-300, -300, 800, 800])
-        .attr( "orientation", [0, 0, 0, 0])
-        .attr( "position", [-100, -200, 800])
-        .attr('id', 'side_view')
-
-    scene.append("orthoviewpoint")
-        .attr( "centerOfRotation", [0, 0, 0])
-        .attr( "fieldOfView", [-300, -300, 800, 800])
-        .attr( "orientation", [0, 0, 0, 0])
-        .attr( "position", [-100, -200, 800])
-        .attr('id', 'top_view')
-
-    scene.append("orthoviewpoint")
-        .attr( "centerOfRotation", [0, 0, 0])
-        .attr( "fieldOfView", [-300, -300, 800, 800])
-        .attr( "orientation", [0, 1.5, 0, 3.14/2])
-        .attr( "position", [600, -200, 250])
-        .attr('id', 'back_view')
-/*
+    /* Define the four different viewpoints (ISO and each of the small multiples)
+       Note: to set a new viewpoint, the best way to get the coordinates is to
+       load the visualization, click on the 3D plot to put the mouse focus there,
+       and then press the d key to bring up the X3DOM debugger. Then, you can 
+       rotate the view to your desired viewpoint and press the v key to print
+       the parameters of the current viewpoint to the X3DOM debugger console.
+       Also note that the debugger console appears below the scene, so to see it
+       I had to go into the Chrome dev tools and change the height of the top_panel
+       div to 100% instead of 50%.
+    */
     scene.append("orthoviewpoint")
         .attr( "centerOfRotation", [0, 0, 0])
         .attr( "fieldOfView", [-500, -500, 500, 500])
@@ -2293,7 +2253,7 @@ function scatterPlot3d( parent ) {
     scene.append("orthoviewpoint")
         .attr( "centerOfRotation", [0, 0, 0])
         .attr( "fieldOfView", [-500, -500, 500, 500])
-        .attr( "orientation", [0, -1.5, 0, 3.14/2])
+        .attr( "orientation", [-0.58094, 0.57446, 0.57663, 2.09156])
         .attr( "position", [0, 800, 0])
         .attr('id', 'top_view');
 
@@ -2303,42 +2263,31 @@ function scatterPlot3d( parent ) {
         .attr( "orientation", [0, 1.5, 0, 3.14/2])
         .attr( "position", [800, 0, 0])
         .attr('id', 'back_view');
-*/
-/* THIS IS CODE I WAS EXPERIMENTING WITH FOR 
-FIGURING OUT VIEWPOINT ORIENTATION. WILL DELETE LATER.
-    scene.append('viewpoint')
-	.attr('position', [600, 300, 600])
-	.attr('orientation', [-0.5, 1, 0.2, 1.12*Math.PI/4])
-	.attr('zNear', 0.01)
-	.attr('zFar', 10000)
-	.attr('id', 'aView');
-    
-    document.getElementById('aView').addEventListener('viewpointChanged', viewFunc, false);
-*/
+
     //make sure that the selection form submit button works
     $('#selectForm').on("submit",  function (event) {
-    event.preventDefault();
-    setSelection();
+	event.preventDefault();
+	setSelection();
     });
 
     console.log("Loading data");
     //Load lineage data structure
-    var getlineageurl = 'http://localhost:8080/cgi-bin/get_lineage.py?color='+encodeURIComponent(defaultColor)
+    var getlineageurl = url_base + '/cgi-bin/get_lineage.py?color='+encodeURIComponent(defaultColor)
     var getlineage = new Promise(function(resolve, reject){
-    $.getJSON(getlineageurl, function(result){
-        if(result){
-        lineage = result;
-        resolve('Lineage loaded.');
-        }else{
-        reject(Error('Something went wrong while loading lineage.'));
-        }
-    });
+	$.getJSON(getlineageurl, function(result){
+            if(result){
+		lineage = result;
+		resolve('Lineage loaded.');
+            }else{
+		reject(Error('Something went wrong while loading lineage.'));
+            }
+	});
     })
     //Then load everything else
     getlineage.then(function(response){
-    loadCellTypeMap();
-    loadTimePoints();
-    loadWormBaseIdMap();
+	loadCellTypeMap();
+	loadTimePoints();
+	loadWormBaseIdMap();
     });
 
     d3.select('#hide-controls')
