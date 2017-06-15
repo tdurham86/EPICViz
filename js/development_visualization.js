@@ -557,6 +557,20 @@ function pickColor_and_setSelected(){
 * 'color' entry in each cells metadata in the cellmap
 * @callback - called whenever a lineage picker selection is changed
 */
+/*
+function updateCellColors_orig(){
+    d3.selectAll('.dp_sphere appearance material')
+        .attr('diffuseColor', function(d){return lineage[d.name].color;});
+    d3.selectAll('.small_multiples_datapoint_xy')
+        .attr('fill', function(d){return lineage[d.name].color;});
+    d3.selectAll('.small_multiples_datapoint_yz')
+        .attr('fill', function(d){return lineage[d.name].color;});
+    d3.selectAll('.small_multiples_datapoint_xz')
+        .attr('fill', function(d){return lineage[d.name].color;});
+    d3.selectAll('.pca_datapoint')
+        .attr('fill', function(d){return lineage[d.name].color;});
+}
+
 function updateCellColors(){
     d3.selectAll('.dp_sphere appearance material')
         .attr('diffuseColor', function(d){return lineage[d.name].color;});
@@ -569,6 +583,7 @@ function updateCellColors(){
     d3.selectAll('.pca_datapoint')
         .attr('fill', function(d){return lineage[d.name].color;});
 }
+*/
 
 /**
 * Function to update the visualization after a user submits a new selection
@@ -654,10 +669,11 @@ function setSelection(){
 
 	    //set the correct coloring and selected status for the cells at this timepoint
 	    pickColor_and_setSelected();
-	    //update the rest of the viz
-	    updateCellColors();
-	    updateCellSize();
-	    updatePlot();
+//	    //update the rest of the viz
+//	    updateCellColors();
+//	    updateCellSize();
+//	    updatePlot();
+	    plotData(0);
 	    //unblock the plots
 	    $('#divPlot').unblock();
 	    //re-enable the submit button
@@ -676,6 +692,7 @@ function setSelection(){
 * lineage picker selections. Called by updateCellColors() whenever a lineage 
 * picker selection is changed.
 */
+/*
 function setCellColors(){
     //Collect highlight classes
     var picker_sel = document.getElementsByClassName('selhi');
@@ -774,12 +791,12 @@ function setCellColors(){
         }
     }
 }
-
+*/
 /**
 * Function to erase and redraw cells in the 3D plot that should have changes in 
 * radius due to changes in lineage picker selections.
 * @callback - called whenever a lineage picker selection is changed
-*/
+
 function updateCellSize(){
     //find cells that are selected and are small, or cells that aren't selected 
     //and are big, erase them, and redraw
@@ -796,8 +813,8 @@ function updateCellSize(){
         });
     to_update.remove();
     plot3DView(to_update);
-    
-    var to_update = d3.selectAll('.small_multiples_datapoint')
+
+    var to_update = d3.selectAll('.small_multiples_datapoint_xy')
         .filter(function(d){
             var rad = +$(this).attr('r');
             if((lineage[d.name].selected && rad === (d.radius / 25)) ||
@@ -810,7 +827,31 @@ function updateCellSize(){
         });
     to_update.remove();
     plotXYSmallMultiple(to_update);
+    var to_update = d3.selectAll('.small_multiples_datapoint_xz')
+        .filter(function(d){
+            var rad = +$(this).attr('r');
+            if((lineage[d.name].selected && rad === (d.radius / 25)) ||
+               (!lineage[d.name].selected && rad > (d.radius / 25)) ||
+               (!highlights && rad === (d.radius / 25))){
+                return this;
+            }else{
+                return null;
+            }
+        });
+    to_update.remove();
     plotXZSmallMultiple(to_update);
+    var to_update = d3.selectAll('.small_multiples_datapoint_yz')
+        .filter(function(d){
+            var rad = +$(this).attr('r');
+            if((lineage[d.name].selected && rad === (d.radius / 25)) ||
+               (!lineage[d.name].selected && rad > (d.radius / 25)) ||
+               (!highlights && rad === (d.radius / 25))){
+                return this;
+            }else{
+                return null;
+            }
+        });
+    to_update.remove();
     plotYZSmallMultiple(to_update);
 
     var to_update = d3.selectAll('.pca_datapoint')
@@ -825,7 +866,9 @@ function updateCellSize(){
             }
         });
     to_update.remove();
+    plotPCA(to_update);
 }
+*/
 
 /**
 * update the plots to have the correct highlights when changes are made in 
@@ -1162,12 +1205,12 @@ function drawAxis( axisIndex, key, duration ) {
 *                                plotted cells, which are then used in plotting
 *                                the lineage tree.
 */
-function plot3DView(to_plot){
+function plot3DView(enter_selection){
     var x = scales[0], y = scales[1], z = scales[2];
     // Draw a sphere at each x,y,z coordinate.
-    var new_data = to_plot.append('transform')
+    var new_data = enter_selection.append('transform')
         .attr('translation', function(d){
-                return x(d.pred_x) + " " + y(d.pred_y) + " " + z(d.pred_z);
+            return x(d.pred_x) + " " + y(d.pred_y) + " " + z(d.pred_z);
         })
         .attr('class', 'datapoint')
         .attr('id', function(d){return d.name})
@@ -1201,7 +1244,8 @@ function plot3DView(to_plot){
             return lineage[d.name].color;
         });
     new_data.append('sphere')
-        // Add attributed for popover text
+
+    // Add attribute for popover text
         .attr('data-toggle', 'popover')
         .attr('title', function(d) {return d.name})
         .attr('data-content', function(d) {return '<b>x:</b> ' + Math.round(d.x * 10000) / 10000 + '<br />' + '<b>y:</b> ' + Math.round(d.y * 10000) / 10000 + '<br />' + '<b>z:</b> ' + Math.round(d.z * 10000) / 10000 + '<br />'})
@@ -1209,18 +1253,53 @@ function plot3DView(to_plot){
         .attr('data-placement', 'bottom')
         .attr('data-html', 'true');
 
-
     // Add the popover behavior for cells
     $(document).ready(function(){
         $('sphere').popover();   
     });
-   
-    //make sure that these new/updated points have the correct user highlighting
-    var new_data_names = [];
-    new_data.select(function(d){new_data_names.push(d.name); return null;});
-    userSelectPoints(new_data_names);
+}
 
-    return new_data;
+function updatePlot3D(update_selection, duration){
+    var x = scales[0], y = scales[1], z = scales[2];
+    update_selection
+	.attr('translation', function(d){
+            return x(d.pred_x) + " " + y(d.pred_y) + " " + z(d.pred_z);
+	})
+	.attr('scale', function(d){
+            if(lineage[d.name].selected || !highlights){
+                var ptrad = d.pred_r * 0.5; 
+                return [ptrad, ptrad, ptrad];
+            }else{
+                return [5, 5, 5];
+            }
+        })
+    var showhide = document.getElementById('showhide-highlight').value;
+    var transp = showhide.substr(0,4) === 'Show' ? 1 : 0;
+    //finish generating data points
+    update_selection.selectAll('material')
+        .attr('transparency', function(d){
+            if(lineage[d.name].selected || !highlights){
+                return 0;
+            }else{
+                return transp;
+            }
+        })
+        .attr('diffuseColor', function(d){
+            return lineage[d.name].color;
+        });
+    //execute transition
+    update_selection.transition().ease(ease).duration(duration)
+        .attr("translation", function(row) {
+            return x(row.x) + " " + y(row.y) + " " + z(row.z);
+        })
+	.attr('scale', function(row){
+	    if(lineage[row.name].selected || !highlights){
+		var ptrad = row.radius * 0.5;
+		return [ptrad, ptrad, ptrad];
+	    }else{
+		return [5,5,5];
+	    }
+	});
 }
 
 /**
@@ -1229,13 +1308,17 @@ function plot3DView(to_plot){
 function initializeSmallMultiples() {
     var width = $('#small_multiples').width(),
     height = Math.floor($('#small_multiples').height()/3);
+    var scaleSet = Math.min(width, height);
 
+    var xmargin = (width - scaleSet)/2;
     small_multiples_x_scale = d3.scale.linear()
         .domain([-300, 300])
-        .range([0, width]);
+        .range([0 + xmargin, width - xmargin]);
+
+    var ymargin = (height - scaleSet)/2;
     small_multiples_y_scale = d3.scale.linear()
 	.domain([-300, 300])
-	.range([0, height]);
+	.range([0 + ymargin, height - ymargin]);
  
     // Make the axes for the x-y chart
     var xyChart = d3.select('#small_multiples')
@@ -1287,63 +1370,93 @@ function initializeSmallMultiples() {
 * Plots points on the XY small multiple axis. initializeSmallMultiples must be called first.
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 */
-function plotXYSmallMultiple(to_plot) { 
-    to_plot.append("svg:circle")
+function plotXYSmallMultiple(enter_selection) { 
+    enter_selection.append("svg:circle")
         .attr('class', 'small_multiples_datapoint_xy')
         .attr('id', function(d){return d.name})
-        .attr("cx", function (d) { return small_multiples_x_scale(d.x); } )
-        .attr("cy", function (d) { return small_multiples_y_scale(-d.y); } )
-        .attr("r", function(d) {
-            if(lineage[d.name].selected || !highlights){
-                return d.radius/15;
-            }else{
-                return  d.radius/25;
-            }
-        })
-        .attr("fill", function (d) { return lineage[d.name].color; } )
-        .attr('opacity', 0.8);
+}
+
+function updateXYSmallMultiple(update_selection, duration){
+    update_selection
+	.attr('r', function(d){
+	    if(lineage[d.name].selected || !highlights){
+		return d.pred_r/15;
+	    }else{
+		return d.pred_r/25;
+	    }
+	})
+	.attr('fill', function(d){return lineage[d.name].color;})
+        .attr('opacity', 0.8)
+        .attr("cx", function (d) { return small_multiples_x_scale(d.pred_x); } )
+        .attr("cy", function (d) { return small_multiples_y_scale(-d.pred_y); } )
+	.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return small_multiples_x_scale(row.x);})
+        .attr("cy", function(row) {return small_multiples_y_scale(-row.y);})
+	.attr('r', function(d) {
+	    return (lineage[d.name].selected || !highlights) ? d.radius/15 : d.radius/25;
+	});
 }
 
 /**
 * Plots points on the XZ small multiple axis. initializeSmallMultiples must be called first.
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 */
-function plotXZSmallMultiple(to_plot) { 
-    to_plot.append("svg:circle")
+function plotXZSmallMultiple(enter_selection) { 
+    enter_selection.append("svg:circle")
         .attr('class', 'small_multiples_datapoint_xz')
-        .attr('id', function(d){return d.name})
-        .attr("cx", function (d) { return small_multiples_x_scale(-d.z); } )
-        .attr("cy", function (d) { return small_multiples_y_scale(d.x); } )
-        .attr("r", function(d) {
-            if(lineage[d.name].selected || !highlights){
-                return d.radius/15;
-            }else{
-                return  d.radius/25;
-            }
-        })
-        .attr("fill", function (d) { return lineage[d.name].color; } )
-        .attr('opacity', 0.8);
+        .attr('id', function(d){return d.name});
+}
+
+function updateXZSmallMultiple(update_selection, duration){
+    update_selection
+	.attr('r', function(d){
+	    if(lineage[d.name].selected || !highlights){
+		return d.pred_r/15;
+	    }else{
+		return d.pred_r/25;
+	    }
+	})
+	.attr('fill', function(d){return lineage[d.name].color;})
+        .attr('opacity', 0.8)
+	.attr('cx', function(d){return small_multiples_x_scale(-d.pred_z);})
+	.attr('cy', function(d){return small_multiples_y_scale(d.pred_x);})
+	.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return small_multiples_x_scale(-row.z);})
+        .attr("cy", function(row) {return small_multiples_y_scale(row.x);})
+	.attr('r', function(d) {
+	    return (lineage[d.name].selected || !highlights) ? d.radius/15 : d.radius/25;
+	});
 }
 
 /**
 * Plots points on the YZ small multiple axis. initializeSmallMultiples must be called first.
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 */
-function plotYZSmallMultiple(to_plot){
-    to_plot.append("svg:circle")
+function plotYZSmallMultiple(enter_selection){
+    enter_selection.append("svg:circle")
         .attr('class', 'small_multiples_datapoint_yz')
-        .attr('id', function(d){return d.name})
-        .attr("cx", function (d) { return small_multiples_x_scale(-d.z); } )
-        .attr("cy", function (d) { return small_multiples_y_scale(-d.y); } )
-        .attr("r", function(d) {
-            if(lineage[d.name].selected || !highlights){
-                return d.radius/15;
-            }else{
-                return  d.radius/25;
-            }
-        })
-        .attr("fill", function (d) {return lineage[d.name].color; } )
-        .attr('opacity', 0.8);
+        .attr('id', function(d){return d.name});
+}
+
+function updateYZSmallMultiple(update_selection, duration){
+    update_selection
+	.attr('r', function(d){
+	    if(lineage[d.name].selected || !highlights){
+		return d.pred_r/15;
+	    }else{
+		return d.pred_r/25;
+	    }
+	})
+	.attr('fill', function(d){return lineage[d.name].color;})
+        .attr('opacity', 0.8)
+	.attr('cx', function(d){return small_multiples_x_scale(-d.pred_z);})
+	.attr('cy', function(d){return small_multiples_y_scale(-d.pred_y);})
+	.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return small_multiples_x_scale(-row.z);})
+        .attr("cy", function(row) {return small_multiples_y_scale(-row.y);})
+	.attr('r', function(d) {
+	    return (lineage[d.name].selected || !highlights) ? d.radius/15 : d.radius/25;
+	});
 }
 
 /**
@@ -1367,11 +1480,11 @@ function initializePCA() {
 	.append('svg')
 	.attr('width', width + margin.left + margin.right)
 	.attr('height', height + margin.top + margin.bottom)
-	.attr('id', 'pcaChart')
+	.attr('id', 'pcaChart');
 
     var main = xyChart.append('g')
 	.attr('id', 'pca_data_points')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 /*
     var g = main.append("g")
@@ -1383,22 +1496,10 @@ function initializePCA() {
 * Plots points on the PCA plot. intializePCA must be called first.
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 */
-function plotPCA(to_plot) { 
-
-    to_plot.append("circle")
+function plotPCA(enter_selection) { 
+    enter_selection.append("circle")
         .attr('class', 'pca_datapoint')
         .attr('id', function(d){return d.name})
-        .attr("cx", function (d) { return pca_scale_x(d.pc2); } )
-        .attr("cy", function (d) { return pca_scale_y(d.pc3); } )
-        .attr("r", function(d) {
-            if(lineage[d.name].selected || !highlights){
-                return d.radius/10;
-            }else{
-                return  d.radius/15;
-            }
-        })
-        .attr("fill", function (d) {return lineage[d.name].color; } )
-        .attr('opacity', 0.8)
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
         .attr('data-toggle', 'tooltip')
         .attr('title', function(d) {return d.name})
@@ -1406,11 +1507,33 @@ function plotPCA(to_plot) {
         .attr('data-placement', 'left')
         .attr('data-html', 'true')
         .attr('container', 'body')
-        .attr('data-container', 'body')
+        .attr('data-container', 'body');
+
     // Add the popover behavior for cells
     $(document).ready(function(){
         $('.pca_datapoint').tooltip();   
     });
+}
+
+function updatePCA(update_selection, duration){
+    update_selection
+        .attr("r", function(d) {
+            if(lineage[d.name].selected || !highlights){
+                return d.pred_r/10;
+            }else{
+                return  d.pred_r/15;
+            }
+        })
+        .attr("fill", function (d) {return lineage[d.name].color; } )
+        .attr('opacity', 0.8)
+        .attr("cx", function (d) { return pca_scale_x(d.pred_pc2); } )
+        .attr("cy", function (d) { return pca_scale_y(d.pred_pc3); } )
+	.transition().ease(ease).duration(duration)
+        .attr("cx", function(row) {return pca_scale_x(row.pc2);})
+        .attr("cy", function(row) {return pca_scale_y(row.pc3);})
+	.attr('r', function(d) {
+	    return (lineage[d.name].selected || !highlights) ? d.radius/15 : d.radius/25;
+	});
 }
 
 /**
@@ -1424,52 +1547,32 @@ function plotData( duration ){
     timepoint_data = tpdata[cur_tpdata_idx]
 
     //Get all cell elements, and remove any that are no longer needed
-    var datapoints = scene.selectAll(".datapoint").data(timepoint_data, function(d){return d.name})
-    datapoints.exit().remove();
+    var datapoints = scene.selectAll(".datapoint").data(timepoint_data, function(d){return d.name + '_3d'})
     var small_multiples_datapoints_xy = d3.select('#xy_data_points').selectAll(".small_multiples_datapoint_xy").data( timepoint_data, function(d){return d.name + '_xy';});
-    small_multiples_datapoints_xy.exit().remove();
     var small_multiples_datapoints_xz = d3.select('#xz_data_points').selectAll(".small_multiples_datapoint_xz").data( timepoint_data, function(d){return d.name + '_xz';});
-    small_multiples_datapoints_xz.exit().remove();
     var small_multiples_datapoints_yz = d3.select('#yz_data_points').selectAll(".small_multiples_datapoint_yz").data( timepoint_data, function(d){return d.name + '_yz';});
+    var pca_datapoints = d3.select('#pca_data_points').selectAll(".pca_datapoint").data( timepoint_data, function(d){return d.name + '_pca';});
+
+    //remove old data points
+    datapoints.exit().remove();
+    small_multiples_datapoints_xy.exit().remove();
+    small_multiples_datapoints_xz.exit().remove();
     small_multiples_datapoints_yz.exit().remove();
-    var pca_datapoints = d3.select('#pca_data_points').selectAll(".pca_datapoint").data( timepoint_data, function(d){return d.name + '_xz';});
     pca_datapoints.exit().remove();
 
-    //Next, update the size and color of the remaining cells
-    updateCellColors();
-    updateCellSize();
-
     //Plot the new points
-    plot3DView(datapoints.enter())
-    plotXYSmallMultiple(small_multiples_datapoints_xy.enter());
-    plotXZSmallMultiple(small_multiples_datapoints_xz.enter());
-    plotYZSmallMultiple(small_multiples_datapoints_yz.enter());
-    plotPCA(pca_datapoints.enter());
+    datapoints.enter().call(plot3DView);
+    small_multiples_datapoints_xy.enter().call(plotXYSmallMultiple);
+    small_multiples_datapoints_xz.enter().call(plotXZSmallMultiple);
+    small_multiples_datapoints_yz.enter().call(plotYZSmallMultiple);
+    pca_datapoints.enter().call(plotPCA);
 
-    //transition 3D plot points
-    var x = scales[0], y = scales[1], z = scales[2];
-    datapoints.transition().ease(ease).duration(duration)
-        .attr("translation", function(row) {
-            return x(row.x) + " " + y(row.y) + " " + z(row.z);
-        });
-
-    // Transition small multiples points
-    small_multiples_datapoints_xy.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return small_multiples_x_scale(row.x);})
-        .attr("cy", function(row) {return small_multiples_y_scale(-row.y);})
-
-    small_multiples_datapoints_xz.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return small_multiples_x_scale(-row.z);})
-        .attr("cy", function(row) {return small_multiples_y_scale(row.x);})
-
-    small_multiples_datapoints_yz.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return small_multiples_x_scale(-row.z);})
-        .attr("cy", function(row) {return small_multiples_y_scale(-row.y);})
-
-    // transition pca points
-    pca_datapoints.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return pca_scale_x(row.pc2);})
-        .attr("cy", function(row) {return pca_scale_y(row.pc3);})
+    //Update the new/remaining points
+    datapoints.call(updatePlot3D, duration);
+    small_multiples_datapoints_xy.call(updateXYSmallMultiple, duration);
+    small_multiples_datapoints_xz.call(updateXZSmallMultiple, duration);
+    small_multiples_datapoints_yz.call(updateYZSmallMultiple, duration);
+    pca_datapoints.call(updatePCA, duration);
 
     //update timepoint indicator on tree
     var cur_tp = tpdata[cur_tpdata_idx][0].tp;
@@ -1731,22 +1834,21 @@ INITIALIZATION AND CALLBACKS FOR VISUALIZATION
 * Handles play and pause of development by starting and stopping playback, changing playbackspeed, and changing play button text.
 * @callback - callback function play/pause button
 */
+var dev_interval = 1000;
 function playpausedev(){
     var button = document.getElementById('playpause');
-
     if(button.innerHTML === "▶"){
         if(speed === "slow"){
-            playback_id = setInterval(development, 1000);
-            button.innerHTML = "▌▌";
-            }
+	    dev_interval = 1000;
+        }
         else if(speed === "medium"){
-            playback_id = setInterval(development, 500);
-            button.innerHTML = "▌▌";
-            }
+	    dev_interval = 500;
+        }
         else if(speed === "fast"){
-            playback_id = setInterval(development, 250);
-            button.innerHTML = "▌▌";
-            }
+	    dev_interval = 250;
+        }
+        playback_id = setInterval(development, dev_interval);
+        button.innerHTML = "▌▌";
     }else{
         clearInterval(playback_id);
         button.innerHTML = "▶";
@@ -1802,9 +1904,9 @@ function development() {
 	}else{
             cur_tpdata_idx++;
 	}
-	console.log('TP Idx: ' + cur_tpdata_idx);
+//	console.log('TP Idx: ' + cur_tpdata_idx);
 	pickColor_and_setSelected();
-        plotData(1000);
+        plotData(dev_interval);
         document.getElementById('timerange').value = cur_tpdata_idx;
     } else {
         console.log('x3d not ready.');
@@ -1865,11 +1967,15 @@ function resize(){
 
 function resizeSmallMultiples(){
     var width = $('#small_multiples').width(),
-    height = Math.floor($('#small_multiples').height()/3);
+	height = Math.floor($('#small_multiples').height()/3);
+    var scaleSet = Math.min(width, height);
 
-    small_multiples_x_scale.range([0, width]);
-    small_multiples_y_scale.range([0, height]);
+    var xmargin = (width - scaleSet)/2;
+    small_multiples_x_scale.range([0 + xmargin, width - xmargin]);
 
+    var ymargin = (height - scaleSet)/2;
+    small_multiples_y_scale.range([0 + ymargin, height - ymargin]);
+ 
     d3.selectAll('.small_multiples_datapoint_xy')
         .attr("cx", function (d) { return small_multiples_x_scale(d.x); } )
         .attr("cy", function (d) { return small_multiples_y_scale(-d.y); } )
