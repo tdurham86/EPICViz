@@ -658,9 +658,9 @@ function setSelection(){
 					       newtree_y_scale_orig(dobj.death));
 		    }else{
 			var path_fmt = 'M{0} {1} V{2}';
-			return path_fmt.format(newtree_x_scale((dobj.lft + dobj.rgt)/2),
-					       newtree_y_scale(d[1] ? d[1] : dobj.birth),
-					       newtree_y_scale(dobj.death));
+			return path_fmt.format(newtree_x_scale_orig((dobj.lft + dobj.rgt)/2),
+					       newtree_y_scale_orig(d[1] ? d[1] : dobj.birth),
+					       newtree_y_scale_orig(dobj.death));
 		    }
 		})
 		.attr('stroke', function(d){return d[2];})
