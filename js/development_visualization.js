@@ -639,7 +639,7 @@ function setSelection(){
 		highlights = true;
 	    }
 	    //update lineage tree with new selection
-	    var tree_paths = tree_container.selectAll('.highlight_treeln_path')
+	    var tree_paths = paths_container.selectAll('.highlight_treeln_path')
 		.data(selected_flat, function(d){return d[0] + '_' + d[1] + '_' + d[2];});
 	    tree_paths.exit().remove();
 	    tree_paths.enter().append('path')
@@ -658,21 +658,17 @@ function setSelection(){
 					       newtree_y_scale_orig(dobj.death));
 		    }else{
 			var path_fmt = 'M{0} {1} V{2}';
-			return path_fmt.format(newtree_x_scale_orig((dobj.lft + dobj.rgt)/2),
-					       newtree_y_scale_orig(d[1] ? d[1] : dobj.birth),
-					       newtree_y_scale_orig(dobj.death));
+			return path_fmt.format(newtree_x_scale((dobj.lft + dobj.rgt)/2),
+					       newtree_y_scale(d[1] ? d[1] : dobj.birth),
+					       newtree_y_scale(dobj.death));
 		    }
 		})
 		.attr('stroke', function(d){return d[2];})
-		.attr('stroke-width', 1)
 		.attr('fill', 'none');
 
 	    //set the correct coloring and selected status for the cells at this timepoint
 	    pickColor_and_setSelected();
-//	    //update the rest of the viz
-//	    updateCellColors();
-//	    updateCellSize();
-//	    updatePlot();
+	    //update the rest of the viz
 	    plotData(0);
 	    //unblock the plots
 	    $('#divPlot').unblock();
@@ -685,190 +681,6 @@ function setSelection(){
     // The data sent is what the user provided in the form
     xhr.send(fd);
 };
-
-/**
-* Parses the highlght selections made in the lineage picker controls, and then
-* sets the 'color' attribute for each cell in cellmap based on the current 
-* lineage picker selections. Called by updateCellColors() whenever a lineage 
-* picker selection is changed.
-*/
-/*
-function setCellColors(){
-    //Collect highlight classes
-    var picker_sel = document.getElementsByClassName('selhi');
-    var picker_col = document.getElementsByClassName('hicolor');
-    var picker_logic = document.getElementsByClassName('loghi');
-    var selections = [];
-    var logic_sel = [];
-    var colors = [];
-    var picker_length = [];
-    highlights = false;
-    for(var i=1; i < picker_sel.length; i++){
-        picker_length.push(picker_sel[i].selectedOptions.length);
-        logic_sel.push(picker_logic[i].value);
-        
-        for(var j=0; j < picker_sel[i].selectedOptions.length; j++){
-            var selected = picker_sel[i].selectedOptions[j].value;
-            if(selected){
-                highlights = true;
-                var sel_type = selected.substr(0, 2);
-                var sel_val = selected.substr(2);
-                if(sel_type === 'cn'){
-                    selections.push(cellLineageStr(sel_val));
-                }else {
-                    selections.push(celltypes[sel_val]);
-                }            
-            }
-        }
-        colors.push(picker_col[i].value);
-    }
-    //Calculate whether a data point should be highlighted and if so what color(s)
-    //it should get
-    var blastregex = /^(P0|AB|P1|EMS|P2|E|MS|C|P3|D|P4|Z2|Z3)/;
-    var linregex = /([aplrdv]+)$/;
-    var pt_colors;
-    var pt_part;
-    var start;
-    for(var cell_nm in cellmap){
-        if(!cellmap.hasOwnProperty(cell_nm)){
-            continue;
-        }
-        var cell = cellmap[cell_nm];
-        pt_colors = []
-        //for(i=0; i < selections.length; i++){
-        for(var i=1; i < picker_sel.length; i++){
-            pt_part = []
-            if(i>1){start = (i-1)*picker_length[i-2];}
-            else{start = 0;}
-            for( var j=0; j < picker_length[i-1]; j++){
-                if(typeof selections[start + j] === 'string' && selections[start+j].indexOf(cell.name) > -1){
-                    pt_part.push($.Color(colors[i-1]));
-                }else if(typeof selections[start+j] === 'object'){
-                //find blastomere name
-                    var blastmatch = blastregex.exec(cell.name);
-                    if(blastmatch === null){
-                        console.log('null blastmatch: ' + cell.name);
-                        continue;
-                }
-                var blast = blastmatch[1];
-
-                //find lineage suffix
-                var linmatch = linregex.exec(cell.name);
-                if(linmatch === null){
-                    if(blast === cell.name && cell.name in selections[start+j] 
-                       && selections[start+j][cell.name].indexOf(cell.name) > -1){
-                        pt_part.push($.Color(colors[i-1]));
-                    }
-                    continue;
-                }
-                var linsuffix = linmatch[1];
-
-                //if a color should be assigned to this blast/lineage combo, get it
-                if(blast in selections[start+j] && selections[start+j][blast].indexOf(linsuffix) > -1){
-                    pt_part.push($.Color(colors[i-1]));
-                }
-            }
-                        
-           }
-           // If we can intersection operation, only the point has the colors of the number as same as the number 0f multiple containers, then we add new color, otherwise, it's zero.'
-           if(logic_sel[i-1]=="opIntersection"){
-                if (pt_part.length ===picker_length[i-1])
-                    {pt_colors = pt_colors.concat(pt_part[0])}
-                else{pt_colors=pt_colors.concat([])}
-                }
-           else {pt_colors = pt_colors.concat(pt_part)}
-        }
-        
-        if(pt_colors.length === 0){
-            cell.color = defaultColor;
-            cell.selected = false;
-        }else if(pt_colors.length === 1){
-            cell.color = pt_colors[0].toHexString();
-            cell.selected = true;
-        }else{
-            cell.color = Color_mixer.mix(pt_colors).toHexString();
-            cell.selected = true;
-        }
-    }
-}
-*/
-/**
-* Function to erase and redraw cells in the 3D plot that should have changes in 
-* radius due to changes in lineage picker selections.
-* @callback - called whenever a lineage picker selection is changed
-
-function updateCellSize(){
-    //find cells that are selected and are small, or cells that aren't selected 
-    //and are big, erase them, and redraw
-    var to_update = d3.selectAll('.datapoint')
-        .filter(function(d){
-            var scale = +$(this).attr('scale').split(',')[0];
-            if((lineage[d.name].selected && scale === 5) || //small and should be big
-               (!lineage[d.name].selected && scale > 5) || //big and should be small
-               (!highlights && scale === 5)){      //reset any small to big
-                return this;
-            }else{
-                return null;
-            }
-        });
-    to_update.remove();
-    plot3DView(to_update);
-
-    var to_update = d3.selectAll('.small_multiples_datapoint_xy')
-        .filter(function(d){
-            var rad = +$(this).attr('r');
-            if((lineage[d.name].selected && rad === (d.radius / 25)) ||
-               (!lineage[d.name].selected && rad > (d.radius / 25)) ||
-               (!highlights && rad === (d.radius / 25))){
-                return this;
-            }else{
-                return null;
-            }
-        });
-    to_update.remove();
-    plotXYSmallMultiple(to_update);
-    var to_update = d3.selectAll('.small_multiples_datapoint_xz')
-        .filter(function(d){
-            var rad = +$(this).attr('r');
-            if((lineage[d.name].selected && rad === (d.radius / 25)) ||
-               (!lineage[d.name].selected && rad > (d.radius / 25)) ||
-               (!highlights && rad === (d.radius / 25))){
-                return this;
-            }else{
-                return null;
-            }
-        });
-    to_update.remove();
-    plotXZSmallMultiple(to_update);
-    var to_update = d3.selectAll('.small_multiples_datapoint_yz')
-        .filter(function(d){
-            var rad = +$(this).attr('r');
-            if((lineage[d.name].selected && rad === (d.radius / 25)) ||
-               (!lineage[d.name].selected && rad > (d.radius / 25)) ||
-               (!highlights && rad === (d.radius / 25))){
-                return this;
-            }else{
-                return null;
-            }
-        });
-    to_update.remove();
-    plotYZSmallMultiple(to_update);
-
-    var to_update = d3.selectAll('.pca_datapoint')
-        .filter(function(d){
-            var rad = +$(this).attr('r');
-            if((lineage[d.name].selected && rad === (d.radius / 15)) ||
-               (!lineage[d.name].selected && rad > (d.radius / 15)) ||
-               (!highlights && rad === (d.radius / 15))){
-                return this;
-            }else{
-                return null;
-            }
-        });
-    to_update.remove();
-    plotPCA(to_update);
-}
-*/
 
 /**
 * update the plots to have the correct highlights when changes are made in 
@@ -2036,118 +1848,140 @@ tree on each resize event.
 */
 var newtree_x_scale, newtree_y_scale
 var newtree_x_scale_orig, newtree_y_scale_orig
-var zoom;
-var tree_container;
+var zoom;//, zoom_translate=[0,0], zoom_scale=1;
+var tree_container, paths_container;
+//var tree_init_scale, tree_init_tranlate;
 function initializeLineageTree2(){
-    var tree_div = d3.select(".lineage_tree");
-    var margin = {top: 10, right: 10, bottom: 10, left: 10},
-    width = $('#lineage_tree').width() - margin.left - margin.right,
-    height = $('#lineage_tree').height() - margin.top - margin.bottom;
+    var tree_div = d3.select(".lineage_tree"),
+	d = calcTreeDims();
 
     newtree_x_scale = d3.scale.linear()
         .domain([0, lineage['P0'].rgt])
-        .range([0, width]);
+        .range([0, d.scale_width]);
     newtree_x_scale_orig = newtree_x_scale.copy();
 
     newtree_y_scale = d3.scale.linear()
         .domain([0, 550])
-        .range([0, height]);
+        .range([0, d.scale_height]);
     newtree_y_scale_orig = newtree_y_scale.copy();
 
     zoom = d3.behavior.zoom()
         .x(newtree_x_scale)
         .y(newtree_y_scale)
-        .scaleExtent([0.5, 15])
-        .center([width / 2, height / 2])
-        .size([width, height])
+        .scaleExtent([0.1, 15])
+        .size([d.viz_width, d.viz_height])
         .on("zoom", zoomed);
 
     // Set up the SVG element
     var svg = tree_div
-	.append("svg")
-	.attr('id', 'tree_svg')
-	.attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom);
+        .append("svg")
+        .attr('id', 'tree_svg')
+        .attr("width", d.viz_width + d.margin.left + d.margin.right)
+        .attr("height", d.viz_height + d.margin.top + d.margin.bottom);
 
-    var svgg = svg
-	.append("g")
-	.attr('id', 'lineagetree2')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-	.style('overflow', 'hidden')
-        .call(zoom);
+    tree_container = svg
+        .append("g")
+        .attr('id', 'lineagetree2')
+        .attr('transform', 'translate(' + d.margin.left + ',' + d.margin.top + ')')
+        .style('overflow', 'hidden');
 
-    svgg.append("rect")
-	.attr('id', 'tree_rect')
-        .attr("width", width)
-        .attr("height", height)
-	.style('fill', 'none')
-	.style("pointer-events", "all");
+    tree_container.append("rect")
+        .attr('id', 'tree_rect')
+        .attr("width", d.viz_width)
+        .attr("height", d.viz_height)
+        .style('fill', 'none')
+        .style("pointer-events", "all");
 
-    tree_container = svgg.append('g')
+    paths_container = tree_container.append('g')
 
     //add a horizontal line to indicate the current timepoint
-    tree_container.append('path')
-	.attr('id', 'current_tp')
-	.attr('d', 'M0 0 H' + width)
-	.attr('stroke', '#aaaaaa')
-	.attr('stroke-width', 2)
-	.attr('stroke-dasharray', "5,5");
+    paths_container.append('path')
+        .attr('id', 'current_tp')
+        .attr('d', 'M0 0 H' + d.scale_width)
+        .attr('stroke', '#aaaaaa')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', "5,5");
 
     drawLineageTree2();
+
+    tree_container.call(zoom);
+
+//    zoom_translate = d.init_translate;
+//    zoom_scale = d.init_scale;
+    zoom.translate(d.init_translate).scale(d.init_scale);
+    zoomed(d.init_translate, d.init_scale);
 }
 
-function zoomed() {
-    tree_container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    tree_container.select('#current_tp').attr('stroke-width', 2/d3.event.scale);
-    tree_container.selectAll('.treeln_path').attr('stroke-width', 1/d3.event.scale);
-    tree_container.selectAll('.highlight_treeln_path').attr('stroke-width', 1/d3.event.scale);
-    if(d3.event.scale > 5){
-	tree_container.selectAll('.tree_text1').attr("visibility", 'visible');
-	tree_container.selectAll('.tree_text2').attr("visibility", 'visible');
-	tree_container.selectAll('.tree_text3').attr("visibility", 'visible');
-    }else if(d3.event.scale > 3){
-	tree_container.selectAll('.tree_text1').attr("visibility", 'visible');
-	tree_container.selectAll('.tree_text2').attr("visibility", 'visible');
-	tree_container.selectAll('.tree_text3').attr("visibility", 'hidden');
-    }else if(d3.event.scale > 1){
-	tree_container.selectAll('.tree_text1').attr("visibility", 'visible');
-	tree_container.selectAll('.tree_text2').attr("visibility", 'hidden');
-	tree_container.selectAll('.tree_text3').attr("visibility", 'hidden');
+function zoomed(t, s) {
+    if(d3.event !== null){
+	t = d3.event.translate;
+	s = d3.event.scale;
+    }
+//    zoom_tranlate = t;
+//    zoom_scale = s;
+    console.log('Trans: ' + t + ' ' + 'Scale: ' + s);
+    paths_container.attr("transform", "translate(" + t + ")scale(" + s + ")");
+    paths_container.select('#current_tp').attr('stroke-width', 2/s);
+    paths_container.selectAll('.treeln_path').attr('stroke-width', 1/s);
+    paths_container.selectAll('.highlight_treeln_path').attr('stroke-width', 1/s)
+//	.attr('transform','translate(' + t + ')scale(' + s + ')');
+    if(s > 5){
+	paths_container.selectAll('.tree_text1').attr("visibility", 'visible');
+	paths_container.selectAll('.tree_text2').attr("visibility", 'visible');
+	paths_container.selectAll('.tree_text3').attr("visibility", 'visible');
+    }else if(s > 3){
+	paths_container.selectAll('.tree_text1').attr("visibility", 'visible');
+	paths_container.selectAll('.tree_text2').attr("visibility", 'visible');
+	paths_container.selectAll('.tree_text3').attr("visibility", 'hidden');
+    }else if(s > 1){
+	paths_container.selectAll('.tree_text1').attr("visibility", 'visible');
+	paths_container.selectAll('.tree_text2').attr("visibility", 'hidden');
+	paths_container.selectAll('.tree_text3').attr("visibility", 'hidden');
     }else{
-	tree_container.selectAll('.tree_text1').attr("visibility", 'hidden');	
-	tree_container.selectAll('.tree_text2').attr("visibility", 'hidden');
-	tree_container.selectAll('.tree_text3').attr("visibility", 'hidden');
+	paths_container.selectAll('.tree_text1').attr("visibility", 'hidden');
+	paths_container.selectAll('.tree_text2').attr("visibility", 'hidden');
+	paths_container.selectAll('.tree_text3').attr("visibility", 'hidden');
     }
 }
 
+function calcTreeDims(){
+    var margin = {top: 10, right: 10, bottom: 10, left: 10},
+	viz_width = $('#lineage_tree').width() - margin.left - margin.right,
+	viz_height = $('#lineage_tree').height() - margin.top - margin.bottom,
+	scale_width = 1480, scale_height=420,
+	init_scale = Math.min(viz_width/scale_width, viz_height/scale_height),
+	init_center_x = Math.abs(scale_width*init_scale - viz_width)/2,
+	init_center_y = Math.abs(scale_height*init_scale - viz_height)/2,
+	init_translate = [margin.left + init_center_x, margin.top + init_center_y];
+
+    console.log('Scale width: ' + scale_width + " Scale height: " + scale_height + " Init scale: " + init_scale);
+    console.log('Init x: ' + init_center_x + ' Init y: ' + init_center_y);
+    return {'margin':margin, 'viz_width':viz_width, 'viz_height':viz_height,
+	    'scale_width':scale_width, 'scale_height':scale_height,
+	    'init_scale':init_scale, 'init_translate':init_translate};
+}
+
 function resetTree(){
-    d3.transition().duration(750).tween("zoom", function() {
-	var c_x_ax = $('.lineage_tree').width()/2,
-	    c_y_ax = $('.lineage_tree').height()/2,
-	    c_x_tr = lineage['P0'].rgt/2,
-	    c_y_tr = 550/2;
-	var ix = d3.interpolate(newtree_x_scale.domain(), [c_x_ax - c_x_tr, c_x_ax + c_x_tr]),
-	    iy = d3.interpolate(newtree_y_scale.domain(), [c_y_ax - c_y_tr, c_y_ax + c_y_tr]);
-	return function(t) {
-	    zoom.x(newtree_x_scale.domain(ix(t))).y(newtree_y_scale.domain(iy(t)));
-	    zoom.event(tree_container);
-	};
-    });
+    d = calcTreeDims();
+//    zoom_translate = d.init_translate;
+//    zoom_scale = d.init_scale;
+    zoom.translate(d.init_translate).scale(d.init_scale);
+    zoomed(d.init_translate, d.init_scale);
 }
 
 function drawLineageTree2(){
     //associate the cells with svg g elements
     var lincells = Object.values(lineage);
 
-    var treedata = tree_container.selectAll('.treeln_path')
-	.data(lincells, function(d){return d.cell_name;})
-	.enter();
+    var treedata = paths_container.selectAll('.treeln_path')
+        .data(lincells, function(d){return d.cell_name;})
+        .enter();
 
     var path_fmt = 'M{0} {1} L{2} {3} V{4}'
     treedata.append('path')
-	.attr('id', function(d){return d.cell_name + '_treeln_path';})
-	.attr('class', 'treeln_path')
-	.attr('d', function(d){
+        .attr('id', function(d){return d.cell_name + '_treeln_path';})
+        .attr('class', 'treeln_path')
+        .attr('d', function(d){
 	    if(d.cell_name == 'P0'){
 		return 'M{0} {1} V{2}'.format(newtree_x_scale((d.lft + d.rgt)/2),
 					      newtree_y_scale(d.birth),
@@ -2161,16 +1995,16 @@ function drawLineageTree2(){
 				       newtree_y_scale(d.death));
 	    }
 	})
-	.attr('stroke', function(d){return d.color;})
-	.attr('stroke-width', 1)
-	.attr('fill', 'none');
+        .attr('stroke', function(d){return d.color;})
+        .attr('stroke-width', 1)
+        .attr('fill', 'none');
 
     // Add text labels to each node
     var thresholds = [lineage['Eal'].death, lineage['ABalpappp'].death];
-    var text = tree_container.selectAll('text')
-	.data(lincells, function(d){return d.cell_name;}).enter()
-	.append('text')
-	.attr('class', function(d){
+    var text = paths_container.selectAll('text')
+        .data(lincells, function(d){return d.cell_name;}).enter()
+        .append('text')
+        .attr('class', function(d){
 	    if(d.birth < thresholds[0]){
 		return 'tree_text1';
 	    }else if(d.birth < thresholds[1]){
@@ -2179,28 +2013,29 @@ function drawLineageTree2(){
 		return 'tree_text3';
 	    }
 	})
-	.text(function(d) {return d.cell_name})
-	.attr('x', function(d) {return newtree_x_scale((d.lft + d.rgt)/2);})
-	.attr('y', function(d) {return newtree_y_scale(d.birth);})
-	.attr('text-anchor', 'end')
-	.attr('alignment-baseline', function(d) {
+        .text(function(d) {return d.cell_name})
+        .attr('x', function(d) {return newtree_x_scale((d.lft + d.rgt)/2);})
+        .attr('y', function(d) {return newtree_y_scale(d.birth);})
+        .attr('text-anchor', 'end')
+        .attr('alignment-baseline', function(d) {
 	    if( (d.cell_name == 'P0') ||
 		((d.lft - lineage[d.parent_name].lft) < (lineage[d.parent_name].rgt - d.rgt)) ){
 		return 'after-edge';
-	    }else{
+            }else{
 		return 'before-edge';
 	    }
 	})
-	.attr('font-size', function(d){
+    //Note: the font size has to be set here so that it will properly scale with zooming
+        .attr('font-size', function(d){
 	    if(d.birth < thresholds[0]){
-		return 4;
+		return 5;
 	    }else if(d.birth < thresholds[1]){
 		return 2;
 	    }else{
 		return 1;
 	    }
 	})
-	.attr('transform', function(d) {
+        .attr('transform', function(d) {
 	    var ycorrect;
 	    if(d.birth < thresholds[0]){
 		ycorrect = 0.5;
@@ -2211,7 +2046,7 @@ function drawLineageTree2(){
 	    }
 	    return 'rotate(-90 {0} {1})'.format(newtree_x_scale((d.lft + d.rgt)/2),
 						newtree_y_scale(d.birth) + ycorrect);})
-	.attr('visibility', 'hidden');
+        .attr('visibility', 'hidden');
 }
 
 /****************************************************************
