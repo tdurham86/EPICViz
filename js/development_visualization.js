@@ -1724,6 +1724,7 @@ function development() {
 	pickColor_and_setSelected();
         plotData(dev_interval);
         document.getElementById('timerange').value = cur_tpdata_idx;
+        updatetime();
     } else {
         console.log('x3d not ready.');
     }
