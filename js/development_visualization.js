@@ -1698,7 +1698,11 @@ function hideControls() {
         $('#divControls').animate({left: "5"}, 500, function() {});
         $('#hide-controls').attr('value', '◀')
         var width = $('#divPlot').width()
-        $('#divPlot').animate({"margin-left": "415", width: width - 415}, 500, function() {resize()});
+
+        // Animate divPlot to original value and then reset to default CSS value ("") in case it is percentage based.
+        // otherwise window resizing no longer impacts div size so rescaling "breaks"
+        // followed by resize of plots
+        $('#divPlot').animate({"margin-left": "415", "width": width - 415}, 500, function() {$("#divPlot").css("width", ""); resize()});
     }
 }
 
@@ -1769,7 +1773,10 @@ function scale_radius(circle, maxCircleRadius, minCircleRadius) {
     });
   }
 
-d3.select(window).on('resize', resize);
+// Resizes plots on window size change
+window.onresize = function(){
+  resize();
+};
 
 function resize(){
     resizeSmallMultiples();
