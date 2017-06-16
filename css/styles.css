@@ -90,6 +90,12 @@ div {
     vertical-align: top;
 }
 
+.numcells{
+    display: inline-block;
+    margin: 0 0 0px;
+    font-weight: bold;
+}
+
 #three_d_plot {
   height: 100%;
   width: 30%;
