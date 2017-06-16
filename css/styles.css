@@ -33,6 +33,13 @@ body > .container-fluid {
 
 .navbar-inverse .navbar-nav>li>a {
   color: #FFF;
+  font-weight: 600;
+}
+
+.navbar-inverse .navbar-nav>li>a:hover {
+  -webkit-box-shadow: 0 4px 1px -1px white;
+  -moz-box-shadow: 0 4px 1px -1px white;
+  box-shadow: 0 4px 1px -1px white;
 }
 
 .navbar-fixed-top {
@@ -60,10 +67,6 @@ body > .container-fluid {
   border-radius: 0px;
   border: 3px solid #153057;
   box-shadow: 0 1px 2px 1px rgba(179, 179, 179, 0.6);
-}
-
-#hide-controls select:focus {
-    outline: none;
 }
 
 #divControls select {
@@ -197,9 +200,9 @@ h1, h2, h3{
 
 #divPlot {
   padding-top: 50px;
-  margin-left: 421.5px;
+  margin-left: 415px;
   height: 100%; 
-  width: calc(100% - 421.5px);
+  width: calc(100% - 415px);
   display: inline-block;
 }
 
@@ -230,6 +233,11 @@ h1, h2, h3{
   margin-left: auto;
   margin-right: auto;
   display: inline-block;
+}
+
+/* Shows that can scroll on the tree */
+#tree_svg:hover{
+  cursor: all-scroll;
 }
 
 /*
@@ -324,7 +332,7 @@ input[type=range]::-moz-range-thumb {
   width: 75px;
 }
 
-/* Styling for buttons */
+/* Styling for buttons. Not entirely clear to me why playpause and hide-controls sometimes have to be called out explicitly */
 #playpause, input[type="button"], input[type="submit"] {
   background-color: #FFF;
   border: 3px solid #153057;
@@ -343,6 +351,10 @@ input[type=range]::-moz-range-thumb {
   font-weight: bold;
 }
 
+#playpause:hover, #hide-controls:hover, input[type="button"]:hover, input[type="submit"]:hover {
+  color: white;
+  background-color: #153057;
+}
 
 #playpause {
   margin-bottom: 10px;
@@ -351,14 +363,6 @@ input[type=range]::-moz-range-thumb {
   top: -3px;
 }
 
-#playpause:hover, input[type="button"]:hover {
-  opacity: 0.9;
-}
-
-#playpause:active, input[type="button"]:active, input[type="submit"]:active {
-  color: white;
-  background-color: #153057;
-}
 
 /* Overriding styling for certain buttons */
 input[class="add-highlight"], input[class="removehi"] {
@@ -377,6 +381,11 @@ input[class="add-highlight"] {
   margin-bottom: 10px;
   color: #FFF;
   background-color: #153057;
+}
+
+input[class="add-highlight"]:hover {
+  color:#153057;
+  background-color: white;
 }
 
 input[id="showhide-highlight"] {
