@@ -1650,24 +1650,47 @@ INITIALIZATION AND CALLBACKS FOR VISUALIZATION
 * @callback - callback function play/pause button
 */
 var dev_interval = 1000;
-function playpausedev(){
+function playpausedev(toggle=true){
+    // Clear any existing interval
+    clearInterval(playback_id);
+
     var button = document.getElementById('playpause');
     if(button.innerHTML === "▶"){
-        if(speed === "slow"){
-	    dev_interval = 1000;
-        }
-        else if(speed === "medium"){
-	    dev_interval = 500;
-        }
-        else if(speed === "fast"){
-	    dev_interval = 250;
-        }
+        dev_interval = get_dev_interval(speed)
         playback_id = setInterval(development, dev_interval);
         button.innerHTML = "▌▌";
     }else{
-        clearInterval(playback_id);
         button.innerHTML = "▶";
     }
+}
+
+function set_playback_interval(){
+    // Clear any existing interval
+    clearInterval(playback_id);
+    
+    // If playing, reset the interval to current speed
+    var button = document.getElementById('playpause');
+    if(button.innerHTML === "▌▌"){
+        dev_interval = get_dev_interval(speed)
+        playback_id = setInterval(development, dev_interval);
+    }
+}
+
+function get_dev_interval(speed_string) {
+    if(speed_string === "slow"){
+    dev_interval = 1000;
+    }
+    else if(speed_string === "medium"){
+    dev_interval = 500;
+    }
+    else if(speed_string === "fast"){
+    dev_interval = 250;
+    } else {
+        dev_interval = 1000
+        console.log('DEV interval not recognized, setting playback to 1000: ' + speed_string)
+    }
+
+    return(dev_interval)
 }
 
 /**
@@ -2262,5 +2285,5 @@ function scatterPlot3d( parent ) {
         .attr('onchange', 'pickColor_and_setSelected(); plotData(500);');
            
     d3.select('body').select('select')
-        .on("change", function(d) {speed = this.value;});
+        .on("change", function(d) {speed = this.value; set_playback_interval(); });
 }
