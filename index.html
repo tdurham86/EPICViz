@@ -97,6 +97,9 @@
 
     <div id="divPlot" class="divPlot" >        
       <div id="top_display_panel">
+        <div id="numcellsdiv" class="numcells">
+          <p id="numcellstxt">cell count: 0</p>
+        </div>
         <div id="three_d_plot"> 
           <input type="button" id="hide-controls" value="◀" class="divPlot" data-intro="<b>Collapse: </b>Click to collapse or expand the control panel to make more space for viewing."  data-step="3" data-position='right'>
           <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="<b>Reset: </b>Reset 3D plot to default position if the view gets all turned around."  data-step="5">
@@ -127,10 +130,7 @@
               <option>fast</option>
             </select>
 	  </div>
-	  <div id="numcellsdiv" class="numcells">
-	    <p id="numcellslab" class="numcells">Cell #:</p>
-	    <p id="numcellstxt" class="numcells">0</p>
-	  </div>
+
 	</div>
       </div>
       <div id="divSelectForm" class="select-form-div" data-intro="<b>Highlighting: </b>Highlight up to four groups of cells in different colors. Set operations like AND, OR, and NOT are also supported when multiple terms are included in a selection for more expressive highlights." data-step="2" data-position='right'>

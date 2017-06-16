@@ -1736,7 +1736,7 @@ function development() {
 function updatetime() {
     timepoint = parseInt(document.getElementById('timerange').value, 10);
     cur_tpdata_idx = timepoint;
-    $("#numcellstxt").html(tpdata[cur_tpdata_idx].length);
+    $("#numcellstxt").html('cell count: ' + tpdata[cur_tpdata_idx].length);
     pickColor_and_setSelected();
     plotData(500);
 }
