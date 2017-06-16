@@ -1355,6 +1355,9 @@ function updatePCA(update_selection, duration){
 */
 //function plotData( time_point, duration ) {
 function plotData( duration ){
+    // Update cell count and timepoint
+    updatetime();
+
     //Get the data for this timepoint
     timepoint_data = tpdata[cur_tpdata_idx]
 
@@ -1715,16 +1718,15 @@ function hideControls() {
 */
 function development() {
     if (ready && x3d.node() && x3d.node().runtime ) {
-	if (cur_tpdata_idx == tpdata.length){
-            cur_tpdata_idx = 1;
-	}else{
-            cur_tpdata_idx++;
-	}
-//	console.log('TP Idx: ' + cur_tpdata_idx);
-	pickColor_and_setSelected();
-        plotData(dev_interval);
+    	if (cur_tpdata_idx == tpdata.length){
+                cur_tpdata_idx = 1;
+    	}else{
+                cur_tpdata_idx++;
+    	}
+
+    	pickColor_and_setSelected();
         document.getElementById('timerange').value = cur_tpdata_idx;
-        updatetime();
+        plotData(dev_interval);
     } else {
         console.log('x3d not ready.');
     }
@@ -1735,11 +1737,9 @@ function development() {
 * @callback - is htis a callback?
 */
 function updatetime() {
-    timepoint = parseInt(document.getElementById('timerange').value, 10);
+    timepoint = parseInt(document.getElementById('timerange').value);
     cur_tpdata_idx = timepoint;
     $("#numcellstxt").html('cell count: ' + tpdata[cur_tpdata_idx].length);
-    pickColor_and_setSelected();
-    plotData(500);
 }
 
 /****************************************************************
@@ -2259,7 +2259,7 @@ function scatterPlot3d( parent ) {
         .attr('min', 0)
         .attr('step', 1)
         .attr('value', 0)
-        .attr('onchange', 'updatetime()');
+        .attr('onchange', 'pickColor_and_setSelected(); plotData(500);');
            
     d3.select('body').select('select')
         .on("change", function(d) {speed = this.value;});
