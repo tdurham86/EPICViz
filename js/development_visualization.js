@@ -1055,10 +1055,9 @@ function plot3DView(enter_selection){
         .attr('diffuseColor', function(d){
             return lineage[d.name].color;
         });
-    new_data.append('sphere')
-
-    // Add attribute for popover text
+    var spheres = new_data.append('sphere')
         .attr('data-toggle', 'popover')
+        .attr('class', 'points_3d')
         .attr('title', function(d) {return d.name})
         .attr('data-content', function(d) {return '<b>x:</b> ' + Math.round(d.x * 10000) / 10000 + '<br />' + '<b>y:</b> ' + Math.round(d.y * 10000) / 10000 + '<br />' + '<b>z:</b> ' + Math.round(d.z * 10000) / 10000 + '<br />'})
         .attr('data-trigger', 'hover')
@@ -1067,7 +1066,7 @@ function plot3DView(enter_selection){
 
     // Add the popover behavior for cells
     $(document).ready(function(){
-        $('sphere').popover();   
+        $('.points_3d').popover();
     });
 }
 
@@ -1309,21 +1308,20 @@ function initializePCA() {
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 */
 function plotPCA(enter_selection) { 
-    enter_selection.append("circle")
+    var circles = enter_selection.append("circle")
         .attr('class', 'pca_datapoint')
         .attr('id', function(d){return d.name})
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
-        .attr('data-toggle', 'tooltip')
+        .attr('data-content', function(d) {return '<b>cell name:</b> ' +d.name})
         .attr('title', function(d) {return d.name})
         .attr('data-trigger', 'hover')
         .attr('data-placement', 'left')
         .attr('data-html', 'true')
-        .attr('container', 'body')
         .attr('data-container', 'body');
 
-    // Add the popover behavior for cells
+    // Add the popover behavior for cells in PCA
     $(document).ready(function(){
-        $('.pca_datapoint').tooltip();   
+        $('.pca_datapoint').popover();
     });
 }
 
