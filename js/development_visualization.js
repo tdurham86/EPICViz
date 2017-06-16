@@ -1340,12 +1340,10 @@ function updatePCA(update_selection, duration){
         .attr('opacity', 0.8)
         .attr("cx", function (d) { return pca_scale_x(d.pred_pc2); } )
         .attr("cy", function (d) { return pca_scale_y(d.pred_pc3); } )
-	.transition().ease(ease).duration(duration)
-        .attr("cx", function(row) {return pca_scale_x(row.pc2);})
-        .attr("cy", function(row) {return pca_scale_y(row.pc3);})
-	.attr('r', function(d) {
-	    return (lineage[d.name].selected || !highlights) ? d.radius/15 : d.radius/25;
-	});
+        .attr('r', function(d) { return (lineage[d.name].selected || !highlights) ? d.radius/15 : d.radius/25;})
+	    .transition().ease(ease).duration(duration)
+            .attr("cx", function(row) {return pca_scale_x(row.pc2);})
+            .attr("cy", function(row) {return pca_scale_y(row.pc3);})
 }
 
 /**
