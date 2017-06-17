@@ -215,6 +215,7 @@ h1, h2, h3{
 
   border-right: 2px solid #153057;
   border-left: 2px solid #153057;
+  border-bottom: 2px solid #153057;
 }
 
 ::-webkit-scrollbar {
