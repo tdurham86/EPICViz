@@ -1056,7 +1056,8 @@ function plot3DView(enter_selection){
             return lineage[d.name].color;
         });
     var spheres = new_data.append('sphere')
-        .on('mouseover', function(d) { update_cell_name(d.name);});
+        .on('mouseover', function(d) { update_cell_name(d.name);})
+        .on('mouseout', function(d) { reset_cell_name();})
 }
 
 function updatePlot3D(update_selection, duration){
@@ -1174,7 +1175,8 @@ function plotXYSmallMultiple(enter_selection) {
     enter_selection.append("svg:circle")
         .attr('class', 'small_multiples_datapoint_xy small_multiples_datapoint')
         .attr('id', function(d){return d.name})
-        .on('mouseover', function(d) { update_cell_name(d.name);});
+        .on('mouseover', function(d) { update_cell_name(d.name);})
+        .on('mouseout', function(d) { reset_cell_name();})
 }
 
 function updateXYSmallMultiple(update_selection, duration){
@@ -1206,7 +1208,8 @@ function plotXZSmallMultiple(enter_selection) {
     enter_selection.append("svg:circle")
         .attr('class', 'small_multiples_datapoint_xz small_multiples_datapoint')
         .attr('id', function(d){return d.name})
-        .on('mouseover', function(d) { update_cell_name(d.name);});
+        .on('mouseover', function(d) { update_cell_name(d.name);})
+        .on('mouseout', function(d) { reset_cell_name();})
 }
 
 function updateXZSmallMultiple(update_selection, duration){
@@ -1238,7 +1241,8 @@ function plotYZSmallMultiple(enter_selection){
     enter_selection.append("svg:circle")
         .attr('class', 'small_multiples_datapoint_yz small_multiples_datapoint')
         .attr('id', function(d){return d.name})
-        .on('mouseover', function(d) { update_cell_name(d.name);});
+        .on('mouseover', function(d) { update_cell_name(d.name);})
+        .on('mouseout', function(d) { reset_cell_name();})
 }
 
 function updateYZSmallMultiple(update_selection, duration){
@@ -1304,7 +1308,8 @@ function plotPCA(enter_selection) {
         .attr('class', 'pca_datapoint')
         .attr('id', function(d){return d.name})
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
-        .on('mouseover', function(d) { update_cell_name(d.name);});
+        .on('mouseover', function(d) { update_cell_name(d.name);})
+        .on('mouseout', function(d) { reset_cell_name();})
 }
 
 function updatePCA(update_selection, duration){
@@ -1746,6 +1751,11 @@ function updatetime() {
 /* Update the cell name display */
 function update_cell_name(cell_name) {
     $("#cellnametxt").html('cell name: ' + cell_name);
+}
+
+/* Reset cell name to note saying to hover */
+function reset_cell_name(cell_name) {
+    $("#cellnametxt").html('cell name: <small>hover to view</small>');
 }
 
 /****************************************************************

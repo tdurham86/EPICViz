@@ -96,7 +96,7 @@ div {
     font-weight: bold;
     float: right;
     position: absolute;
-    left: calc(100% - 220px);
+    left: 43%;
     top:5px;
     color: #153057;
     font-size: 12pt;
@@ -108,10 +108,15 @@ div {
     font-weight: bold;
     float: right;
     position: absolute;
-    left: calc(100% - 220px);
+    left: 43%;
     top:25px;
     color: #153057;
     font-size: 12pt;
+}
+
+.cellname small {
+  font-size: 12pt;
+  color: #d3d3d3;
 }
 
 #three_d_plot {
