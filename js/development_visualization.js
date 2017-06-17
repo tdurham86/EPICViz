@@ -1009,7 +1009,7 @@ function drawAxis( axisIndex, key, duration ) {
 }
 
 /**
-* Plots data in the 3D view. Determines show/hide status of points and adds popover text to each cell.
+* Plots data in the 3D view. Determines show/hide status of points.
 * @param {d3 data selection} to_plot - A set of datapoints from d3, typically the enter() set so new points are plotted.
 * @returns {d3 data selection} - a selection containing shape elements appended 
 *                                to the to_plot selection. Used later in 
@@ -1056,18 +1056,7 @@ function plot3DView(enter_selection){
             return lineage[d.name].color;
         });
     var spheres = new_data.append('sphere')
-        .attr('data-toggle', 'popover')
-        .attr('class', 'points_3d')
-        .attr('title', function(d) {return d.name})
-        .attr('data-content', function(d) {return '<b>x:</b> ' + Math.round(d.x * 10000) / 10000 + '<br />' + '<b>y:</b> ' + Math.round(d.y * 10000) / 10000 + '<br />' + '<b>z:</b> ' + Math.round(d.z * 10000) / 10000 + '<br />'})
-        .attr('data-trigger', 'hover')
-        .attr('data-placement', 'bottom')
-        .attr('data-html', 'true');
-
-    // Add the popover behavior for cells
-    $(document).ready(function(){
-        $('.points_3d').popover();
-    });
+        .on('mouseover', function(d) { update_cell_name(d.name);});
 }
 
 function updatePlot3D(update_selection, duration){
@@ -1183,8 +1172,9 @@ function initializeSmallMultiples() {
 */
 function plotXYSmallMultiple(enter_selection) { 
     enter_selection.append("svg:circle")
-        .attr('class', 'small_multiples_datapoint_xy')
+        .attr('class', 'small_multiples_datapoint_xy small_multiples_datapoint')
         .attr('id', function(d){return d.name})
+        .on('mouseover', function(d) { update_cell_name(d.name);});
 }
 
 function updateXYSmallMultiple(update_selection, duration){
@@ -1214,8 +1204,9 @@ function updateXYSmallMultiple(update_selection, duration){
 */
 function plotXZSmallMultiple(enter_selection) { 
     enter_selection.append("svg:circle")
-        .attr('class', 'small_multiples_datapoint_xz')
-        .attr('id', function(d){return d.name});
+        .attr('class', 'small_multiples_datapoint_xz small_multiples_datapoint')
+        .attr('id', function(d){return d.name})
+        .on('mouseover', function(d) { update_cell_name(d.name);});
 }
 
 function updateXZSmallMultiple(update_selection, duration){
@@ -1245,8 +1236,9 @@ function updateXZSmallMultiple(update_selection, duration){
 */
 function plotYZSmallMultiple(enter_selection){
     enter_selection.append("svg:circle")
-        .attr('class', 'small_multiples_datapoint_yz')
-        .attr('id', function(d){return d.name});
+        .attr('class', 'small_multiples_datapoint_yz small_multiples_datapoint')
+        .attr('id', function(d){return d.name})
+        .on('mouseover', function(d) { update_cell_name(d.name);});
 }
 
 function updateYZSmallMultiple(update_selection, duration){
@@ -1312,17 +1304,7 @@ function plotPCA(enter_selection) {
         .attr('class', 'pca_datapoint')
         .attr('id', function(d){return d.name})
         .attr('onclick', "calcGeneEnrichment($(this).attr('fill')); $('#geneModal').modal('show');")
-        .attr('data-content', function(d) {return '<b>cell name:</b> ' +d.name})
-        .attr('title', function(d) {return d.name})
-        .attr('data-trigger', 'hover')
-        .attr('data-placement', 'left')
-        .attr('data-html', 'true')
-        .attr('data-container', 'body');
-
-    // Add the popover behavior for cells in PCA
-    $(document).ready(function(){
-        $('.pca_datapoint').popover();
-    });
+        .on('mouseover', function(d) { update_cell_name(d.name);});
 }
 
 function updatePCA(update_selection, duration){
@@ -1759,6 +1741,11 @@ function updatetime() {
     timepoint = parseInt(document.getElementById('timerange').value);
     cur_tpdata_idx = timepoint;
     $("#numcellstxt").html('cell count: ' + tpdata[cur_tpdata_idx].length);
+}
+
+/* Update the cell name display */
+function update_cell_name(cell_name) {
+    $("#cellnametxt").html('cell name: ' + cell_name);
 }
 
 /****************************************************************

@@ -101,16 +101,20 @@
         <div id="numcellsdiv" class="numcells">
           <p id="numcellstxt">cell count: 0</p>
         </div>
+        <div id="cellnamediv" class="cellname">
+          <p id="cellnametxt">cell name: hover to view</p>
+        </div>
+
         <div id="three_d_plot"> 
           <input type="button" id="hide-controls" value="◀" class="divPlot" data-intro="<b>Collapse: </b>Click to collapse or expand the control panel to make more space for viewing."  data-step="3" data-position='right'>
           <input type="button" id="reset-button" class="divPlot" value="Reset View" data-intro="<b>Reset: </b>Reset 3D plot to default position if the view gets all turned around."  data-step="5">
           <x3d data-intro="<b>Cell Positions: </b>3D-plot of cell positions during <i>C. elegans</i> development. Drag to rotate in any direction and scroll to zoom."  data-step="4">
           </x3d>
-	</div>
+  </div>
         <div id="small_multiples" data-intro="<b>Small Multiples: </b>Small multiples of the 3D view. Clicking on a small multiple rotates the 3D view to that position."  data-step="6">
         </div>
         <div id="pcaDiv" data-intro="<b>Gene Expression Overview: </b>This plot shows each cell as a dot plotted based on a principal components analysis of the expression patterns of all EPIC transcription factors." data-step="7" data-position="left" >
-	</div>
+  </div>
       </div>
       <input type="button" id="tree-reset-button" class="divPlot" value="Reset Tree" data-intro="<b>Reset: </b>Reset tree view to default position."  data-step="9">
       <div id="lineage_tree" class="lineage_tree" data-intro="<b>Lineage Tree: </b><i>C. elegans</i> has stereotyped cell divisions and development. Divisions are represented as a binary tree that populates as the embryo develops. Drag the slider to navigate."  data-step="8" data-position='top'>
@@ -118,85 +122,85 @@
     </div>
     <div id="divControls" class="divControls">
       <div id="playback" data-intro="<b>Playback: </b>Development can be played back at various speeds."  data-step="1" data-position='right'>
-	<div class="section-title">
-	  <h3>Playback</h3>
-	</div>
-	<div class="control-section">
-	  <button id="playpause" >▶</button>
-	  <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="0">
-	  <div id="speed" class="select-style" >
+  <div class="section-title">
+    <h3>Playback</h3>
+  </div>
+  <div class="control-section">
+    <button id="playpause" >▶</button>
+    <input type="range" id="timerange" defaultvalue="0" min="0" step="1" value="0" max="0">
+    <div id="speed" class="select-style" >
             <select>
               <option>slow</option>
               <option>medium</option>
               <option>fast</option>
             </select>
-	  </div>
+    </div>
 
-	</div>
+  </div>
       </div>
       <div id="divSelectForm" class="select-form-div" data-intro="<b>Highlighting: </b>Highlight up to four groups of cells in different colors. Set operations like AND, OR, and NOT are also supported when multiple terms are included in a selection for more expressive highlights." data-step="2" data-position='right'>
-	<div class="section-title">
-	  <h3>Highlighting</h3>
-	</div>
-	<form id="selectForm" class="select-form">
-	  <input type="hidden" name="selection" value="true" />
-	  <div id="lineagepickers" class="lineage-pickers">
-	  </div>
-	  
-	  <div id="picker-controls" class="picker-controls">
+  <div class="section-title">
+    <h3>Highlighting</h3>
+  </div>
+  <form id="selectForm" class="select-form">
+    <input type="hidden" name="selection" value="true" />
+    <div id="lineagepickers" class="lineage-pickers">
+    </div>
+    
+    <div id="picker-controls" class="picker-controls">
             <input id="submitSelection" type="submit" value="Submit"/>
             <input type="button" value="Hide Non-Highlighted" class="showhide-highlight" id="showhide-highlight" onclick='(function(e, obj) {obj.value = obj.value.substr(0,4) === "Hide" ? "Show Non-Highlighted" : "Hide Non-Highlighted"; showHideHighlights(obj.value);})(event, this)'/>
             <input type="button" value="+" class="add-highlight" id="add-lp" onclick="cloneLPDiv()"/>
-	  </div>
-	</form>
+    </div>
+  </form>
       </div>
     </div>
     <!-- About modal dialog  -->
     <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
-	<div class="modal-content">
-	  <div class="modal-header">
+  <div class="modal-content">
+    <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title" id="myModalLabel">About</h4>
-	  </div>
-	  <div class="modal-body">
+    </div>
+    <div class="modal-body">
             <h1>3D <i>C. elegans</i> Embryogenesis and Gene Expression</h1>
             <h2>Melissa Chiasson, Timothy Durham, Andrew Hill, and Ning Li, UW Genome Sciences and Statistics</h2>
             <h4><p><i>Caenorhabditis elegans</i> (<i>C. elegans</i>) is a small roundworm used widely as a model organism in genetics and genomics. Its development has been well studied; each worm takes around 14 hours to grow from a single fertilized cell to a hatched larvae with 558 cells. Embryonic development proceeds due to the tightly choreographed expression of several genes. These patterns of gene expression contribute to cell identity. Location of cells during embryogenesis is also important, as cell-cell interactions can influence gene regulation. </p>
               <p>The Expression Patterns In <i>C. elegans</i> (EPIC – http://epic2.gs.washington.edu/Epic2) project has generated a dataset that describes the spatial orientation of every cell during <i>C. elegans</i> embryogenesis, its developmental lineage and cell fate, and expression measurements for a set of about 227 genes. These data provide an expansive view of gene expression in the <i>C. elegans</i> embryo; however, to derive insights into gene expression patterns in different cells across time we need a tool to integrate and allow interactive exploration of the data.</p>
               <figure>
-		<img src="https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/master/img/hnd-1.png?raw=true" alt="hnd-1 expression through embryogenesis" width="25%">
-		<figcaption> hnd-1 expression as measured by red fluorescence in embryogenesis, from EPIC.</figcaption>
+    <img src="https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/master/img/hnd-1.png?raw=true" alt="hnd-1 expression through embryogenesis" width="25%">
+    <figcaption> hnd-1 expression as measured by red fluorescence in embryogenesis, from EPIC.</figcaption>
               </figure>
               <br>
               <p>We seek to address this lack of resource by developing an interactive visualization that includes a 3D plot of the <i>C. elegans</i> developing embryo, a lineage tree that is synched to the 3D plot, and plots of gene expression patterns. Users will be able to explore data using filters for lineage, cell type, and time point. In this way we hope to build a tool that <i>C. elegans</i> researchers can use to easily investigate patterns of gene expression during worm embryogenesis.</p></h4>
-	  </div>
-	  <div class="modal-footer">
+    </div>
+    <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	  </div>
-	</div>
+    </div>
+  </div>
       </div>
     </div>
 
     <!-- Help modal dialog  -->
     <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
-	<div class="modal-content">
-	  <div class="modal-header">
+  <div class="modal-content">
+    <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title" id="myModalLabel">Help</h4>
-	  </div>
-	  <div class="modal-body">
+    </div>
+    <div class="modal-body">
             <p>Confused about where to start? We have two compelling examples of how this visualization can be used to better understand the development and gene expression patterns of specific lineages and cell types.</p>
             <p>For the first example, select "intestine," from the dropdown menu. Hit play on the time slider, and those cells that will form the intestine will then be highlighted in the color of your choice (the default is red). At the gastrulation stage of development these cells migrate dorsally from ventral locations on the outside of the embryo to locations inside the embryo, with other cells migrating ventrally to fill in the space left by their migration. When the intestinal cell type is highlighted in our 3D plot, this migration can be observed clearly from any orientation, and other interacting lineages and cell types can be identified by using the multiple lineage highlighting feature. These cells also exhibit unique gene expression patterns, as evidenced by their grouping in the gene expression PCA plot.</p>
             <img src="https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/master/img/intestine_example.png?raw=true" width="75%">
             <p>For the second example, select "C" from the dropdown menu. By the end of our time series, cells from the C lineage migrate to the posterior-dorsal edge of the embryo, forming a complex curvature around the back of the embryo from left to right. Patterns like this are hard to understand in two-dimensions (as seen in our 2D small multiple plots), but our 3D plot provides a more natural way to gain this insight. In addition, you will see in the gene expression PCA that these cells have a distinct gene expression pattern.</p>
             <img src="https://github.com/CSE512-15S/fp-tdurham-ajh24-chiasson-ningli30/blob/master/img/c_example.png?raw=true" width="75%">
-	  </div>
-	  <div class="modal-footer">
+    </div>
+    <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	  </div>
-	</div>
+    </div>
+  </div>
       </div>
     </div>
 

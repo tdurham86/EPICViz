@@ -96,10 +96,22 @@ div {
     font-weight: bold;
     float: right;
     position: absolute;
-    right: 50px;
-    top:10px;
+    left: calc(100% - 220px);
+    top:5px;
     color: #153057;
-    font-size: 15pt;
+    font-size: 12pt;
+}
+
+.cellname{
+    display: inline-block;
+    margin: 0 0 0px;
+    font-weight: bold;
+    float: right;
+    position: absolute;
+    left: calc(100% - 220px);
+    top:25px;
+    color: #153057;
+    font-size: 12pt;
 }
 
 #three_d_plot {
@@ -139,7 +151,7 @@ svg#pcaChart {
 }
 */
 
-.pca_datapoint:hover{
+.pca_datapoint:hover,.small_multiples_datapoint:hover{
     stroke: #2394F5;
     stroke-width: 1px;
     cursor: pointer;
