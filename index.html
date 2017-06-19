@@ -167,7 +167,7 @@
             <h1>3D <i>C. elegans</i> Embryogenesis and Gene Expression</h1>
 	    <div id="maintext">
               <figure>
-		<img src="img/hnd-1.png?raw=true" alt="hnd-1 expression through embryogenesis">
+		<img id="about_modal_image" src="img/hnd-1.png?raw=true" alt="hnd-1 expression through embryogenesis">
 		<figcaption>From EPIC: <i>hnd-1</i> reporter expression highlights body wall muscle progenitors.</figcaption>
 	      </figure>
               <h4><p><i>Caenorhabditis elegans</i> (<i>C. elegans</i>) is a small roundworm used widely as a model organism in genetics and genomics. Its development has been well studied; each worm takes around 14 hours to grow from a single fertilized cell to a hatched larvae with 558 cells. Embryonic development proceeds due to the tightly choreographed expression of many genes. These patterns of gene expression contribute to cell identity. Location of cells during embryogenesis is also important, as cell-cell interactions can influence gene regulation. </p>
@@ -222,7 +222,7 @@
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title" id="myModalLabel">Gene Expression Report</h4>
           </div>
-          <div class="modal-body">
+          <div id="gene-modal-body" class="modal-body">
             <h5>Gene expression specificity for all genes within the selected population. Gene specificity p-values were calculated using a hypergeometric test for the number of cells expressing each gene in the highlighted selection vs the total population at the current time point. The p-values are Bonferroni corrected based on the number of genes.</h5>
             <table id="gene_report" cellspacing="1" class="tablesorter">
               <thead>

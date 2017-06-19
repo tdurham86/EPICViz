@@ -1570,6 +1570,7 @@ function calcGeneEnrichment(selcolor){
 }
 */
 function calcGeneEnrichment(selcolor){
+    $('#gene-modal-body').block({message: '<div id="loading_spinner"></div>'});
     var cur_tp = tpdata[cur_tpdata_idx]
     var query = url_base+'/cgi-bin/get_genes.py?timepoint=' + cur_tp[0].tp;
     cur_tp.forEach(function(item, index){
@@ -1587,6 +1588,7 @@ function calcGeneEnrichment(selcolor){
 	    wormbase_map[gene_name].pval = item[3];
         });
 	printGeneTable();
+	$('#gene-modal-body').unblock();
     });
 }
 
