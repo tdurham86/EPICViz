@@ -2118,7 +2118,7 @@ var tpdata = [];
 var cur_tpdata_idx = 0;
 var num_tps = 10;
 var total_tps = 548;
-var url_base = '{0}//{1}'.format(window.location.protocol, window.location.hostname);
+var url_base = '{0}//{1}{2}'.format(window.location.protocol, window.location.hostname, (window.location.port ? ':'+window.location.port: ''));
 console.log('url_base: '+url_base);
 var cgi_url = url_base + '/cgi-bin/get_tp.py?rangelow={0}&rangehigh={1}';
 /*function loadTimePoint(timepoint_idx, plot){
