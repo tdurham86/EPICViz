@@ -1724,6 +1724,7 @@ function development() {
     	}
     	pickColor_and_setSelected();
         document.getElementById('timerange').value = cur_tpdata_idx;
+	$("#numcellstxt").html('nucleus count: ' + tpdata[cur_tpdata_idx].length);
         plotData(dev_interval);
     } else {
         console.log('x3d not ready.');
@@ -1737,17 +1738,17 @@ function development() {
 function updatetime() {
     timepoint = parseInt(document.getElementById('timerange').value);
     cur_tpdata_idx = timepoint;
-    $("#numcellstxt").html('cell count: ' + tpdata[cur_tpdata_idx].length);
+    $("#numcellstxt").html('nucleus count: ' + tpdata[cur_tpdata_idx].length);
 }
 
 /* Update the cell name display */
 function update_cell_name(cell_name) {
-    $("#cellnametxt").html('cell name: ' + cell_name);
+    $("#cellnametxt").html('nucleus name: ' + cell_name);
 }
 
 /* Reset cell name to note saying to hover */ 
 function reset_cell_name(cell_name) {
-    $("#cellnametxt").html('cell name: <small>hover to view</small>');
+    $("#cellnametxt").html('nucleus name: <small>hover to view</small>');
 }
 
 /****************************************************************

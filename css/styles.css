@@ -19,6 +19,20 @@ body > .container-fluid {
     margin-top: 50px;
 }
 
+figure {
+    float: left;
+    display: table;
+    width: 15%; /* This can be any width, so long as it's narrower than any image */
+}
+img, figcaption {
+    display: table-row;
+    width: 100%;
+    font-size: smaller;
+}
+#divRefs {
+    clear: both;
+}
+
 .navbar {
     background: #153057;
     color: #FFF;
